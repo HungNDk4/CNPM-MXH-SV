@@ -80,3 +80,14 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Documentation changed:** DECISIONS (ADR-011), DOCUMENT_ACCESS_POLICY, MVP_SCOPE, SRS, DOCUMENT_UPLOAD_SPEC, API_CONTRACT, TEST_PLAN, REQUIREMENTS_TRACEABILITY, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, SESSION_LOG, WORKTREE_REGISTRY.
 **Tests added, NOT RUN:** T-DOCFREE-01..06 (guest metadata, guest direct download 401, expired token, student cross-owner download, hidden/deleted/paid, unauthorized writes).
 **Next:** publish dependent Draft PR #5, confirm GitHub Actions and append PR/CI evidence; next review 10 MiB cap/one PDF-post proposals and whether to approve wider Guest feed (ADR-002).
+
+## SESSION-20261018-AN-06-PR — Guest PDF access docs published
+**Actor:** AI via GitHub connector. **Task:** AN-06 completed as product decision, docs in REVIEW.
+**Draft PR #5:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/5 → `docs/pdf-upload-scope-20261017` (dependent PR stack #1→#2→#3→#4→#5).
+**Initial commit:** `ab3111900479283cade14b86ff21dd3270333388`. Verified GitHub Actions https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39052464467: **3/3 PASS** (backend syntax, frontend build, project-control docs integrity).
+**Approved:** Guest lists and reads active free PDF metadata; PDF file bytes require authenticated session (401 without token). No extrapolation to all post types (ADR-002 remains open).
+**Still PROPOSED:** upload cap 10 MiB, one PDF per post, provider/storage choice, inline preview and moderation implementation details.
+**Implementation/QA:** No backend/frontend/schema changes; runtime tests **NOT RUN**. Source payment and file exposure P0 warnings remain.
+**Local worktree:** UNVERIFIED (remote branch only).
+**Next:** Human A reviews technical PDF size/count and ADR-002 general feed scope; both humans review PR chain; then implement auth/download API and test.
+**Handoff:** this entry and registry changes produce a new HEAD; check its CI separately, do not attribute previous CI result to new HEAD.

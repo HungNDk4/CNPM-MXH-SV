@@ -1,5 +1,7 @@
 # AGENTS.md — Quy ước cho AI coding agents
 
+**MANDATORY SESSION GATE:** Trước khi làm bất kỳ task nào, đọc `PROJECT_CONTROL.md` → `docs/ops/CURRENT_STATE.md` → `docs/ops/TASK_BOARD.md` → `docs/ops/WORKTREE_REGISTRY.md` → `docs/ops/SESSION_LOG.md` → `docs/ops/SESSION_START.md`. Kiểm tra branch/commit/PR/CI trực tiếp; cập nhật trạng thái và handoff khi kết thúc. GitHub branch ≠ local worktree.
+
 Áp dụng cho toàn bộ repository `CNPM-MXH-SV`. Đọc `README.md`, `CONTRIBUTING.md`, `docs/TEAM_WORKFLOW.md`, `docs/TECH_STACK_PLAYBOOK.md`, `docs/ANALYSIS_DESIGN_PROCESS.md`, `docs/AI_SKILLS_PLAYBOOK.md`, `docs/SRS.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md` trước khi sửa code. Nhóm có đúng 2 thành viên con người; AI tạo draft/code nhưng không tự duyệt hoặc tự merge.
 
 ## Ranh giới và workflow

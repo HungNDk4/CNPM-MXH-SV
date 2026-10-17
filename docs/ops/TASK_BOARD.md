@@ -33,8 +33,11 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | FE-04 | P1 | Profile/edit/password screens | UNASSIGNED | TODO | DS-03/04 | FE page stub |
 | FE-05 | P1 | Edit/delete post UI with ownership | UNASSIGNED | TODO | DS-03/04 | BE routes exist |
 | BE-03 | P1 | Admin moderation (approved scope) | UNASSIGNED | TODO | AN-03/DS-03 | Design pending |
-| DOC-01 | P1 | Choose free document sharing: external links, upload, or both | Human A + Human B | BLOCKED | Human A product choice | **NEXT DECISION**; source only accepts URL |
-| DOC-02 | P0 | Secure document access/download | UNASSIGNED | BLOCKED | DOC-01 + SEC-01 | No secure endpoint |
+| DOC-01 | P1 | Human A selects direct PDF upload for free documents | Human A | DONE | AN-00 | User confirmed B 2026-10-17; ADR-010; detailed spec awaiting review |
+| DOC-02 | P1 | Design PDF metadata/storage/download permissions and error flows | Human A + AI | TODO | DOC-01 + ADR-002 guest rights | DOCUMENT_UPLOAD_SPEC DRAFT; no endpoint |
+| DOC-03 | P1 | Implement authenticated single-PDF upload, validation and storage | UNASSIGNED | BLOCKED | DOC-02 design approval + SEC-04 | Existing source URL-only |
+| DOC-04 | P1 | Implement controlled download, ownership/delete cleanup and UI | UNASSIGNED | BLOCKED | DOC-03 + access policy | Not implemented |
+| SEC-04 | P0 | Replace vulnerable Multer 1.x with reviewed patched release before upload implementation | UNASSIGNED | TODO | DOC-01 + compatibility check | Repo package.json declares 1.4.5-lts.1; GHSA-wc9g-mqfw-jrwm affects <2.3.0 |
 | PAY-01 | P2 | Order/history/payment state UI | UNASSIGNED | DEFERRED | New explicit scope decision | VNPay Sandbox extension only |
 | PAY-02 | P2 | Sandbox full flow/negative/idempotency tests | UNASSIGNED | DEFERRED | SEC-02 + scope reopened | NOT TESTED; out of MVP |
 | QA-02 | P1 | Disposable MySQL integration suite | UNASSIGNED | TODO | G4 | No tests |
@@ -57,4 +60,4 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 - Never let AI mark human approval or runtime QA PASS merely from static review.
 
 ## Next pull
-First: review PR #1/#2 plus scope PR #3, decide DOC-01, then AN-01/AN-02. SEC-01 and SEC-03 block MVP demo; payment implementation SEC-02 remains deferred.
+First: review PR #1/#2 plus scope PR #3, DOC-01 is CONFIRMED; next decide guest PDF download policy, then AN-01/AN-02. SEC-01 and SEC-03 block MVP demo; payment implementation SEC-02 remains deferred.

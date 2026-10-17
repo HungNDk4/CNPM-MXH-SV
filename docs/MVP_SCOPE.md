@@ -13,12 +13,12 @@ VNPay Sandbox, paid documents, checkout, orders and purchased-file rights are **
 | FR-04/05/06 | Posts | Ask, discuss, view post, edit/delete own content |
 | FR-07/08 | Interaction | Comment/reply, like/unlike |
 | FR-10 | Profile | View user profile, edit own details, change password |
-| FR-11 | Free documents | Publish/access free learning material; storage choice DOC-01 OPEN |
+| FR-11 | Free documents | Publish/access **uploaded PDF** for free; size/access/storage rules need review |
 | FR-12 | Moderation | Minimal admin controls for inappropriate posts/accounts; exact policy OPEN |
 
 ## Proposed MVP user journeys
 1. Discover posts → register/login → post a question → another user comments/likes → owner edits/deletes.
-2. Share FREE learning material → discover/read its description → access material using the method approved in DOC-01.
+2. Upload FREE PDF → discover/read its description → access/download using the reviewed permission policy.
 3. Edit own profile/password → other accounts cannot edit it.
 4. Admin hides a violating post; student cannot call admin API.
 5. Direct requests to deferred paid/checkout APIs are denied, not just hidden in the UI.
@@ -33,11 +33,11 @@ Existing code contains paid-document fields, payment/order routes and callbacks.
 ## Explicitly OUT of required MVP
 VNPay Sandbox, paid documents and order history; real-money payouts; livestream, realtime chat, follows/friends, groups/clubs, AI recommendations, university enrollment verification unless later agreed.
 
-## Next product decision: DOC-01 (OPEN)
-How should students share FREE documents?
-- **A. External link only:** enter a Google Drive/other document URL. Simple implementation; availability/access policies depend on the external provider.
-- **B. Upload to website:** user uploads files for direct access. Needs storage, size/MIME validation, copyright/moderation and permissions.
-- **C. Both:** upload or external URL; most flexible but larger QA and architecture scope.
+## DOC-01 CONFIRMED: upload PDF trực tiếp (Human A, 2026-10-17)
+Students upload PDF files through the website; **external-link-only is not the selected core document flow**. Current source only supports entering `file_url`; upload has not been implemented. See [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).
+
+**Detailed design proposals (NOT approved yet):** one PDF per document post, initial 10 MiB size cap, private storage with controlled download, PDF signature + MIME validation. Also verify access rules, hosting, antivirus/scanning plan and moderation.
+**Next business question:** may a guest view/download shared PDFs, or must the user log in?
 
 **Pending questions:** anonymous feed access, who qualifies as student, admin moderation depth, team role assignments and instructor/deadline constraints. Never infer these have been approved.
 

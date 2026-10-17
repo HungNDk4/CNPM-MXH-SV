@@ -18,13 +18,13 @@
 - Active: P0 Foundation & control-system docs. AN-00 **DONE** (Human A's limited Option B scope decision), but G0/G1 not yet approved. OPS-02 in REVIEW; OPS-03 in REVIEW, both awaiting human approval.
 - G0 **NOT YET APPROVED**. Requirements/design documents are DRAFT. No verified business E2E MySQL/Sandbox tests.
 - Known P0: posts feed leaks paid file URL; payment return/IPN risk double credit; paid static file exposure. **These endpoints are NOT disabled by the scope decision:** SEC-03 must deny them before MVP demo.
-- Product decision DOC-01 confirmed by Human A 2026-10-17: **direct PDF upload**, size limit appropriate but not specified. Technical spec DRAFT, SEC-04 Multer review required. Scope branch: `docs/pdf-upload-scope-20261017` based on option-B branch (exact ref/PR must be rechecked live).
+- Product decision DOC-01 confirmed by Human A 2026-10-17: **direct PDF upload**, size limit appropriate but not specified. Technical spec DRAFT, SEC-04 Multer review required. Scope branch: `docs/pdf-upload-scope-20261017` based on option-B branch, **Draft PR #4** → option-B branch; initial commit `4aafba2a` CI 3 jobs PASS (https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39051750751); verify latest HEAD.
 - Known P1: guest GET feed blocked; PostDetail/Profile pages stub; SQL/Sequelize drift, no integration tests.
 
 ## NEXT_SESSION_ACTIONS — Follow this order
 1. Inspect GitHub `main`, PR #1 and Draft PR #2. Compare HEAD and CI; do not assume this snapshot remains current.
 2. Read `PROJECT_CONTROL.md`, `docs/ops/TASK_BOARD.md`, `docs/ops/SESSION_LOG.md`, `docs/ops/WORKTREE_REGISTRY.md`.
-3. Human A/Human B review stacked PRs #1/#2/#3; payment scope Option B already chosen by Human A, remaining SRS and G0/G1 not approved. Do not merge without review.
+3. Human A/Human B review stacked PRs **#1 → #2 → #3 → #4**; payment scope Option B already chosen by Human A, remaining SRS and G0/G1 not approved. Do not merge without review.
 4. **DOC-01 CONFIRMED:** direct website PDF upload. **NEXT question:** whether guests can view/download PDF; size cap and single-file assumptions are only proposals (10 MiB and one PDF). Design and tests in docs/DOCUMENT_UPLOAD_SPEC.md.
 5. Once foundation merged and G0 accepted, start AN-01 (actors and SRS) and AN-02 on dedicated analysis branch.
 6. Before MVP demo, implement and negative-test **SEC-03 server-side paid-flow shutdown** and **SEC-01 paid URL protection**. SEC-02 full payment fix deferred.

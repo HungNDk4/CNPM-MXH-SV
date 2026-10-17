@@ -60,3 +60,13 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Detailed proposals only:** cap 10 MiB, one PDF/post, private download endpoint; need user/team review.
 **NEXT PRODUCT QUESTION:** are public guests allowed to view/download PDFs, or is login required? Do not invent access policy.
 **Ops:** GitHub-only; no physical worktree created/verified. PR/CI details appended in a later session entry when available.
+
+## SESSION-20261017-DOC-01-PR — PDF decision docs ready for human review
+**Actor:** AI via linked GitHub. **Task:** DOC-01 (product choice DONE, docs IN REVIEW).
+**PR:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/4 (Draft) targeting `docs/mvp-scope-option-b-20261017`. Dependent on PR #3, #2 and #1.
+**Initial changes HEAD:** `4aafba2a0093865e8737c86e3b3f42fc83776f2a`. Verified GitHub Actions https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39051750751: **Frontend production build PASS; Backend JS syntax PASS; project-control integrity PASS**.
+**Files:** docs/DECISIONS, MVP_SCOPE, SRS, DOCUMENT_UPLOAD_SPEC, API_CONTRACT, DATA_MODEL, TEST_PLAN, MASTER_PLAN, REQUIREMENTS_TRACEABILITY, TASK_BOARD, CURRENT_STATE, SESSION_LOG, WORKTREE_REGISTRY.
+**Business scope:** free PDF upload is the selected method. **10 MiB max / one PDF per post are proposals ONLY;** guest download rights undecided.
+**Technical and security:** multer 1.x declared and vulnerable; SEC-04 requires patched dependency review, file validation and protected storage before implementation. No controller/model/schema changed. No file-upload/DB/E2E tests performed.
+**Local worktree:** NOT VERIFIED (GitHub-only branch). **Human approval of detailed design/G0/G1:** PENDING.
+**Next:** choose guest PDF viewing/downloading policy, review size constraints, PR #1-#4 in dependency order. CI for any handoff-only follow-up commit needs fresh verification.

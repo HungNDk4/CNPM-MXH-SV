@@ -2,7 +2,7 @@
 **Source hiện tại, chưa xác nhận chạy PASS trên máy thành viên.**
 
 ## Cần cài
-- Node.js 20.x và npm (tham khảo `.nvmrc`).
+- Node.js 24.x LTS và npm (tham khảo `.nvmrc`; cần kiểm thử bằng CI sau khi đổi phiên bản).
 - MySQL (đề xuất 8.x), MySQL Workbench hoặc CLI.
 - Git; VS Code hoặc IDE tùy ý.
 

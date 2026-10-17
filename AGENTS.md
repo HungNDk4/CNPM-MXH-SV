@@ -1,6 +1,6 @@
 # AGENTS.md — Quy ước cho AI coding agents
 
-Áp dụng cho toàn bộ repository `CNPM-MXH-SV`. Đọc `README.md`, `CONTRIBUTING.md`, `docs/SRS.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md` trước khi sửa code.
+Áp dụng cho toàn bộ repository `CNPM-MXH-SV`. Đọc `README.md`, `CONTRIBUTING.md`, `docs/TEAM_WORKFLOW.md`, `docs/TECH_STACK_PLAYBOOK.md`, `docs/ANALYSIS_DESIGN_PROCESS.md`, `docs/AI_SKILLS_PLAYBOOK.md`, `docs/SRS.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md` trước khi sửa code. Nhóm có đúng 2 thành viên con người; AI tạo draft/code nhưng không tự duyệt hoặc tự merge.
 
 ## Ranh giới và workflow
 1. **Không commit/push trực tiếp vào `main`**. Tạo branch mới từ `main`: `feat/<slug>`, `fix/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`.

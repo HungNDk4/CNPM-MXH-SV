@@ -7,12 +7,12 @@ Sinh viên đăng câu hỏi, thảo luận và chia sẻ tài liệu học tậ
 
 ## Công nghệ
 - Client: React 18, Vite 5, Tailwind CSS, React Query, Zustand, Axios.
-- Server: Node.js 20, Express 4, JWT, Sequelize 6.
+- Server: Node.js 24 LTS, Express 4, JWT, Sequelize 6.
 - Database: MySQL 8 (đề xuất cho môi trường phát triển).
 - Thanh toán thử nghiệm: VNPay Sandbox.
 
 ## Chạy trên máy cá nhân
-1. Cài Node.js 20, npm và MySQL.
+1. Cài Node.js 24 LTS, npm và MySQL.
 2. Tạo schema: `mysql -u root -p < database/schema.sql` (hoặc chạy trong MySQL Workbench).
 3. Copy `server/.env.example` thành `server/.env`, thay thông tin DB và hai JWT secret; **không commit `.env`**.
 4. Terminal backend: `cd server && npm ci && npm run dev`.
@@ -23,6 +23,11 @@ Hướng dẫn và lưu ý: [docs/DEV_SETUP.md](docs/DEV_SETUP.md).
 
 ## Bắt đầu làm việc trong nhóm
 - [AGENTS.md](AGENTS.md) — quy tắc dành cho các AI coding agents.
+- [docs/TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) — cách phối hợp 2 thành viên và AI.
+- [docs/TECH_STACK_PLAYBOOK.md](docs/TECH_STACK_PLAYBOOK.md) — thư viện, version-specific patterns, security gates.
+- [docs/ANALYSIS_DESIGN_PROCESS.md](docs/ANALYSIS_DESIGN_PROCESS.md) — quy trình SRS → UML → ERD → API → tests.
+- [docs/AI_SKILLS_PLAYBOOK.md](docs/AI_SKILLS_PLAYBOOK.md) — kỹ năng và checklist AI Research/Engineering.
+- [docs/REQUIREMENTS_TRACEABILITY.md](docs/REQUIREMENTS_TRACEABILITY.md) — trace FR → thiết kế → test.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Git branch, PR và quy tắc hợp tác.
 - [docs/PROJECT_CHARTER.md](docs/PROJECT_CHARTER.md) — mục tiêu, phạm vi và quyết định còn mở.
 - [docs/SRS.md](docs/SRS.md) — yêu cầu và tiêu chí nghiệm thu (bản nháp).

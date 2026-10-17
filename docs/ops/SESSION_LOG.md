@@ -39,3 +39,13 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **P0:** SEC-03 server-side deny paid/checkout/payment callback and SEC-01 prevent paid URL leakage are REQUIRED before demo. Payment code is not yet disabled; SEC-02 full idempotent payment flow deferred.
 **Tests:** DOCS only; no DB/E2E/payment integration verified. GitHub CI will be checked after opening PR.
 **Next:** choose DOC-01 free document sharing method, review PR #1/#2/#3 in order, then start requirements AN-01/AN-02 after G0.
+
+## SESSION-20261017-AN-00-PR — Scope decision docs published
+**Actor:** AI via GitHub connector. **Task:** AN-00 documentation. **Status:** REVIEW; human product scope Option B already CONFIRMED.
+**Draft PR #3:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/3 → `docs/session-worktree-control-20261017`, stacked after PR #2 and PR #1.
+**Initial published commit:** `07a72f9c2d04038a37a001c05ab54d3590f16b57`. CI run https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39051123916 — **Frontend build, Backend syntax, docs integrity all PASS**.
+**Decision record:** ADR-003/004 + docs/MVP_SCOPE.md, product owner Human A selected free-first MVP; detailed SRS and teammates' review remain DRAFT/PENDING.
+**Code change:** NONE in business controllers/models/database. **Payment APIs NOT DISABLED YET**; SEC-03 and SEC-01 are P0 gate before MVP demo.
+**Local worktree:** UNVERIFIED (remote branch only). No DB/E2E/VNPay QA run.
+**Next exact product decision:** DOC-01 choose (A) external URL, (B) upload file to website, or (C) both. Avoid claim of completion of G0/G1.
+**Follow-up:** status/log registry update creates new HEAD; verify final CI independently.

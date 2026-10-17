@@ -29,3 +29,13 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Changes:** master plan P0–P7, canonical task board, read-first index, worktree guide/registry, session start/log/handoff, risk and research register, status read-only PowerShell script, docs-integrity check.
 **QA NOT RUN:** DB integration, E2E, live/Sandbox payment. **Local worktree:** NOT VERIFIED (remote branch only). **Main:** not modified.
 **Next:** reviewer approves/edits PR #1 then PR #2 dependency, human owners and MVP scope. Once G0 accepted, AN-01/AN-02 on analysis worktree. A follow-up commit updated status snapshots; verify the latest CI independently.
+
+## SESSION-20261017-AN-00 — Free-first MVP decision captured
+**Actor:** Human A (product decision), AI (GitHub documentation). **Task:** AN-00. **Result:** Human A CONFIRMED Option B, not entire SRS/G0/G1.
+**User choice:** VNPay Sandbox is optional extension; prioritize student social networking and FREE documents for MVP.
+**Branch:** `docs/mvp-scope-option-b-20261017`, based on control branch HEAD `8c0b28ec025516cb98fe240fb9497020ac9822f0`. Linked PR added after publishing; verify GitHub current head.
+**Changed:** `docs/MVP_SCOPE.md`, ADR-003/004, SRS, Charter, Roadmap, Master Plan, task board, current state, requirements traceability, risk and registry. 
+**Approval:** Human A approved scope option only; Human B/instructor review and DOC-01 link-vs-upload decision PENDING.
+**P0:** SEC-03 server-side deny paid/checkout/payment callback and SEC-01 prevent paid URL leakage are REQUIRED before demo. Payment code is not yet disabled; SEC-02 full idempotent payment flow deferred.
+**Tests:** DOCS only; no DB/E2E/payment integration verified. GitHub CI will be checked after opening PR.
+**Next:** choose DOC-01 free document sharing method, review PR #1/#2/#3 in order, then start requirements AN-01/AN-02 after G0.

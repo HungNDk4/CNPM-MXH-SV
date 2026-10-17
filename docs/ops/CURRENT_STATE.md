@@ -11,7 +11,7 @@
 - `main` HEAD confirmed: `0993a42154feb37e8842ef8bb3ed4d0a03627889`.
 - Foundation branch: `chore/project-foundation-20261017`, head `87eb985e023f77935edd49916ca7655346ff83eb`; **Draft PR #1** → main; CI build/syntax PASS for that commit.
 - This control-system workstream: `docs/session-worktree-control-20261017`, **based on foundation branch**, **Draft PR #2** → `chore/project-foundation-20261017` (dependent/stacked). Initial commit `3f4a018c3c40f34d348276c41156f459df96dca8` has GitHub CI PASS (3 jobs); latest HEAD changes as follow-up log is committed. HEAD changes after commit; use GitHub not this dated snapshot.
-- Scope branch: `docs/mvp-scope-option-b-20261017`, based on control branch @ `8c0b28ec025516cb98fe240fb9497020ac9822f0`, proposed PR → `docs/session-worktree-control-20261017` (confirm PR/current HEAD online).
+- Scope branch: `docs/mvp-scope-option-b-20261017`, based on control branch @ `8c0b28ec025516cb98fe240fb9497020ac9822f0`, **Draft PR #3** → `docs/session-worktree-control-20261017`, CI initial scope commit PASS. Check latest HEAD/CI online.
 - No local Git worktrees have been created/verified by this GitHub-only workflow.
 
 ## Phase and gate snapshot
@@ -23,7 +23,7 @@
 ## NEXT_SESSION_ACTIONS — Follow this order
 1. Inspect GitHub `main`, PR #1 and Draft PR #2. Compare HEAD and CI; do not assume this snapshot remains current.
 2. Read `PROJECT_CONTROL.md`, `docs/ops/TASK_BOARD.md`, `docs/ops/SESSION_LOG.md`, `docs/ops/WORKTREE_REGISTRY.md`.
-3. Human A/Human B review stacked PRs #1/#2/#3 (once #3 published); payment scope Option B already chosen by Human A, remaining SRS and G0/G1 not approved. Do not merge without review.
+3. Human A/Human B review stacked PRs #1/#2/#3; payment scope Option B already chosen by Human A, remaining SRS and G0/G1 not approved. Do not merge without review.
 4. **NEXT PRODUCT QUESTION: DOC-01** — free document external links, website uploads, or both? Record answer before designing file flow.
 5. Once foundation merged and G0 accepted, start AN-01 (actors and SRS) and AN-02 on dedicated analysis branch.
 6. Before MVP demo, implement and negative-test **SEC-03 server-side paid-flow shutdown** and **SEC-01 paid URL protection**. SEC-02 full payment fix deferred.
@@ -32,6 +32,7 @@
 ## Last verified tests
 - Foundation PR commit `87eb985e`: GitHub Actions **Frontend production build PASS** and **Backend JavaScript syntax PASS** (Node 24).
 - Planning PR initial commit `3f4a018c` GitHub Actions run https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39049674352: **three jobs PASS** (frontend build, backend syntax, docs integrity). Check latest follow-up commit CI separately.
+- Scope PR #3 initial commit `07a72f9c`: GitHub Actions https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39051123916 **3 jobs PASS**; this is docs/build/syntax only. Re-check final HEAD after log update.
 - MySQL integration, E2E, sandbox, pen-test: **NOT RUN**.
 
 ## Operational warning

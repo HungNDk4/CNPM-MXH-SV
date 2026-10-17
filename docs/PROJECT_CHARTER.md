@@ -1,12 +1,12 @@
 # Project Charter — Mini Study Network
-**Trạng thái:** DRAFT, chờ nhóm/giảng viên xác nhận phạm vi. **Ngày khởi tạo baseline:** 2026-10-17.
+**Trạng thái:** DRAFT chi tiết. Human A đã xác nhận Option B (17/10/2026): mạng xã hội + tài liệu miễn phí là MVP, VNPay Sandbox DEFERRED; chờ review đầy đủ từ nhóm/giảng viên. **Ngày khởi tạo baseline:** 2026-10-17.
 
 ## Bài toán
 Sinh viên cần một nơi tập trung để đặt câu hỏi, thảo luận, tìm và chia sẻ tài liệu học tập. Dự án là một nền tảng mạng xã hội học tập quy mô đồ án, không phải hệ thống thương mại production.
 
 ## Mục tiêu dự kiến
 - Sinh viên có thể đăng ký/đăng nhập, đăng bài, tìm nội dung, bình luận, thích và quản lý hồ sơ.
-- Tài liệu có thể được chia sẻ miễn phí; mô hình tài liệu có phí/VNPay Sandbox là luồng mở rộng **đã có source ban đầu nhưng chưa đạt acceptance**.
+- Tài liệu có thể được chia sẻ miễn phí; mô hình tài liệu có phí/VNPay Sandbox là **luồng mở rộng bị hoãn khỏi MVP**. Source hiện có không được xem là an toàn hoặc đã vô hiệu hóa.
 - Hệ thống có cơ chế phân quyền và kiểm duyệt cơ bản, được test theo các tình huống nghiệp vụ chính.
 
 ## Đối tượng và stakeholders
@@ -18,7 +18,7 @@ Sinh viên cần một nơi tập trung để đặt câu hỏi, thảo luận, 
 
 ## Ranh giới
 **In scope đề xuất (MVP):** Auth, feed, bài viết, tìm kiếm/lọc, bình luận, like, hồ sơ, chia sẻ tài liệu miễn phí, kiểm duyệt mức tối thiểu, QA.
-**Phase mở rộng có điều kiện:** Mua tài liệu VNPay Sandbox, cấp quyền tải an toàn, lịch sử đơn hàng.
+**Phase mở rộng có điều kiện, không bắt buộc MVP:** Mua tài liệu VNPay Sandbox, cấp quyền tải an toàn, lịch sử đơn hàng; phải khóa backend các endpoint chưa an toàn trong MVP.
 **Out of scope mặc định:** Chat realtime, livestream, marketplace hàng hóa, production payments, rút tiền thật, AI gợi ý, social graph phức tạp.
 
 ## Deliverables cần có

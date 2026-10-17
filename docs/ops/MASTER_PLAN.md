@@ -46,8 +46,8 @@ Dependencies: G1/G2; G3 for exposing data.
 
 ## Phase P5 — Free documents first; Sandbox payments deferred
 **Goal:** verified document sharing; paid-document flow only if approved.
-Tasks: DOC-01 decide free document share via external URL/upload/both; DOC-02 implement safe free document access. **PAY-01/02 deferred** until Human A/teammate explicitly reopen scope and approve security design.
-Deliverables: document flow, access control, Sandbox evidence and explicit financial assumptions (if approved).
+Tasks: **DOC-01 Human A confirmed direct PDF upload**, DOC-02 finalize upload schema/API/storage/permissions, SEC-04 review/upgrade vulnerable Multer 1.x before accepting uploads, DOC-03 implement validated PDF upload, DOC-04 safe download/UI/ownership/cleanup. **PAY-01/02 deferred** until Human A/teammate explicitly reopen scope and approve security design.
+Deliverables MVP: PDF upload/download UI, storage and metadata contract, validation and ownership, QA evidence; Sandbox remains optional future deliverable.
 Gate **G5 MVP**: free-documents work end-to-end, paid paths remain disabled; VNPay checkout/Sandbox testing is **not** a mandatory MVP exit criterion. A future paid-feature extension must have its own security and payment QA gate.
 Dependencies: G3, G4, and ADR on whether paid docs mandatory.
 

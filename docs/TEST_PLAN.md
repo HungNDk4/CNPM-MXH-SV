@@ -40,3 +40,21 @@ Result: PASS | FAIL | SKIP | NOT RUN
 Evidence: log/screenshot/PR link (không chứa secret)
 ```
 Không đánh PASS chỉ vì code có hàm tương ứng.
+
+## PDF upload QA (FR-11, DOC-01 confirmed; all NOT RUN)
+Reference: [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md). The mechanism is chosen but these tests are **not yet implemented/executed**.
+
+| ID | Scenario | Expected |
+|---|---|---|
+| T-UP-01 | Student uploads valid PDF | Post+metadata+file created; downloadable under approved policy |
+| T-UP-02 | Guest tries to upload | 401, no file stored |
+| T-UP-03 | Spoofed PDF extension/MIME/signature | Reject, remove temporary file |
+| T-UP-04 | File larger than approved cap, multiple unexpected parts/files | 4xx, no orphan |
+| T-UP-05 | Aborted upload / DB failure | Cleanup and consistent DB state |
+| T-UP-06 | Different student deletes other student's document | Deny mutation |
+| T-UP-07 | Hidden/deleted/private file via direct static path | File not exposed |
+| T-UP-08 | Guest/other student download | Enforce **pending** guest access decision |
+| T-UP-09 | Legacy paid/payment endpoints | Direct request denied before MVP demo |
+| T-UP-10 | Multipart parser malformed field names/DoS | Patched middleware, bounded parsing and safe errors |
+
+**Security dependency:** `multer ^1.4.5-lts.1` is present and must not be used for new uploads without patched dependency review; relevant GHSA https://github.com/advisories/GHSA-wc9g-mqfw-jrwm. QA coverage including this vulnerability is planned, not PASS.

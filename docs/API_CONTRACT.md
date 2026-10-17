@@ -36,3 +36,9 @@
 - GET /documents/:postId/download — xác thực quyền sở hữu/quyền mua rồi stream file private.
 - GET /orders/:id/status — tra cứu trạng thái cho buyer sau redirect, không tin query `status` từ browser.
 - Admin moderation APIs — cần thiết kế chi tiết theo FR-12.
+
+## Planned change for FR-11 (NOT IMPLEMENTED, DOC-01 confirmed)
+- Direct PDF upload is the approved MVP product mechanism; current post creation takes `file_url` as text and does **not** handle file bytes.
+- **Proposal:** POST `/api/documents` with `multipart/form-data`, one `file` field plus title/description/subject/tags, authenticated; returns public-safe document/post DTO. Error cases: invalid PDF 415, too large 413, unauthenticated 401, validation 400. Detailed design [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).
+- **Proposal:** GET `/api/documents/:postId/download` with server-side authorization and streamed PDF attachment. Guest eligibility is **OPEN**, not yet approved. Never expose storage key/absolute path or allow raw static access.
+- Existing payment/order endpoints must still be denied by backend before MVP demo (SEC-03). Upload implementation will be a separate reviewed PR; not included in this docs-only decision.

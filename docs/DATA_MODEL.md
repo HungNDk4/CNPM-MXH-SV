@@ -22,3 +22,10 @@
 
 ## Quy tắc schema change
 Mỗi thay đổi schema phải ghi migration theo version, kế hoạch rollback, tương thích model, seed không chứa secret và test dữ liệu liên quan. Không trực tiếp drop/recreate DB có dữ liệu nhóm.
+
+## Proposed storage schema for PDF uploads (NOT IMPLEMENTED)
+- Product decision DOC-01: website-hosted **PDF upload** for FREE documents; current `posts.file_url` only holds URLs and is not a complete secure file storage design.
+- **Design option to review:** `document_files(id, post_id UNIQUE FK, uploader_id FK, storage_key UNIQUE, original_filename, mime_type, size_bytes, sha256, created_at)`, 1 PDF per post *proposed*, not approved.
+- Store PDF bytes outside a publicly served `/uploads` folder, generate server-side storage keys; DB stores metadata/identifier, not publicly exposed file URLs.
+- Define transaction/orphan cleanup, soft-deleted post access and data retention. Review current SQL + Sequelize drift and migration path before changing schema.
+- Size cap **10 MiB** is proposed only; actual max and guest download policy are awaiting user review. See [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).

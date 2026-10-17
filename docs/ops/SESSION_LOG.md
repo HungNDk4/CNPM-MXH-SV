@@ -49,3 +49,14 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Local worktree:** UNVERIFIED (remote branch only). No DB/E2E/VNPay QA run.
 **Next exact product decision:** DOC-01 choose (A) external URL, (B) upload file to website, or (C) both. Avoid claim of completion of G0/G1.
 **Follow-up:** status/log registry update creates new HEAD; verify final CI independently.
+
+## SESSION-20261017-DOC-01 — Human A chooses direct PDF uploads
+**Actor:** Human A (product decision) + AI (research and GitHub docs). **Task:** DOC-01. **Decision:** direct website PDF upload for free documents, replacing external-link-only MVP; exact size limit not selected.
+**Branch:** `docs/pdf-upload-scope-20261017`, based on scope branch `a5bc0c57693b82753daa29a89ece565a683f884e`. Planned Draft PR #4 → `docs/mvp-scope-option-b-20261017`.
+**Files:** `docs/DOCUMENT_UPLOAD_SPEC.md`, ADR-010, MVP_SCOPE, SRS, API_CONTRACT and DATA_MODEL draft proposals, TEST_PLAN, requirement traceability, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, WORKTREE_REGISTRY.
+**Source verified:** current `server/src/controllers/post.controller.js` writes only supplied `file_url`; `server/src/app.js` exposes `/uploads` as static; `server/package.json` declares `multer ^1.4.5-lts.1`.
+**Research:** OWASP File Upload Cheat Sheet, official Multer API, GHSA-wc9g-mqfw-jrwm (`multer <2.3.0` affected; upgrade required before upload).
+**Security:** SEC-04 added for patched multipart parser; SEC-01/SEC-03 still block paid-file/payment exposures. **NO upload implementation occurred**; no DB changes; QA PDF/storage NOT RUN.
+**Detailed proposals only:** cap 10 MiB, one PDF/post, private download endpoint; need user/team review.
+**NEXT PRODUCT QUESTION:** are public guests allowed to view/download PDFs, or is login required? Do not invent access policy.
+**Ops:** GitHub-only; no physical worktree created/verified. PR/CI details appended in a later session entry when available.

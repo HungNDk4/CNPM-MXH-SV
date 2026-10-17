@@ -5,7 +5,9 @@
 **Trạng thái:** Đang phát triển (đồ án Công nghệ phần mềm). Repository đã có mã nguồn frontend/backend và schema; **chưa có bằng chứng kiểm thử end-to-end**. Không coi API thanh toán hoặc quyền tải tài liệu là production-ready.
 
 ## Mục tiêu
-Sinh viên đăng câu hỏi, thảo luận và chia sẻ tài liệu học tập (miễn phí hoặc có phí). Có phân quyền tài khoản và quản trị. VNPay chỉ dùng **Sandbox** trong quá trình đồ án.
+Sinh viên đăng câu hỏi, thảo luận và chia sẻ tài liệu học tập **miễn phí**. Có phân quyền tài khoản và quản trị. **Đã chốt Option B (17/10/2026):** VNPay Sandbox và tài liệu thu phí là chức năng mở rộng, **không thuộc MVP**. Trước khi demo phải chặn an toàn các API thanh toán/paid-file hiện tồn tại — ẩn nút UI không đủ.
+
+**Đọc phạm vi MVP:** [docs/MVP_SCOPE.md](docs/MVP_SCOPE.md).
 
 ## Công nghệ
 - Client: React 18, Vite 5, Tailwind CSS, React Query, Zustand, Axios.

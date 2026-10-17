@@ -13,9 +13,9 @@
 | FR-08 | Likes | UC TBD | POST /likes, GET /likes/count | T-LIKE-01 | BE, FE thiếu |
 | FR-09 | Search | UC TBD | GET /posts params | T-POST-03 | BE một phần |
 | FR-10 | Profile | UC TBD | GET /users/:id + PUT | T-PROFILE-01 | FE stub |
-| FR-11 | Free documents | UC TBD | posts metadata + download TBD | T-DOC-01/02 | Upload chưa có |
+| FR-11 | Free documents **MVP** | UC TBD | posts metadata + sharing method DOC-01 OPEN | T-DOC-01/02 | Source URL only; detailed sharing pending |
 | FR-12 | Admin moderation | UC TBD | admin endpoints TBD | T-ADMIN-01 | Cần thiết kế |
-| FR-13 | Paid documents | UC TBD | POST /orders, payment callbacks | T-PAY-01/02/03 | P0, Sandbox only |
-| FR-14 | Paid access | UC TBD | document_access, download TBD | T-DOC-01/02 | P0, chưa bảo vệ đủ |
+| FR-13 | Paid documents **DEFERRED** | UC TBD | POST /orders, payment callbacks | T-PAY-01/02/03 | Optional extension; SEC-03 shutdown required first |
+| FR-14 | Paid access **DEFERRED** | UC TBD | document_access, download TBD | T-DOC-01/02 | Optional extension; paid URLs must not leak |
 
 Trước khi ghi `VERIFIED`: link đầy đủ UC spec/diagram, source commit, testcase PASS và reviewer sign-off.

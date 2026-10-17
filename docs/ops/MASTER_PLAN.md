@@ -1,5 +1,5 @@
 # MASTER PLAN / WBS — Mini Study Network
-Version 0.1 · 2026-10-17 · DRAFT · Two human members + AI support.
+Version 0.2 · 2026-10-17 · DRAFT details; Human A confirms Option B · Two human members + AI support.
 **Purpose:** executable, traceable delivery plan; no arbitrary dates or percent-complete claims. Status/owners live ONLY in [TASK_BOARD.md](TASK_BOARD.md).
 
 ## Operating principles
@@ -7,7 +7,7 @@ Version 0.1 · 2026-10-17 · DRAFT · Two human members + AI support.
 - Work as small feature slices: FR → UC → API/schema/UI → code → tests → PR. Changes to approved rules require decision record.
 - A phase passes only with its acceptance gate. Source existence ≠ runtime tested.
 - P0 privacy/payment problems cannot be bypassed for an enabled paid-document feature.
-- Only use VNPay Sandbox; no real payouts/wallet operations.
+- **Option B confirmed by Human A:** prioritize free docs + social learning MVP. Paid docs and VNPay Sandbox are DEFERRED. Old paid/payment routes must be denied by default with negative tests before public MVP demo. See [../MVP_SCOPE.md](../MVP_SCOPE.md). No real payouts/wallet operations.
 
 ## Phase P0 — Foundation & control system
 **Goal:** reproducible collaboration, branch discipline, official repo state.
@@ -18,7 +18,7 @@ Dependencies: none. Important: PR #1 is still DRAFT at planning baseline; do not
 
 ## Phase P1 — Requirements & use cases
 **Goal:** lock an implementable MVP for student learning network.
-Tasks: AN-01 actors/personas & scope; AN-02 FR/NFR and measurable acceptance; AN-03 business rules and permission matrix; AN-04 Use Case diagram + specifications; AN-05 requirements traceability review.
+Tasks: AN-00 scope decision (Option B confirmed by Human A); AN-01 actors/personas & scope; AN-02 FR/NFR and measurable acceptance; AN-03 business rules and permission matrix; AN-04 Use Case diagram + specifications; AN-05 requirements traceability review.
 Deliverables: Charter v1, SRS reviewed, actors/UC catalog, UC specs (normal/alternate/error), matrix FR→UC→test; Decision Log approvals.
 Gate **G1**: all MVP FR have actor, trigger, preconditions, success/exception paths, acceptance; unresolved payment/school verification explicitly scoped or deferred. Human-approved baseline, not just AI generated.
 Dependencies: G0; source audit. Can research while PR awaiting merge, but do not present approval as granted.
@@ -32,9 +32,9 @@ Dependencies: G1; a security spike may occur earlier on an isolated branch with 
 
 ## Phase P3 — Security and backend stability
 **Goal:** eliminate known P0 vulnerabilities before public file/payment demos.
-Tasks: SEC-01 paid file URL leakage in list/detail/static paths; SEC-02 verified VNPay callback with idempotent state transitions; BE-01 guest optional auth feed; BE-02 schema drift/migration safe strategy; QA-01 automated auth/privacy/payment regression foundation.
+Tasks: SEC-01 no paid URL leakage; **SEC-03 deny/disable all existing paid/payment routes and callbacks from the backend, with negative tests**; SEC-02 full VNPay idempotency implementation is **DEFERRED**; BE-01 guest optional auth, BE-02 schema drift/migration, QA-01 privacy/auth/paid-shutdown regression suite.
 Deliverables: validated response DTO, protected document access strategy, safe payment state machine or disabled paid flow, code/test PRs.
-Gate **G3**: tests fail on old security regression and pass on fix; no double-credit on repeated/competing callbacks; guest feed contract works; DB migration tested against disposable DB; evidence captured.
+Gate **G3 MVP**: direct payment/paid requests cannot trigger orders, paid wallet transitions or paid file exposure; SEC-01/SEC-03 negative tests PASS; guest feed contract and DB tests pass. Full callback idempotency/correct credit handling belongs only to future paid-feature reactivation gate.
 Dependencies: G2 decisions concerning paid files; if paid flow deferred, disable access to unsafe endpoints rather than declaring them tested.
 
 ## Phase P4 — Core application end-to-end
@@ -44,11 +44,11 @@ Deliverables: complete UI pages with empty/loading/error states, scoped backend 
 Gate **G4**: end-to-end demo guest→register/login→post→search/detail→comment/like→profile→moderate; negative ownership tests pass.
 Dependencies: G1/G2; G3 for exposing data.
 
-## Phase P5 — Documents and optional Sandbox payments
+## Phase P5 — Free documents first; Sandbox payments deferred
 **Goal:** verified document sharing; paid-document flow only if approved.
-Tasks: DOC-01 determine URL-only vs upload/private storage; DOC-02 secure download + entitlement; PAY-01 order/history UI; PAY-02 VNPay Sandbox integration/negative cases.
+Tasks: DOC-01 decide free document share via external URL/upload/both; DOC-02 implement safe free document access. **PAY-01/02 deferred** until Human A/teammate explicitly reopen scope and approve security design.
 Deliverables: document flow, access control, Sandbox evidence and explicit financial assumptions (if approved).
-Gate **G5**: free docs accessible per rules; paid docs never accessible without entitlement, failed/replayed payments do not grant access; evidence real Sandbox or feature documented as deferred.
+Gate **G5 MVP**: free-documents work end-to-end, paid paths remain disabled; VNPay checkout/Sandbox testing is **not** a mandatory MVP exit criterion. A future paid-feature extension must have its own security and payment QA gate.
 Dependencies: G3, G4, and ADR on whether paid docs mandatory.
 
 ## Phase P6 — System test, hardening & reproducible demo
@@ -73,8 +73,9 @@ Dependencies: G6.
 
 ## Dependency map
 ```text
-G0 → G1 → G2 → G3 → G4 → G6 → G7
-              ↘   G5 ───↗
+G0 → G1 → G2 → G3 (paid APIs denied) → G4 → G5 (free docs) → G6 → G7
+
+Paid/VNPay Sandbox: separate optional track after explicit approval.
 G3 security fixes may be prioritized as a safety spike before all G2 docs are final.
 ```
 

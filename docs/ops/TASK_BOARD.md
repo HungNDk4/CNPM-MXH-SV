@@ -9,6 +9,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | OPS-02 | P0 | Foundation docs, workflow and CI | AI + Human A review | REVIEW | None | PR #1 draft; 87eb985e; CI PASS |
 | OPS-03 | P0 | Create cross-session control + worktree playbook | AI + Human A review | REVIEW | OPS-02 branch | Draft PR #2; docs/build/syntax CI PASS; human review pending |
 | OPS-04 | P0 | Review PR stack, agree 2-person module ownership, merge | Human A + Human B | BLOCKED | OPS-02/03 | Await human approval |
+| AN-00 | P1 | Human A confirms free-first MVP; VNPay Sandbox extension | Human A | DONE | None | User confirmed Option B 2026-10-17; ADR-003/004; details SRS still DRAFT |
 | AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review |
 | AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft |
 | AN-03 | P1 | Permission matrix, account/student verification decisions | Human A + AI | TODO | AN-02 | Decisions pending |
@@ -21,20 +22,21 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | DS-05 | P1 | Sequence/activity diagrams for critical flows | AI + Human A review | TODO | DS-01/02/03 | Not started |
 | DS-06 | P0 | Threat model, design gate | AI + two humans review | TODO | DS-02/03/05 | P0 vulnerabilities |
 | SEC-01 | P0 | No leak of paid-document file URL | UNASSIGNED | BLOCKED | DS-03 + access decision | Bug identified; no code fix |
-| SEC-02 | P0 | VNPay idempotency/security tests or gate off unsafe flow | UNASSIGNED | BLOCKED | DS-03/06 | Bug identified; no code fix |
+| SEC-02 | P2 | Full VNPay idempotent callbacks, payment QA for extension | UNASSIGNED | DEFERRED | Explicit reopening of payment scope | Payment source unsafe; routes MUST first be gated by SEC-03 |
+| SEC-03 | P0 | Hard-disable/gate paid APIs, paid document paths and callbacks with negative tests before MVP demo | UNASSIGNED | TODO | AN-00 + security review | Scope Option B, code not yet gated |
 | BE-01 | P1 | Public guest GET feed, optional auth | UNASSIGNED | TODO | DS-03 | route currently blocks guest |
 | BE-02 | P1 | Schema consistency + migration plan | UNASSIGNED | TODO | DS-02 | ORM drift |
-| QA-01 | P0 | Automated auth/privacy/payment regression tests | UNASSIGNED | TODO | DS-03/SEC-01 | CI currently only syntax/build |
+| QA-01 | P0 | Auth/privacy tests + verify paid endpoints DENIED in MVP | UNASSIGNED | TODO | DS-03/SEC-01/SEC-03 | CI only syntax/build now |
 | FE-01 | P1 | Post detail + threaded comments | UNASSIGNED | TODO | DS-03/04 + BE-01 | FE page stub |
 | FE-02 | P1 | Like/unlike FE with correct API states | UNASSIGNED | TODO | DS-03/04 | BE route exists |
 | FE-03 | P1 | Search/filter/pagination UI | UNASSIGNED | TODO | BE-01/DS-04 | UI placeholders |
 | FE-04 | P1 | Profile/edit/password screens | UNASSIGNED | TODO | DS-03/04 | FE page stub |
 | FE-05 | P1 | Edit/delete post UI with ownership | UNASSIGNED | TODO | DS-03/04 | BE routes exist |
 | BE-03 | P1 | Admin moderation (approved scope) | UNASSIGNED | TODO | AN-03/DS-03 | Design pending |
-| DOC-01 | P1 | Decide URL-only vs private upload and copyright policy | Human A + Human B | BLOCKED | AN-02 + decisions | Proposal open |
+| DOC-01 | P1 | Choose free document sharing: external links, upload, or both | Human A + Human B | BLOCKED | Human A product choice | **NEXT DECISION**; source only accepts URL |
 | DOC-02 | P0 | Secure document access/download | UNASSIGNED | BLOCKED | DOC-01 + SEC-01 | No secure endpoint |
-| PAY-01 | P2 | Order/history/payment state UI | UNASSIGNED | DEFERRED | Payment decision + G3 | Sandbox only |
-| PAY-02 | P0 | Sandbox full flow/negative/idempotency tests | UNASSIGNED | DEFERRED | SEC-02 + G5 choice | Not tested |
+| PAY-01 | P2 | Order/history/payment state UI | UNASSIGNED | DEFERRED | New explicit scope decision | VNPay Sandbox extension only |
+| PAY-02 | P2 | Sandbox full flow/negative/idempotency tests | UNASSIGNED | DEFERRED | SEC-02 + scope reopened | NOT TESTED; out of MVP |
 | QA-02 | P1 | Disposable MySQL integration suite | UNASSIGNED | TODO | G4 | No tests |
 | QA-03 | P1 | Browser E2E smoke and responsive test | UNASSIGNED | TODO | G4 | No tests |
 | QA-04 | P1 | Security/regression review | UNASSIGNED | TODO | G4/G5 | No tests |
@@ -55,4 +57,4 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 - Never let AI mark human approval or runtime QA PASS merely from static review.
 
 ## Next pull
-First: review OPS-02/OPS-03 PR stack and confirm scope; then AN-01 + AN-02. Safety bugs SEC-01/SEC-02 remain highest-priority before enabling the paid flow.
+First: review PR #1/#2 plus scope PR #3, decide DOC-01, then AN-01/AN-02. SEC-01 and SEC-03 block MVP demo; payment implementation SEC-02 remains deferred.

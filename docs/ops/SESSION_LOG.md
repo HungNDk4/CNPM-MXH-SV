@@ -20,3 +20,12 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Evidence:** new control-system PR/commit and CI are to be added in a following append-only entry once completed. No claim of PASS yet.
 **Next:** publish Draft PR against foundation, validate CI, request human review, then start AN-01 after G0 acceptance.
 
+
+## SESSION-20261017-OPS-03 — Control docs published for review
+**Actor:** AI via GitHub connector. **Task:** OPS-03. **Transition:** IN_PROGRESS → REVIEW (not DONE).
+**Branch:** `docs/session-worktree-control-20261017` based on `87eb985e...`.
+**Initial commit:** `3f4a018c3c40f34d348276c41156f459df96dca8`; **Draft PR #2:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/2 → foundation branch.
+**CI evidence:** https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39049674352 — frontend build PASS, backend syntax PASS, project control docs static checks PASS.
+**Changes:** master plan P0–P7, canonical task board, read-first index, worktree guide/registry, session start/log/handoff, risk and research register, status read-only PowerShell script, docs-integrity check.
+**QA NOT RUN:** DB integration, E2E, live/Sandbox payment. **Local worktree:** NOT VERIFIED (remote branch only). **Main:** not modified.
+**Next:** reviewer approves/edits PR #1 then PR #2 dependency, human owners and MVP scope. Once G0 accepted, AN-01/AN-02 on analysis worktree. A follow-up commit updated status snapshots; verify the latest CI independently.

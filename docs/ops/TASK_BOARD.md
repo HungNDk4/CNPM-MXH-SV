@@ -7,7 +7,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 |---|---|---|---|---|---|---|
 | OPS-01 | P0 | Audit source and current repository | AI | DONE | None | source read at 0993a421; conversation review |
 | OPS-02 | P0 | Foundation docs, workflow and CI | AI + Human A review | REVIEW | None | PR #1 draft; 87eb985e; CI PASS |
-| OPS-03 | P0 | Create cross-session control + worktree playbook | AI + Human A review | IN_PROGRESS | OPS-02 branch | This PR, pending checks |
+| OPS-03 | P0 | Create cross-session control + worktree playbook | AI + Human A review | REVIEW | OPS-02 branch | Draft PR #2; docs/build/syntax CI PASS; human review pending |
 | OPS-04 | P0 | Review PR stack, agree 2-person module ownership, merge | Human A + Human B | BLOCKED | OPS-02/03 | Await human approval |
 | AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review |
 | AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft |

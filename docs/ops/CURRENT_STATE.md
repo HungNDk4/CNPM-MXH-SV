@@ -10,17 +10,17 @@
 ## GitHub state recorded at bootstrap
 - `main` HEAD confirmed: `0993a42154feb37e8842ef8bb3ed4d0a03627889`.
 - Foundation branch: `chore/project-foundation-20261017`, head `87eb985e023f77935edd49916ca7655346ff83eb`; **Draft PR #1** → main; CI build/syntax PASS for that commit.
-- This control-system workstream: `docs/session-worktree-control-20261017`, **based on foundation branch**, intended for Draft PR → `chore/project-foundation-20261017` (stacked). See PR link/status in SESSION_LOG once published. HEAD changes after commit; use GitHub not this dated snapshot.
+- This control-system workstream: `docs/session-worktree-control-20261017`, **based on foundation branch**, **Draft PR #2** → `chore/project-foundation-20261017` (dependent/stacked). Initial commit `3f4a018c3c40f34d348276c41156f459df96dca8` has GitHub CI PASS (3 jobs); latest HEAD changes as follow-up log is committed. HEAD changes after commit; use GitHub not this dated snapshot.
 - No local Git worktrees have been created/verified by this GitHub-only workflow.
 
 ## Phase and gate snapshot
-- Active: P0 Foundation & control-system docs. OPS-02 in REVIEW; OPS-03 IN_PROGRESS pending this PR and CI.
+- Active: P0 Foundation & control-system docs. OPS-02 in REVIEW; OPS-03 in REVIEW, both awaiting human approval.
 - G0 **NOT YET APPROVED**. Requirements/design documents are DRAFT. No verified business E2E MySQL/Sandbox tests.
 - Known P0: GET posts leaks paid file URL; VNPay return/IPN risk double seller credit; paid file static exposure.
 - Known P1: guest GET feed blocked; PostDetail/Profile pages stub; SQL/Sequelize drift, no integration tests.
 
 ## NEXT_SESSION_ACTIONS — Follow this order
-1. Inspect GitHub `main`, PR #1 and the documentation-control PR (if published). Compare HEAD and CI; do not assume this snapshot remains current.
+1. Inspect GitHub `main`, PR #1 and Draft PR #2. Compare HEAD and CI; do not assume this snapshot remains current.
 2. Read `PROJECT_CONTROL.md`, `docs/ops/TASK_BOARD.md`, `docs/ops/SESSION_LOG.md`, `docs/ops/WORKTREE_REGISTRY.md`.
 3. Human A + Human B review the two PRs, agree core scope/paid documents status, approve or request changes. Do not merge without approval.
 4. Once foundation merged and G0 accepted: create a dedicated analysis branch/worktree, start AN-01 (actors/requirements) and AN-02 (FR/NFR) with source-backed documentation.
@@ -29,7 +29,7 @@
 
 ## Last verified tests
 - Foundation PR commit `87eb985e`: GitHub Actions **Frontend production build PASS** and **Backend JavaScript syntax PASS** (Node 24).
-- This planning PR: check latest run in GitHub; do not mark PASS until run completes.
+- Planning PR initial commit `3f4a018c` GitHub Actions run https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39049674352: **three jobs PASS** (frontend build, backend syntax, docs integrity). Check latest follow-up commit CI separately.
 - MySQL integration, E2E, sandbox, pen-test: **NOT RUN**.
 
 ## Operational warning

@@ -4,7 +4,7 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 | Worktree ID | Owner | Branch | PR / base | Local path verified? | State | Notes |
 |---|---|---|---|---|---|---|
 | WT-BASE | AI | chore/project-foundation-20261017 | PR #1 → main | NO (GitHub-only) | REVIEW | Current foundation CI PASS |
-| WT-OPS | AI | docs/session-worktree-control-20261017 | Planned PR → chore/project-foundation-20261017 | NO (GitHub-only) | IN_PROGRESS | Control docs being authored |
+| WT-OPS | AI | docs/session-worktree-control-20261017 | Draft PR #2 → chore/project-foundation-20261017 | NO (GitHub-only) | REVIEW | Initial control docs CI PASS; human review pending |
 | WT-ANALYSIS | Human A (proposed) | Not created | Base reviewed main after merge | NO | PLANNED | Requirements/UC/ERD session |
 | WT-DEV | Human B (proposed) | Not created | Base reviewed main after merge | NO | PLANNED | Independently scoped coding |
 | WT-QA | Unassigned | Not created | Base reviewed main after merge | NO | OPTIONAL | Integration/regression tests |

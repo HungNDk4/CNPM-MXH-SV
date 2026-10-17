@@ -6,7 +6,7 @@
 ## Quick start (read in order)
 1. [docs/ops/CURRENT_STATE.md](docs/ops/CURRENT_STATE.md) — what is true now; immediate next steps; blockers.
 2. [docs/ops/TASK_BOARD.md](docs/ops/TASK_BOARD.md) — canonical work item statuses, owners and dependencies.
-3. [docs/ops/WORKTREE_REGISTRY.md](docs/ops/WORKTREE_REGISTRY.md) — logical branch/worktree ownership; local paths verified separately.
+3. [docs/ops/WORKTREE_REGISTRY.md](docs/ops/WORKTREE_REGISTRY.md) — logical branch/worktree ownership; local paths verified separately. See [WORKTREE_PLAYBOOK.md](docs/ops/WORKTREE_PLAYBOOK.md) for local commands.
 4. [docs/ops/SESSION_LOG.md](docs/ops/SESSION_LOG.md) — append-only progress/evidence.
 5. [docs/ops/SESSION_START.md](docs/ops/SESSION_START.md) — mandatory checks and exact resume prompt.
 6. [docs/ops/MASTER_PLAN.md](docs/ops/MASTER_PLAN.md) — phases, deliverables, acceptance gates.

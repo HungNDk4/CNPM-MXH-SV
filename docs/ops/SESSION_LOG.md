@@ -49,3 +49,24 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Local worktree:** UNVERIFIED (remote branch only). No DB/E2E/VNPay QA run.
 **Next exact product decision:** DOC-01 choose (A) external URL, (B) upload file to website, or (C) both. Avoid claim of completion of G0/G1.
 **Follow-up:** status/log registry update creates new HEAD; verify final CI independently.
+
+## SESSION-20261017-DOC-01 — Human A chooses direct PDF uploads
+**Actor:** Human A (product decision) + AI (research and GitHub docs). **Task:** DOC-01. **Decision:** direct website PDF upload for free documents, replacing external-link-only MVP; exact size limit not selected.
+**Branch:** `docs/pdf-upload-scope-20261017`, based on scope branch `a5bc0c57693b82753daa29a89ece565a683f884e`. Planned Draft PR #4 → `docs/mvp-scope-option-b-20261017`.
+**Files:** `docs/DOCUMENT_UPLOAD_SPEC.md`, ADR-010, MVP_SCOPE, SRS, API_CONTRACT and DATA_MODEL draft proposals, TEST_PLAN, requirement traceability, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, WORKTREE_REGISTRY.
+**Source verified:** current `server/src/controllers/post.controller.js` writes only supplied `file_url`; `server/src/app.js` exposes `/uploads` as static; `server/package.json` declares `multer ^1.4.5-lts.1`.
+**Research:** OWASP File Upload Cheat Sheet, official Multer API, GHSA-wc9g-mqfw-jrwm (`multer <2.3.0` affected; upgrade required before upload).
+**Security:** SEC-04 added for patched multipart parser; SEC-01/SEC-03 still block paid-file/payment exposures. **NO upload implementation occurred**; no DB changes; QA PDF/storage NOT RUN.
+**Detailed proposals only:** cap 10 MiB, one PDF/post, private download endpoint; need user/team review.
+**NEXT PRODUCT QUESTION:** are public guests allowed to view/download PDFs, or is login required? Do not invent access policy.
+**Ops:** GitHub-only; no physical worktree created/verified. PR/CI details appended in a later session entry when available.
+
+## SESSION-20261017-DOC-01-PR — PDF decision docs ready for human review
+**Actor:** AI via linked GitHub. **Task:** DOC-01 (product choice DONE, docs IN REVIEW).
+**PR:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/4 (Draft) targeting `docs/mvp-scope-option-b-20261017`. Dependent on PR #3, #2 and #1.
+**Initial changes HEAD:** `4aafba2a0093865e8737c86e3b3f42fc83776f2a`. Verified GitHub Actions https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39051750751: **Frontend production build PASS; Backend JS syntax PASS; project-control integrity PASS**.
+**Files:** docs/DECISIONS, MVP_SCOPE, SRS, DOCUMENT_UPLOAD_SPEC, API_CONTRACT, DATA_MODEL, TEST_PLAN, MASTER_PLAN, REQUIREMENTS_TRACEABILITY, TASK_BOARD, CURRENT_STATE, SESSION_LOG, WORKTREE_REGISTRY.
+**Business scope:** free PDF upload is the selected method. **10 MiB max / one PDF per post are proposals ONLY;** guest download rights undecided.
+**Technical and security:** multer 1.x declared and vulnerable; SEC-04 requires patched dependency review, file validation and protected storage before implementation. No controller/model/schema changed. No file-upload/DB/E2E tests performed.
+**Local worktree:** NOT VERIFIED (GitHub-only branch). **Human approval of detailed design/G0/G1:** PENDING.
+**Next:** choose guest PDF viewing/downloading policy, review size constraints, PR #1-#4 in dependency order. CI for any handoff-only follow-up commit needs fresh verification.

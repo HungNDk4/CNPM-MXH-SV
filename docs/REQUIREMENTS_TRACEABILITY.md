@@ -13,7 +13,7 @@
 | FR-08 | Likes | UC TBD | POST /likes, GET /likes/count | T-LIKE-01 | BE, FE thiếu |
 | FR-09 | Search | UC TBD | GET /posts params | T-POST-03 | BE một phần |
 | FR-10 | Profile | UC TBD | GET /users/:id + PUT | T-PROFILE-01 | FE stub |
-| FR-11 | Free documents **MVP** | UC TBD | posts metadata + sharing method DOC-01 OPEN | T-DOC-01/02 | Source URL only; detailed sharing pending |
+| FR-11 | Free documents **MVP** | UC TBD | **PDF direct upload DOC-01 confirmed**; proposed POST /documents and GET /documents/:id/download (design pending) | T-DOC-01/02; T-UP-01..10 | Source URL-only; backend upload NOT implemented |
 | FR-12 | Admin moderation | UC TBD | admin endpoints TBD | T-ADMIN-01 | Cần thiết kế |
 | FR-13 | Paid documents **DEFERRED** | UC TBD | POST /orders, payment callbacks | T-PAY-01/02/03 | Optional extension; SEC-03 shutdown required first |
 | FR-14 | Paid access **DEFERRED** | UC TBD | document_access, download TBD | T-DOC-01/02 | Optional extension; paid URLs must not leak |

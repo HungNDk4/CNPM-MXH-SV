@@ -40,5 +40,11 @@
 ## Planned change for FR-11 (NOT IMPLEMENTED, DOC-01 confirmed)
 - Direct PDF upload is the approved MVP product mechanism; current post creation takes `file_url` as text and does **not** handle file bytes.
 - **Proposal:** POST `/api/documents` with `multipart/form-data`, one `file` field plus title/description/subject/tags, authenticated; returns public-safe document/post DTO. Error cases: invalid PDF 415, too large 413, unauthenticated 401, validation 400. Detailed design [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).
-- **Proposal:** GET `/api/documents/:postId/download` with server-side authorization and streamed PDF attachment. Guest eligibility is **OPEN**, not yet approved. Never expose storage key/absolute path or allow raw static access.
+- **Proposal for route, CONFIRMED business rule ADR-011:** GET `/api/documents/:postId/download` with server-side authentication and streamed PDF attachment. Missing/invalid token returns **401**, no PDF body or redirect; active signed-in student may download any active/free PDF. Never expose storage key, absolute path or raw static access.
 - Existing payment/order endpoints must still be denied by backend before MVP demo (SEC-03). Upload implementation will be a separate reviewed PR; not included in this docs-only decision.
+
+## ADR-011 document metadata/download access (APPROVED requirement, NOT IMPLEMENTED)
+- `GET /api/posts?type=document` and `GET /api/posts/:id` for active/free **PDF document metadata** must allow Guest. Any data response exposes only safe public fields, such as title, description, subject, uploader, file display name; no binary, raw `file_url`, `storage_key` or public static file URL. The current code's mandatory `authenticate` blocks guests; do not claim it works yet.
+- `GET /api/documents/:postId/download` **proposed path**: requires active authenticated session. 401 on unauthenticated/invalid/expired token without bytes; logged-in active student downloads active/free PDF (200 attachment). Hidden/deleted/paid PDFs denied. Authorization must be enforced server-side regardless of UI.
+- Guest scope applies to **document metadata**; public access to all other post types is still ADR-002 OPEN. Routes may require splitting read contracts, filtering DTOs or implementing optional-auth without opening sensitive content.
+- Requirements & negative tests: [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md), `T-DOCFREE-01..06`.

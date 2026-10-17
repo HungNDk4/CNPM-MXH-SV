@@ -20,7 +20,7 @@
 | FR-08 | STUDENT | Like/unlike bài/bình luận; chống like trùng | BE có code, FE thiếu |
 | FR-09 | GUEST/STUDENT | Tìm kiếm theo từ khóa, loại bài, môn học | BE hỗ trợ một phần; FE chưa nối |
 | FR-10 | GUEST/STUDENT | Xem profile công khai; người dùng sửa hồ sơ và đổi mật khẩu của mình | BE có code; FE profile stub |
-| FR-11 | STUDENT | **MVP:** chia sẻ và truy cập tài liệu miễn phí; **upload PDF trực tiếp**; giới hạn kích thước và quyền tải chi tiết chờ duyệt | URL nhập tay; upload/download kiểm soát chưa có |
+| FR-11 | GUEST/STUDENT | **MVP:** Student upload PDF trực tiếp; Guest xem danh sách/tiêu đề/mô tả; người đăng nhập mới tải được PDF công khai còn active. Giới hạn file/storage còn DRAFT | URL nhập tay; upload/download kiểm soát chưa có |
 | FR-12 | ADMIN | Ẩn/xóa bài vi phạm, kiểm soát tài khoản | Quyền admin nền tảng; UI/quy trình thiếu |
 | FR-13 | STUDENT/VNPAY | **DEFERRED:** mua tài liệu bằng VNPay Sandbox; không bắt buộc MVP | BE khung, FE thiếu; phải chặn an toàn khi chưa mở |
 | FR-14 | STUDENT | **DEFERRED:** phân quyền tài liệu trả phí | Model tồn tại; hiện chưa an toàn, phải chặn paid path trong MVP |
@@ -29,13 +29,13 @@
 - **MVP DRAFT requirements:** FR-01 tới FR-12; nhóm cần duyệt chi tiết trước khi gọi SRS APPROVED.
 - **DEFERRED:** FR-13 và FR-14; không yêu cầu chạy VNPay Sandbox trong demo MVP.
 - **BẮT BUỘC trước demo:** dù payment deferred, API checkout/callback/paid document từ source cũ vẫn có thể truy cập; phải chặn từ backend và kiểm thử trực tiếp, không chỉ ẩn giao diện. Không được rò URL file trả phí.
-- **CONFIRMED DOC-01:** website tiếp nhận PDF trực tiếp. **OPEN:** dung lượng tối đa, số PDF mỗi bài, guest download, và storage deployment; guest feed và quyền admin cũng chưa chốt.
+- **CONFIRMED DOC-01:** website tiếp nhận PDF trực tiếp. **ADR-011 CONFIRMED:** guest xem metadata tài liệu, phải login mới download. **OPEN:** dung lượng tối đa, số PDF mỗi bài, storage deployment, quyền Guest với các post loại khác và admin.
 
 ## FR-11 — Free PDF upload (product mechanism CONFIRMED, detailed behavior DRAFT)
 - Sinh viên đăng nhập gửi `multipart/form-data` chứa PDF + metadata của bài tài liệu.
 - Backend giới hạn số lượng file và dung lượng, kiểm tra extension/MIME/file signature, lưu với key ngẫu nhiên không dùng original filename cho filesystem.
 - Dữ liệu DB lưu metadata/file key, không đặt nội dung PDF vào bảng `posts` theo phương án thiết kế; storage location cần duyệt.
-- Người dùng thấy trang bài tài liệu có title, subject, uploader, file name và dung lượng; quyền tải của Guest hiện chưa quyết định.
+- Guest được xem danh sách và metadata công khai của tài liệu active; yêu cầu tải PDF thiếu token/phiên hợp lệ phải bị API từ chối 401. Sinh viên đăng nhập được tải PDF miễn phí active; hidden/deleted không được tải.
 - File invalid/oversize, unauthenticated upload, interrupted upload, unauthorized delete, removed document phải có response/test và cleanup.
 - Hiện source chỉ ghi `file_url`, `server/uploads` public; **chưa triển khai** upload PDF theo quyết định mới.
 - Chi tiết thiết kế/test: [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md); 10 MiB/bài một file chỉ là **đề xuất**, không được đánh dấu APPROVED.
@@ -64,3 +64,11 @@ Không yêu cầu realtime chat, nhóm học tập, gợi ý AI hay production m
 
 ## Ghi chú
 Danh sách use case chi tiết, ngoại lệ và sơ đồ UML sẽ được bổ sung theo từng FR/issue. Không tự coi bảng này là biên bản phê duyệt yêu cầu.
+
+## BR-DOC-ACCESS-01 — Access policy CONFIRMED by Human A (2026-10-18)
+- **Read metadata:** Guest and authenticated accounts may list/search/view title/description/subject/uploader of **active free PDF document** posts; no authentication needed for these metadata responses.
+- **Read file bytes:** login required. Unauthenticated `GET /api/documents/:postId/download` returns **401**, with no PDF body, no signed/public storage URL and no redirect that leaks content. Invalid/expired sessions are unauthorized.
+- **Signed-in student/admin:** may download **active, free, public** PDFs even if uploaded by another student. Hidden/deleted, unavailable or future paid documents must be rejected according to approved visibility policy; precise 403/404 concealment convention is design-level DRAFT.
+- **Upload/update/delete:** write action requires authentication and existing owner/admin checks; exact administrative policy still DRAFT.
+- **Not implied:** guest access to other post types, inline PDF preview, university-verification requirement or new file-size limits.
+- **Tests:** T-DOCFREE-01..06; see [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md), [TEST_PLAN.md](TEST_PLAN.md). Current source does not implement this; do not label QA PASS.

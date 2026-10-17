@@ -53,8 +53,20 @@ Reference: [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md). The mechanism is 
 | T-UP-05 | Aborted upload / DB failure | Cleanup and consistent DB state |
 | T-UP-06 | Different student deletes other student's document | Deny mutation |
 | T-UP-07 | Hidden/deleted/private file via direct static path | File not exposed |
-| T-UP-08 | Guest/other student download | Enforce **pending** guest access decision |
+| T-UP-08 | Guest/other student download | Guest 401; logged-in active student 200 safe PDF attachment (ADR-011) |
 | T-UP-09 | Legacy paid/payment endpoints | Direct request denied before MVP demo |
 | T-UP-10 | Multipart parser malformed field names/DoS | Patched middleware, bounded parsing and safe errors |
 
 **Security dependency:** `multer ^1.4.5-lts.1` is present and must not be used for new uploads without patched dependency review; relevant GHSA https://github.com/advisories/GHSA-wc9g-mqfw-jrwm. QA coverage including this vulnerability is planned, not PASS.
+
+## Approved document access policy ADR-011 — acceptance tests (NOT RUN)
+| ID | Scenario | Expected outcome |
+|---|---|---|
+| T-DOCFREE-01 | Guest lists/searches/views active free PDF metadata | 200 safe title/description/uploader, without URL/path/bytes |
+| T-DOCFREE-02 | Guest requests PDF download directly | 401, no file bytes, storage URL, redirect or raw static access |
+| T-DOCFREE-03 | Expired/invalid session requests download | 401, no bytes |
+| T-DOCFREE-04 | Student A downloads Student B's active free PDF | 200 with correct PDF attachment and safe file name |
+| T-DOCFREE-05 | Direct download of hidden/deleted/paid PDF | Denied; no raw path/file disclosure for any actor in MVP |
+| T-DOCFREE-06 | Guest uploads or Student A modifies Student B's PDF | Guest 401, unauthorized student 403; no mutation |
+
+**Status:** ADR-011 business requirement CONFIRMED by Human A 2026-10-18; implementation/integration tests NOT RUN. Do not mark PASS on documentation or CI build alone. See [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md).

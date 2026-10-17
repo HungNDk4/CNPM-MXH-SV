@@ -70,3 +70,13 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Technical and security:** multer 1.x declared and vulnerable; SEC-04 requires patched dependency review, file validation and protected storage before implementation. No controller/model/schema changed. No file-upload/DB/E2E tests performed.
 **Local worktree:** NOT VERIFIED (GitHub-only branch). **Human approval of detailed design/G0/G1:** PENDING.
 **Next:** choose guest PDF viewing/downloading policy, review size constraints, PR #1-#4 in dependency order. CI for any handoff-only follow-up commit needs fresh verification.
+
+## SESSION-20261018-AN-06 — Human A confirms PDF discovery / download permission
+**Actor:** Human A (business rule), AI (GitHub documentation), **Task:** AN-06 (product decision DONE; detailed design/implementation pending).
+**Decision:** Guest can see free/public/active PDF list, title and description; **must log in before downloading PDF**. Signed-in active student may download another student's active free PDF. No university email verification or inline preview implied.
+**Approval boundary:** Only ADR-011 document permission rule approved by Human A; general-post feed ADR-002, size cap, number of files, final storage policy, Human B/teacher review remain OPEN.
+**Implementation:** NOT IMPLEMENTED. No controller/database/schema changes; direct URL access and raw `/uploads` still require security patch before deployment.
+**Branch:** `docs/guest-metadata-auth-download-20261018`, branched from PDF docs HEAD `db170bd05eee924dcf612c51d2a22dd4dd110886`. Physical local worktree NOT VERIFIED.
+**Documentation changed:** DECISIONS (ADR-011), DOCUMENT_ACCESS_POLICY, MVP_SCOPE, SRS, DOCUMENT_UPLOAD_SPEC, API_CONTRACT, TEST_PLAN, REQUIREMENTS_TRACEABILITY, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, SESSION_LOG, WORKTREE_REGISTRY.
+**Tests added, NOT RUN:** T-DOCFREE-01..06 (guest metadata, guest direct download 401, expired token, student cross-owner download, hidden/deleted/paid, unauthorized writes).
+**Next:** publish dependent Draft PR #5, confirm GitHub Actions and append PR/CI evidence; next review 10 MiB cap/one PDF-post proposals and whether to approve wider Guest feed (ADR-002).

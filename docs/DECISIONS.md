@@ -12,8 +12,8 @@
 | ADR-007 | DB strategy | Dùng migration có kiểm soát, không chạy alter trong production | PROPOSED |
 | ADR-008 | Xác minh sinh viên | Chưa có yêu cầu cụ thể; không tuyên bố đã verify | OPEN |
 | ADR-009 | Phân công, deadline, tiêu chí chấm | Cần nhóm và giảng viên cung cấp | OPEN |
-
 | ADR-010 | DOC-01: phương thức chia sẻ tài liệu miễn phí | **Phương án B: upload PDF trực tiếp vào website**, không chỉ dán external URL; dung lượng/giới hạn số file cần duyệt riêng | CONFIRMED Human A (2026-10-17); detailed design DRAFT |
+| ADR-011 | Quyền xem / tải PDF miễn phí | **Guest được xem danh sách, tiêu đề, mô tả; phải đăng nhập mới tải PDF**. Sinh viên đã đăng nhập được tải tài liệu miễn phí còn active | CONFIRMED Human A (2026-10-18); triển khai/QA chưa thực hiện |
 
 ## Decision evidence — 2026-10-17
 Human A explicitly chose: "Chốt phương án B: VNPay Sandbox là chức năng mở rộng. Ưu tiên mạng xã hội và chia sẻ miễn phí." This approves the **product priority only**, not full SRS, detailed upload method, payment security, G0/G1, or teammate acceptance.
@@ -23,3 +23,9 @@ Human A explicitly chose: "Chốt phương án B: VNPay Sandbox là chức năng
 **DOC-01 decision (Human A, 2026-10-17):** “B — Upload tài liệu trực tiếp, trước mắt giới hạn PDF và kích thước file phù hợp.” Không tự coi 10 MB hay số file/bài là đã phê duyệt. Tham khảo [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md). Các quyết định tiếp theo: ai được xem/tải PDF, giới hạn dung lượng cuối, chính sách duyệt/xóa tài liệu.
 
 Khi chốt quyết định: bổ sung ngày, người phê duyệt, phương án chọn và hệ quả tới SRS/schema/API. Tránh thay đổi âm thầm trong code.
+
+## ADR-011 — Evidence and scope (2026-10-18)
+- **Human A decision:** chấp nhận quy tắc guest xem danh sách/tiêu đề/mô tả tài liệu, nhưng bắt buộc login để tải PDF.
+- **In scope:** metadata tài liệu miễn phí công khai (active); guest không được truy cập bytes PDF, file path, storage key, public static URL; unauthenticated download returns 401 from backend. Authenticated active users may download free public PDFs; post status and moderation checks still apply.
+- **Not decided by this ADR:** guest đọc tất cả bài hỏi đáp/thảo luận (ADR-002), xác minh email trường, PDF inline preview, giới hạn dung lượng/số file, storage provider.
+- **Reference:** [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md); SRS FR-11; test IDs T-DOCFREE-01..06. Human B/instructor and complete SRS sign-off remain pending.

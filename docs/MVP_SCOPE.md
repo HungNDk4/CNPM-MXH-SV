@@ -13,12 +13,12 @@ VNPay Sandbox, paid documents, checkout, orders and purchased-file rights are **
 | FR-04/05/06 | Posts | Ask, discuss, view post, edit/delete own content |
 | FR-07/08 | Interaction | Comment/reply, like/unlike |
 | FR-10 | Profile | View user profile, edit own details, change password |
-| FR-11 | Free documents | Publish/access **uploaded PDF** for free; size/access/storage rules need review |
+| FR-11 | Free documents | Direct PDF upload confirmed; **guest views public metadata, login required for file download**; size/storage rules DRAFT |
 | FR-12 | Moderation | Minimal admin controls for inappropriate posts/accounts; exact policy OPEN |
 
 ## Proposed MVP user journeys
 1. Discover posts → register/login → post a question → another user comments/likes → owner edits/deletes.
-2. Upload FREE PDF → discover/read its description → access/download using the reviewed permission policy.
+2. Upload FREE PDF → guest discovers/list/views public metadata → login required to download PDF; hidden/deleted documents unavailable.
 3. Edit own profile/password → other accounts cannot edit it.
 4. Admin hides a violating post; student cannot call admin API.
 5. Direct requests to deferred paid/checkout APIs are denied, not just hidden in the UI.
@@ -37,8 +37,8 @@ VNPay Sandbox, paid documents and order history; real-money payouts; livestream,
 Students upload PDF files through the website; **external-link-only is not the selected core document flow**. Current source only supports entering `file_url`; upload has not been implemented. See [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).
 
 **Detailed design proposals (NOT approved yet):** one PDF per document post, initial 10 MiB size cap, private storage with controlled download, PDF signature + MIME validation. Also verify access rules, hosting, antivirus/scanning plan and moderation.
-**Next business question:** may a guest view/download shared PDFs, or must the user log in?
+**ADR-011 CONFIRMED (2026-10-18):** guest may view document list/title/description; PDF download requires login. Backend enforces 401 for unauthenticated requests; no public static PDF link. See [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md).
 
-**Pending questions:** anonymous feed access, who qualifies as student, admin moderation depth, team role assignments and instructor/deadline constraints. Never infer these have been approved.
+**Pending questions:** anonymous access to non-document feed content (ADR-002), who qualifies as student, admin moderation depth, team role assignments and instructor/deadline constraints. Never infer these have been approved.
 
 **Related:** docs/DECISIONS.md ADR-003/004, docs/SRS.md, docs/ops/TASK_BOARD.md.

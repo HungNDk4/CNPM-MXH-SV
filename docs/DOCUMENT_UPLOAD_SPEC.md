@@ -4,7 +4,7 @@
 
 ## 1. Scope / proposed constraints
 - MVP document post has title, description, subject/category, uploader, created date, original display name, size, and downloadable **PDF** content.
-- Only authenticated student accounts may UPLOAD (proposed, aligned with general write access); PDF visibility/download for GUEST is **UNDECIDED**.
+- Only authenticated student accounts may UPLOAD (proposed, aligned with general write access); GUEST may browse **public metadata** but may NOT download PDF bytes (ADR-011 CONFIRMED 2026-10-18).
 - Initial cap **10 MiB per PDF** and **1 PDF per document post** are engineering proposals, NOT approved decisions. Need team review for exact limit, quota/user, PDF page count and data retention.
 - URL-based external sharing is **not the selected MVP path**; existing `file_url` code is not the new upload pipeline.
 - PDF inline preview, document version history, OCR/text indexing, paid access and storage on third-party clouds are NOT automatically in scope.
@@ -14,7 +14,7 @@
 2. Frontend checks extension/size for early UX; backend independently validates authenticated user, upload bounds, signature and acceptable type.
 3. Store file outside public `/uploads`, generate unpredictable storage key, persist metadata and an active `document` post consistently.
 4. Return public-safe DTO: post ID, metadata, safe download endpoint (but not a raw storage key/path). Show post on feed/search.
-5. An authorized viewer opens details and downloads via backend-controlled route. Provide errors for deleted/hidden/missing files.
+5. A GUEST opens public document details/metadata and sees a login prompt on download; an AUTHENTICATED viewer can download an active/free PDF through a backend-authenticated route. Provide errors for deleted/hidden/missing files.
 
 ## 3. Architecture proposal — NOT IMPLEMENTED
 ```text
@@ -37,7 +37,7 @@ Download -> GET /api/documents/:postId/download (check policy & status) -> attac
 - Multer in `server/package.json` is `^1.4.5-lts.1`. **Do not enable uploads on this outdated 1.x dependency**. Official advisory GHSA-wc9g-mqfw-jrwm describes malformed field-name DoS affecting **<2.3.0**; upgrade to patched version **2.3.0 or newer** and verify exact compatible release/lockfile and regression, in a **separate PR**. Other advisories may require later versions: recheck security advisories at implementation time.
 - Validate extension (PDF allowlist), MIME and file contents/signature, not Content-Type header alone. A PDF header check alone is NOT sufficient for full malware safety; consider scan/CDR where practical, otherwise document residual risk and constrain serving behavior.
 - Limits on fileSize, files, fields, parts and field names; handle partial/aborted uploads and clean temp files; rate limits/quotas; generated filename; store outside webroot; no path traversal.
-- Restrict POST upload to authenticated users, and enforce ownership for edit/delete and moderation. **Access/download policy** must explicitly decide guest eligibility; don't infer from guest feed.
+- Restrict POST upload to authenticated users, and enforce ownership for edit/delete and moderation. **Access policy CONFIRMED ADR-011:** guest reads safe metadata only; file bytes/download require a valid login (401 otherwise). Do not infer that guests can access all non-document posts from this rule.
 - Return file with appropriate Content-Type and safe Content-Disposition (prefer attachment until preview security is designed), no raw filesystem path. Do not enable public static `/uploads` for stored PDFs.
 - Do not commit example user PDFs, personal documents or secrets; include copyright and prohibited-content guidance, report/remove workflow.
 
@@ -45,8 +45,8 @@ Download -> GET /api/documents/:postId/download (check policy & status) -> attac
 | Method | Route | Access | Action |
 |---|---|---|---|
 | POST | /api/documents | Auth | `multipart/form-data`, field `file` + metadata, create free document post |
-| GET | /api/posts/:id | Pending guest/post visibility policy | Safe document metadata; no raw storage key |
-| GET | /api/documents/:postId/download | **PENDING ADR** | Validate post status + authorization; attachment response |
+| GET | /api/posts/:id | Guest/Authenticated for **active free document metadata** | Safe document metadata; no raw storage key; other post types pending ADR-002 |
+| GET | /api/documents/:postId/download | **Authenticated active user required (ADR-011)** | 401 without valid login; check free+active document; attachment stream, no static URL |
 | DELETE | /api/posts/:id | Owner/admin | Soft delete post, revoke access; physical file retention/cleanup policy TBD |
 
 Response/error draft: 201 created with ID/meta; 400 invalid data; 401 unauthenticated upload; 403 denied; 404 missing/hidden; 413 exceeds size; 415 not a valid allowed PDF; 429 quota/rate limit. Exact response bodies and path naming subject to API contract review.
@@ -61,12 +61,12 @@ Response/error draft: 201 created with ID/meta; 400 invalid data; 401 unauthenti
 | T-UP-05 | Upload interrupted / DB transaction failure | No orphaned blob or inconsistent post |
 | T-UP-06 | Student edits/deletes another student's document | 403, no file changes |
 | T-UP-07 | Hidden/deleted post, direct static URL attempts | Reject access; raw path never exposed |
-| T-UP-08 | Valid download, download policy for guest/other student | Policy-specific 200 or 401/403, safe filename |
+| T-UP-08 | Guest direct download vs authenticated download | Guest 401; active logged-in student 200 and safe attachment; no raw path leakage |
 | T-UP-09 | Direct POST old paid/order/payment callbacks | Denied (SEC-03), no wallet/order/entitlement effect |
 | T-UP-10 | Multipart malformed field names / abort floods | Parser patched and bounded; no service crash (SEC-04) |
 
 ## 7. Engineering task split and human review
-- **DOC-02:** decide guest download, size, count, retention and storage; approve wireframe, model/migration and API.
+- **DOC-02:** guest download policy now confirmed by ADR-011; still decide size, count, retention and storage; approve wireframe, model/migration and API.
 - **SEC-04:** patched multipart library with security regression tests.
 - **DOC-03:** backend upload with storage and DB metadata (branch + PR).
 - **DOC-04:** post detail/upload/download frontend integration and ownership cleanup.
@@ -77,3 +77,12 @@ Response/error draft: 201 created with ID/meta; 400 invalid data; 401 unauthenti
 - OWASP File Upload Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
 - Express/Multer middleware docs: https://expressjs.com/en/resources/middleware/multer/
 - GitHub reviewed advisory: https://github.com/advisories/GHSA-wc9g-mqfw-jrwm
+
+## 8. Approved access flow ADR-011 (2026-10-18)
+1. Guest requests active/free PDF metadata: return safe DTO with title, description, subject, uploader and public fields; **never** a file URL, storage path/key or bytes.
+2. Guest presses Download: client prompts login; if bypassing UI and calling download API directly, backend returns 401 and no file content.
+3. Authenticated student downloads another student's active/free PDF: backend verifies session and post state, streams attachment; no raw static file URL.
+4. Hidden/deleted or paid documents remain inaccessible through this MVP path even for authenticated users until separately approved.
+5. Filename, storage and Content-Disposition safety constraints still apply; inline preview is out of decision scope.
+
+**Reference:** [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md). These are requirements, **not implemented or tested**.

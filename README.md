@@ -1,5 +1,7 @@
 # Mini Study Network — Mạng xã hội học tập sinh viên
 
+> **BẮT ĐẦU SESSION MỚI:** đọc [PROJECT_CONTROL.md](PROJECT_CONTROL.md) trước mọi thay đổi. Đây là mục lục trạng thái, worktree, task board và session logs, tránh phụ thuộc lịch sử chat.
+
 **Trạng thái:** Đang phát triển (đồ án Công nghệ phần mềm). Repository đã có mã nguồn frontend/backend và schema; **chưa có bằng chứng kiểm thử end-to-end**. Không coi API thanh toán hoặc quyền tải tài liệu là production-ready.
 
 ## Mục tiêu

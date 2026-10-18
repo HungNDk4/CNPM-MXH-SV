@@ -70,3 +70,31 @@ Reference: [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md). The mechanism is 
 | T-DOCFREE-06 | Guest uploads or Student A modifies Student B's PDF | Guest 401, unauthorized student 403; no mutation |
 
 **Status:** ADR-011 business requirement CONFIRMED by Human A 2026-10-18; implementation/integration tests NOT RUN. Do not mark PASS on documentation or CI build alone. See [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md).
+
+## ADR-012 size and single-PDF boundary tests (NOT RUN)
+**Approved by Human A 2026-10-18:** up to **10 MiB = 10,485,760 bytes** inclusive and exactly one PDF per document post. These test designs are **NOT RUN**, not evidence upload works.
+
+| Test ID | Case | Expected |
+|---|---|---|
+| T-UP-LIM-01 | Logged-in student uploads structurally valid PDF of exactly 10,485,760 bytes | Not rejected solely for size, create one document post/file if all other validations pass |
+| T-UP-LIM-02 | Logged-in student uploads PDF of 10,485,761 bytes | Reject as too large (413 suggested), no post, no temporary orphan |
+| T-UP-LIM-03 | Upload 2 PDFs in same request (any sizes) | Reject excess file count (4xx), no post/files persisted |
+| T-UP-LIM-04 | Upload with no `file` field or zero-byte file | Reject (400/422 suggested), no post persisted |
+| T-UP-LIM-05 | Upload one small non-PDF disguised as `.pdf` | Reject on server-side content/type validation; clean up |
+| T-UP-LIM-06 | Accept a valid PDF under the limit as 1 file, with concurrent/aborted requests | Exactly one document association per successful post; aborted/failed upload leaves no orphan |
+
+**Do not fabricate PDF bytes** during review; fixture generating/test execution belongs to implementation QA. Endpoint path/error shape is proposed in [API_CONTRACT.md](API_CONTRACT.md); access rules in [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md).
+
+## ADR-013 — Immediate publication / post-moderation tests (NOT RUN)
+Human A confirmed Option A on 2026-10-18. These test cases are defined but **have not been executed**.
+
+| ID | Case | Expected |
+|---|---|---|
+| T-PUBLISH-01 | Authenticated Student uploads valid PDF, server validates, stores and commits successfully | 201, one `active` free document; guest public metadata visible immediately; no Admin approval |
+| T-PUBLISH-02 | Guest lists/views newly active document then tries direct download | Public safe metadata available; file bytes denied 401; signed-in student can download |
+| T-PUBLISH-03 | Oversize/wrong MIME, failed storage or DB write, interrupted upload | No active public post, no orphan file, no misleading published success |
+| T-PUBLISH-04 | Admin hides previously active PDF | Disappears from guest search/list/detail; signed-in author and other users denied direct PDF bytes |
+| T-PUBLISH-05 | Admin deletes PDF, then access attempted with stale/raw URL | No public file bytes or metadata; HTTP access policy applied even for cached URLs |
+| T-PUBLISH-06 | Ordinary Student tries to hide/delete another student's PDF | Backend rejects unauthorized modification (403); original post state unchanged |
+
+**G5 gate:** real test evidence required, CI build/syntax/document checks do not establish PASS.

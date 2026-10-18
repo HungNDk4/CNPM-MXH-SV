@@ -29,3 +29,7 @@ Mỗi thay đổi schema phải ghi migration theo version, kế hoạch rollbac
 - Store PDF bytes outside a publicly served `/uploads` folder, generate server-side storage keys; DB stores metadata/identifier, not publicly exposed file URLs.
 - Define transaction/orphan cleanup, soft-deleted post access and data retention. Review current SQL + Sequelize drift and migration path before changing schema.
 - Size cap **10 MiB** is proposed only; actual max and guest download policy are awaiting user review. See [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).
+
+## ADR-012 approved document cardinality constraint — physical schema still PROPOSED
+Human A confirmed (2026-10-18): exactly one uploaded PDF per document post and maximum 10 MiB (10,485,760 bytes inclusive). A proposed `document_files.post_id UNIQUE NOT NULL FK` enforces **at most one** file row per post; application workflow must also require **at least one** successful file before a `document` post is active. Storage byte length must be `1..10,485,760`. DB CHECK may provide defense-in-depth subject to actual MySQL version/DDL review.
+This is a **business requirement**, not a migration approval. No DB schema/model was changed by this docs PR; any DDL/model must be reviewed and applied on a disposable DB with rollback plan first.

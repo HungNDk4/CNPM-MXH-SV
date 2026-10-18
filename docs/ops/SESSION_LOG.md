@@ -91,3 +91,54 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Local worktree:** UNVERIFIED (remote branch only).
 **Next:** Human A reviews technical PDF size/count and ADR-002 general feed scope; both humans review PR chain; then implement auth/download API and test.
 **Handoff:** this entry and registry changes produce a new HEAD; check its CI separately, do not attribute previous CI result to new HEAD.
+
+## SESSION-20261018-AN-07 — Human A confirms 10 MiB and one PDF per document post
+**Actor:** Human A (business requirement), AI (docs via GitHub connector). **Task:** AN-07. **Status:** product decision DONE; docs awaiting review.
+**Decision:** maximum **10 MiB = 10,485,760 bytes** inclusive, **exactly one PDF** per document post. This supersedes *proposal status* of the same limits in earlier documentation, not historical evidence. Must reject zero bytes, multiple files, wrong type and 10,485,761+ bytes. UI may pre-check, server must enforce.
+**Branch:** `docs/pdf-upload-limits-20261018` based on `docs/guest-metadata-auth-download-20261018` @ `4d101fcb5b63f79af49811c86566be594d6d7191`. Draft PR expected targeting that branch, not main; verify PR and CI when published.
+**Files/doc scope:** ADR-012, MVP_SCOPE, SRS, DOCUMENT_UPLOAD_SPEC, API_CONTRACT, DATA_MODEL, TEST_PLAN, REQUIREMENTS_TRACEABILITY, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, WORKTREE_REGISTRY, SESSION_LOG; source controllers/schema untouched.
+**QA:** T-UP-LIM-01..06 specified, NOT RUN (no upload implementation); CI on new commit pending verification.
+**Still OPEN:** provider/storage approach, file replacement policy, retention/deletion, admin moderation/publish approval, full G0/G1 acceptance, other general-post guest access ADR-002.
+**Next:** publish/verify dependent Draft PR #6; ask Human A whether PDF is published immediately after passing validation or requires admin approval. Continue human review of stacked docs PRs #1-#6 and start AN-01/AN-02 after G0. GitHub-only branch: local worktree UNVERIFIED.
+
+## SESSION-20261018-AN-07-PR — PDF upload limits published for review
+**Actor:** AI via GitHub connector; **task:** AN-07 (human decision DONE; docs in REVIEW).
+**Draft PR #6:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/6 → `docs/guest-metadata-auth-download-20261018` (dependent on Draft PRs #1-#5).
+**Initial commit:** `c15e59b19740d278ef6cf409400c322a8d03ce3d`. Verified GitHub Actions: https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39137384913 **3/3 PASS** (frontend production build, backend JS syntax, project control docs integrity).
+**Human A confirmed:** exactly one PDF per new document post and limit 10 MiB = 10,485,760 bytes inclusive. 10 MiB + 1 byte rejected.
+**Docs:** ADR-012, SRS, MVP_SCOPE, DOCUMENT_UPLOAD_SPEC, DOCUMENT_ACCESS_POLICY, API_CONTRACT, DATA_MODEL, TEST_PLAN, REQUIREMENTS_TRACEABILITY, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, WORKTREE_REGISTRY, SESSION_LOG.
+**Runtime status:** no app/upload/backend/schema change; T-UP-LIM-01..06 **NOT RUN**; static CI success does not prove PDF upload works.
+**Local worktree:** NOT VERIFIED (remote branch only); `main` unchanged at start of this session.
+**Next:** Human A decides whether successfully validated PDF auto-publishes or waits for admin review; two human teammates review stacked PRs; then G0 and analysis AN-01/AN-02.
+**CI caveat:** this handoff-only follow-up commit advances PR HEAD; verify its own run independently.
+
+## SESSION-20261018-AN-08 — Immediate PDF publication selected
+**Actor:** Human A selected **A — Hiển thị ngay**; AI updated docs through GitHub. **Task:** AN-08 DONE as product choice, NOT implementation.
+**Decision ADR-013:** validated FREE PDF becomes `active` and publicly discoverable immediately after file storage + DB commit succeed. No admin manual preapproval. Admin may hide/delete violations afterwards; hidden/deleted PDF must be absent from public metadata and denied on direct download even for uploader.
+**Approval boundary:** user-report/flag UI, appeal/unhide, durable PDF storage/retention and exact moderator UI NOT approved by this choice. Existing ADR-011 and ADR-012 unchanged.
+**Branch/PR:** `docs/pdf-upload-limits-20261018` / https://github.com/HungNDk4/CNPM-MXH-SV/pull/6 (Draft), stacked after #5. Updated within current PR (no seventh PR), no direct `main` modification.
+**Files changed:** DECISIONS, MVP_SCOPE, SRS, DOCUMENT_UPLOAD_SPEC, DOCUMENT_ACCESS_POLICY, API_CONTRACT, TEST_PLAN, REQUIREMENTS_TRACEABILITY, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, SESSION_LOG.
+**Test specification:** T-PUBLISH-01..06, **NOT RUN**; no application controller, model, database migration, payment or PDF upload code changed. SEC-01/SEC-03/SEC-04 unresolved; physical worktrees unverified.
+**Next:** verify new PR #6 HEAD and CI; Human A/Human B review stacked PRs; next technical decision storage/retention and optional reporter workflow; G0/G1 not yet approved.
+
+## SESSION-20261018-AN-08-CI — ADR-013 docs PR CI evidence
+**Draft PR #6:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/6 (title updated to include ADR-012 and ADR-013).
+**Verified commit:** `19cd787cf6de365fe9475a96fbecf67f7d145a25`. **GitHub Actions:** https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39138720270 — CI **PASS** (frontend build, backend JS syntax, project control docs).
+**Scope:** Documentation-only decision & handoff, **NOT** upload, download, moderation, DB integration or P0 security regression QA. `main` was still `0993a42154feb37e8842ef8bb3ed4d0a03627889` when verified.
+**Next:** review this PR within stacked dependencies; choose persistent storage, retention and whether report flow is needed. This log-only follow-up advances branch HEAD and triggers a new CI run; verify it live.
+
+## SESSION-20261018-AN-09 — Student budget-first constraint
+**Actor:** Human A expressed concern that student project costs should not balloon; AI researched current official provider free-tier/pricing and prepared recommendation (task AN-09 DONE as cost requirement capture only).
+**Decision boundary:** Human A confirmed **cost minimization**; did NOT explicitly approve an exact numeric hard cap, sign up for any service, use a payment card or select a storage provider. Proposed target 0 VND recurring fees for local demo. ADR-014 records this distinction.
+**Recommendation:** local private PDF directory on the computer running backend + local MySQL during development/demo. No monthly infrastructure subscription, but no always-online hosted link and team must handle safe backup. R2 10GB-month free (overage can bill), Supabase Storage 1GB free (usage caps) are **optional future** choices; no connectors/services provisioned.
+**Docs:** `docs/STORAGE_COST_REVIEW.md`, DECISIONS ADR-014, SRS NFR-08, TASK_BOARD AN-09, CURRENT_STATE, SESSION_LOG.
+**GitHub scope:** update existing Draft PR #6 only, **no new PR**, no source/schema/hosting/credentials change. CI check is docs/build/syntax only; PDF E2E/security tests NOT RUN.
+**Next product question:** classroom/local demo versus a continuously accessible public online deployment, since this determines infrastructure need. Confirm actual budget/provider only when needed. Update current-state and CI evidence after publication if possible.
+
+## SESSION-20261018-AN-10 — Instructor-accessible public online deployment requirement
+**Human A explicitly confirmed:** the Mini Study Network website must be reachable via a public online link at arbitrary times, independent of student's laptop. Local-only demo does not satisfy final delivery. **Decision ADR-015 CONFIRMED**. Cost minimization ADR-014 remains.
+**Provider choice:** NONE approved; zero subscription is only target, not an uptime SLA. AI researched official Vercel Express/Functions/Blob docs, TiDB Cloud Starter and Sequelize compatibility, Render Free sleep/disk and Oracle Always Free VM.
+**Candidate for DEP-01 PoC:** Vercel Hobby React+Express Function; TiDB Starter MySQL-compatible for Sequelize v6 with integration tests; Vercel Blob Private for 10 MiB direct client uploads. Vercel Function payload **4.5 MB** prohibits server-proxied 10 MiB PDF. Auth token, post-upload server content check, hidden-post denial and streaming required.
+**Docs:** ADR-015, NFR-09, docs/ONLINE_DEPLOYMENT_OPTIONS.md, corrected STORAGE_COST_REVIEW, Charter, TASK_BOARD AN-10 DONE/DEP-01 TODO/DEP-02 BLOCKED, MASTER_PLAN, CURRENT_STATE, RISK_REGISTER, DOCUMENT_UPLOAD_SPEC, SESSION_LOG.
+**Execution status:** docs-only on existing Draft PR #6. No cloud account, backend deployment, database migration, file service, payment card or local worktree created. DEP-T01..07 tests **NOT RUN**; no source implementation. Human A+Human B must review provider feasibility and PR dependency stack #1→#6 before implementation.
+**Next:** publish docs commit to PR #6 and verify exact HEAD/CI; review DEP-01 and establish user-authorized cloud account connections only if needed.

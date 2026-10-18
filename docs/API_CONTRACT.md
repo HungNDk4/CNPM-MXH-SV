@@ -48,3 +48,15 @@
 - `GET /api/documents/:postId/download` **proposed path**: requires active authenticated session. 401 on unauthenticated/invalid/expired token without bytes; logged-in active student downloads active/free PDF (200 attachment). Hidden/deleted/paid PDFs denied. Authorization must be enforced server-side regardless of UI.
 - Guest scope applies to **document metadata**; public access to all other post types is still ADR-002 OPEN. Routes may require splitting read contracts, filtering DTOs or implementing optional-auth without opening sensitive content.
 - Requirements & negative tests: [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md), `T-DOCFREE-01..06`.
+
+## ADR-012 upload quantity and size (APPROVED requirements, NOT IMPLEMENTED)
+- **Proposed** `POST /api/documents`, multipart field `file`: exactly 1 PDF, length in **[1, 10,485,760] bytes** inclusive. Reject missing/extra files, other formats or zero bytes. Client pre-validation is advisory only; backend enforces.
+- **Suggested error mapping (contract detail still DRAFT):** 400/422 for missing/extra/empty or invalid metadata; 413 for PDF exceeding 10 MiB; 415 for non-PDF. No partial DB post or storage object must remain after rejected upload.
+- Do not expose raw storage URL in upload response; existing `/uploads` static route is not appropriate for protected new PDF bytes. Proposed download requires authentication per ADR-011, active/free document visibility enforced.
+- Boundary acceptance: T-UP-LIM-01..06. If actual route naming/response body changes, update SRS/API/test together in one reviewed PR.
+
+## ADR-013 — Immediate publish and hide/delete (approved business behavior; endpoints DRAFT)
+- Proposed upload `POST /api/documents`: validate 1 free PDF ≤10 MiB, persist file+metadata consistently, return 201 with `active` status **only after successful storage and DB commit**. No Admin preapproval/pending queue.
+- Public guest document list/detail include only `active`, free, safe metadata; hidden/deleted PDF posts never appear. Direct `GET /api/documents/:postId/download` authenticates and checks latest post state; denies hidden/deleted **even to the owner**.
+- Only Admin may hide another user's document for moderation. Endpoint and exact error responses still subject to API design review. Failed upload does not create public post/file and does not return publication success.
+- `T-PUBLISH-01..06` are acceptance plans **NOT RUN**. No source implementation changed in this docs-only PR.

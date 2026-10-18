@@ -24,7 +24,7 @@ For free/public/active PDF documents only: **guests can discover and read public
 - Authenticated active student downloading any active/free document (not only their own) receives a valid PDF attachment (200). Header `Content-Disposition: attachment` with sanitized filename; no public static `/uploads`.
 - Hidden/deleted/unavailable documents, paid docs, disabled users and cross-user edit/delete must obey server-side authorization and reject. Exact 403 vs 404 concealment behavior remains DRAFT.
 - No university-email verification assumed, and **PDF inline preview was not approved**.
-- No 10 MiB cap/one-file-per-post approval from this decision; those remain technical proposals.
+- **Historical ADR-011 boundary:** Guest/download decision did not itself approve upload caps; Human A **subsequently approved** 10 MiB and 1 PDF/post in **ADR-012 (2026-10-18)**. See [DECISIONS.md](DECISIONS.md).
 
 ## Negative test mapping (NOT RUN)
 | ID | Test | Expected |
@@ -37,8 +37,11 @@ For free/public/active PDF documents only: **guests can discover and read public
 | T-DOCFREE-06 | Guest POST upload or student modify other's PDF | 401 for guest; 403 for unauthorized student; no stored changes |
 
 ## Technical tasks/dependencies
-- DOC-02: finalize API/authorization matrix with ADR-011, select storage/file cap and state concealment.
+- DOC-02: finalize API/authorization matrix with ADR-011 and size/count with ADR-012; select storage, retention and state concealment.
 - DOC-03/04: implement server-side authenticated download, safe public DTO, file storage and UI login CTA only after design review.
 - SEC-04: upgrade multipart parser from known vulnerable Multer 1.x before enabling upload; SEC-01/03 block legacy paid exposure.
 - BE-01/ADR-002: separately decide/implement Guest access to *general posts* if desired.
 - CI or source-only checks do not verify T-DOCFREE tests; require runtime tests on temporary MySQL data.
+
+## Subsequent ADR-013 — Public after successful upload; Admin may hide/delete
+Human A confirmed (2026-10-18): a free PDF becomes `active` and publicly discoverable immediately after safe upload, file storage and DB commit, without manual Admin approval. The Guest metadata vs authenticated download split remains as in ADR-011. Admin hide/delete after publication must revoke public metadata and normal download eligibility **immediately at server-side status checks**. Report/appeal flow and exact backend response code for concealed records remain DRAFT. See [DECISIONS.md](DECISIONS.md) and [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).

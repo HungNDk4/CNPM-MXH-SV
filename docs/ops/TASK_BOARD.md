@@ -11,6 +11,12 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | OPS-04 | P0 | Review PR stack, agree 2-person module ownership, merge | Human A + Human B | BLOCKED | OPS-02/03 | Await human approval |
 | AN-00 | P1 | Human A confirms free-first MVP; VNPay Sandbox extension | Human A | DONE | None | User confirmed Option B 2026-10-17; ADR-003/004; details SRS still DRAFT |
 | AN-06 | P1 | Human A confirms Guest document metadata browse; authenticated PDF download only | Human A | DONE | DOC-01 | User confirmed access policy 2026-10-18; ADR-011 + DOCUMENT_ACCESS_POLICY (QA NOT RUN) |
+| AN-07 | P1 | Human A confirms max 10 MiB PDF, exactly 1 PDF per document post | Human A | DONE | DOC-01 | ADR-012 on 2026-10-18; T-UP-LIM cases specified, runtime QA NOT RUN |
+| AN-08 | P1 | Human A confirms immediate PDF publish + Admin hide/delete after posting | Human A | DONE | DOC-01 + ADR-011/012 | ADR-013 confirmed 2026-10-18; T-PUBLISH-01..06 NOT RUN |
+| AN-09 | P1 | Record low-cost/no-cost-inflation constraint for two-student project | Human A + AI | DONE | AN-00 | Human A stated budget concern 2026-10-18, ADR-014; **zero recurring fee target is PROPOSED, not vendor approval** |
+| AN-10 | P0 | Human A requires a public online HTTPS website accessible at any time | Human A | DONE | AN-09 | ADR-015 confirmed 2026-10-18; provider/SLA NOT approved |
+| DEP-01 | P0 | Compare low-cost online frontend/Express/SQL/PDF options and run controlled PoC | AI + Human B review | TODO | AN-10, G0 review | ONLINE_DEPLOYMENT_OPTIONS DRAFT; Vercel/TiDB/Private Blob candidate; NO deployment |
+| DEP-02 | P0 | Publish tested online demo and verify persistence across redeploy | UNASSIGNED | BLOCKED | DEP-01 approval, SEC-01/03/04, G4/G5 | Public HTTPS/DB/PDF/runtime proof required, NOT RUN |
 | AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review |
 | AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft |
 | AN-03 | P1 | Permission matrix, account/student verification decisions | Human A + AI | TODO | AN-02 | Decisions pending |
@@ -33,9 +39,9 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | FE-03 | P1 | Search/filter/pagination UI | UNASSIGNED | TODO | BE-01/DS-04 | UI placeholders |
 | FE-04 | P1 | Profile/edit/password screens | UNASSIGNED | TODO | DS-03/04 | FE page stub |
 | FE-05 | P1 | Edit/delete post UI with ownership | UNASSIGNED | TODO | DS-03/04 | BE routes exist |
-| BE-03 | P1 | Admin moderation (approved scope) | UNASSIGNED | TODO | AN-03/DS-03 | Design pending |
+| BE-03 | P1 | Admin hide/delete after PDF publication | UNASSIGNED | TODO | AN-03/DS-03/ADR-013 | Admin post-moderation confirmed; report/appeal UX remains PROPOSED |
 | DOC-01 | P1 | Human A selects direct PDF upload for free documents | Human A | DONE | AN-00 | User confirmed B 2026-10-17; ADR-010; detailed spec awaiting review |
-| DOC-02 | P1 | Finish PDF metadata/storage/download specification and file size/retention review | Human A + AI | TODO | DOC-01 + ADR-011 confirmed; final storage/limits open | DOCUMENT_ACCESS_POLICY + DOCUMENT_UPLOAD_SPEC DRAFT; no endpoint |
+| DOC-02 | P1 | Finish PDF storage/retention/moderation API design without paid infrastructure | Human A + AI | TODO | DOC-01 + ADR-011/012/013 and ADR-014 cost constraint; local vs online demo requirement OPEN | STORAGE_COST_REVIEW recommendations; local storage NOT approved, no endpoint |
 | DOC-03 | P1 | Implement authenticated single-PDF upload, validation and storage | UNASSIGNED | BLOCKED | DOC-02 design approval + SEC-04 | Existing source URL-only |
 | DOC-04 | P1 | Implement authenticated PDF download, guest metadata/login CTA, cleanup and UI | UNASSIGNED | BLOCKED | DOC-03 + DOC-02 design approval | ADR-011 approved; no code/test yet |
 | SEC-04 | P0 | Replace vulnerable Multer 1.x with reviewed patched release before upload implementation | UNASSIGNED | TODO | DOC-01 + compatibility check | Repo package.json declares 1.4.5-lts.1; GHSA-wc9g-mqfw-jrwm affects <2.3.0 |
@@ -61,4 +67,4 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 - Never let AI mark human approval or runtime QA PASS merely from static review.
 
 ## Next pull
-First: review PR #1/#2 plus scope PR #3, DOC-01 is CONFIRMED; guest PDF policy now CONFIRMED ADR-011; next decide max PDF size and one-file-per-post, then AN-01/AN-02. SEC-01 and SEC-03 block MVP demo; payment implementation SEC-02 remains deferred.
+Human A confirmed **ADR-015 online public HTTPS** and **ADR-014 student budget-first**, not a specific vendor. **DEP-01 TODO**: validate Vercel+TiDB+Blob versus a MySQL VM alternative (upload 10 MiB and private-file auth critical). Review stacked Draft PRs #1-#6. Full G0/G1 and P0 SEC-01/03/04 still pending; no service/payment created.

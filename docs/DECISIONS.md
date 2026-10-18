@@ -16,6 +16,7 @@
 | ADR-011 | Quyền xem / tải PDF miễn phí | **Guest được xem danh sách, tiêu đề, mô tả; phải đăng nhập mới tải PDF**. Sinh viên đã đăng nhập được tải tài liệu miễn phí còn active | CONFIRMED Human A (2026-10-18); triển khai/QA chưa thực hiện |
 | ADR-012 | Giới hạn upload PDF MVP | **Tối đa 10 MiB = 10.485.760 byte (bao gồm biên); 1 PDF duy nhất/bài tài liệu**. Từ chối 0 byte, sai loại, >10 MiB hoặc nhiều file | CONFIRMED Human A (2026-10-18); triển khai/QA chưa thực hiện |
 | ADR-013 | Xuất bản PDF sau upload | **Phương án A**: PDF tự chuyển `active`, xuất hiện ngay khi kiểm tra kỹ thuật và lưu thành công; không chờ Admin duyệt. Admin được ẩn/xóa vi phạm sau đăng; file ẩn/xóa phải chặn tải trực tiếp | CONFIRMED Human A (2026-10-18); code/QA NOT RUN |
+| ADR-014 | Ngân sách vận hành cho nhóm sinh viên | **Ưu tiên chi phí thấp, không để chi phí phình to**. Mục tiêu đề xuất: **0đ phí dịch vụ định kỳ cho development và demo tại lớp**; local private storage trước, cloud tùy chọn khi thật sự cần | COST CONSTRAINT CONFIRMED Human A (2026-10-18); numeric target/provider still PROPOSED |
 
 ## Decision evidence — 2026-10-17
 Human A explicitly chose: "Chốt phương án B: VNPay Sandbox là chức năng mở rộng. Ưu tiên mạng xã hội và chia sẻ miễn phí." This approves the **product priority only**, not full SRS, detailed upload method, payment security, G0/G1, or teammate acceptance.
@@ -46,3 +47,13 @@ Khi chốt quyết định: bổ sung ngày, người phê duyệt, phương án
 - Invalid, too large, interrupted, failed-to-store or failed-to-commit uploads must **not** be published; no orphaned public file. This choice does not waive safe content validation.
 - **Not decided by this choice:** user report/flag workflow, appeals/unhide, detailed moderation UI, storage/provider, scanning implementation, university verification or general feed Guest access.
 - **Engineering evidence:** [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md), tests `T-PUBLISH-01..06` in [TEST_PLAN.md](TEST_PLAN.md). Existing source is not yet implementing/QA-verifying this flow.
+
+## ADR-014 — Student budget guardrail (2026-10-18)
+- **Confirmed user constraint:** This is a two-person student course project; hosting, file storage, database and infrastructure costs **must be kept minimal and should not expand unnecessarily**.
+- **Proposal for approval, NOT a spending authorization or provider selection:** target **zero recurring paid service fees** during development/classroom demo by running Node/Express, MySQL and protected PDF file storage on a teammate's local computer. This excludes existing electricity/internet/hardware costs; does not guarantee 24/7 internet availability.
+- **Cloud alternatives, only if remotely accessible demo is needed:** Cloudflare R2 Standard currently lists free 10 GB-month, 1M Class A and 10M Class B operations monthly; usage over quotas can be billed and R2 requires account activation. Supabase Free currently lists 1 GB storage and usage/egress caps; no guarantee of always-on public hosting. Figures must be checked at the time of onboarding and **storage is not a free backend/MySQL host**.
+- **Require explicit human approval** before entering payment method, enabling a billed service, buying domains/hosting, or opting into automatic paid overages. No recurring paid dependency is authorized by the user statement.
+- **Security constraints remain non-negotiable on local storage:** PDFs outside Express static `/uploads`, authenticated streaming download, reject hidden/deleted and deferred paid files, bounded validated uploads, backups of sanitized demo data, no secrets in Git.
+- **Technical storage provider/retention choice OPEN:** the local-first approach is a recommendation, **NOT final ADR approval**. Investigate portability of a `DocumentStorage` interface if/when remote hosting becomes a hard requirement; avoid unnecessary engineering before demo requirements are known.
+- **Research checked:** https://developers.cloudflare.com/r2/pricing/ ; https://supabase.com/docs/guides/platform/billing-on-supabase ; https://vercel.com/kb/guide/how-can-i-use-files-in-serverless-functions (not suitable to assume deployed functions persist local uploads).
+- **Next question:** does the group require a publicly accessible online demo or just a demo running on one student's laptop/classroom network?

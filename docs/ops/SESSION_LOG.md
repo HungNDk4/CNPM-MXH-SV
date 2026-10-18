@@ -126,3 +126,11 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Verified commit:** `19cd787cf6de365fe9475a96fbecf67f7d145a25`. **GitHub Actions:** https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39138720270 — CI **PASS** (frontend build, backend JS syntax, project control docs).
 **Scope:** Documentation-only decision & handoff, **NOT** upload, download, moderation, DB integration or P0 security regression QA. `main` was still `0993a42154feb37e8842ef8bb3ed4d0a03627889` when verified.
 **Next:** review this PR within stacked dependencies; choose persistent storage, retention and whether report flow is needed. This log-only follow-up advances branch HEAD and triggers a new CI run; verify it live.
+
+## SESSION-20261018-AN-09 — Student budget-first constraint
+**Actor:** Human A expressed concern that student project costs should not balloon; AI researched current official provider free-tier/pricing and prepared recommendation (task AN-09 DONE as cost requirement capture only).
+**Decision boundary:** Human A confirmed **cost minimization**; did NOT explicitly approve an exact numeric hard cap, sign up for any service, use a payment card or select a storage provider. Proposed target 0 VND recurring fees for local demo. ADR-014 records this distinction.
+**Recommendation:** local private PDF directory on the computer running backend + local MySQL during development/demo. No monthly infrastructure subscription, but no always-online hosted link and team must handle safe backup. R2 10GB-month free (overage can bill), Supabase Storage 1GB free (usage caps) are **optional future** choices; no connectors/services provisioned.
+**Docs:** `docs/STORAGE_COST_REVIEW.md`, DECISIONS ADR-014, SRS NFR-08, TASK_BOARD AN-09, CURRENT_STATE, SESSION_LOG.
+**GitHub scope:** update existing Draft PR #6 only, **no new PR**, no source/schema/hosting/credentials change. CI check is docs/build/syntax only; PDF E2E/security tests NOT RUN.
+**Next product question:** classroom/local demo versus a continuously accessible public online deployment, since this determines infrastructure need. Confirm actual budget/provider only when needed. Update current-state and CI evidence after publication if possible.

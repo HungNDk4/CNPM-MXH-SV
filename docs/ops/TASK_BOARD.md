@@ -13,6 +13,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | AN-06 | P1 | Human A confirms Guest document metadata browse; authenticated PDF download only | Human A | DONE | DOC-01 | User confirmed access policy 2026-10-18; ADR-011 + DOCUMENT_ACCESS_POLICY (QA NOT RUN) |
 | AN-07 | P1 | Human A confirms max 10 MiB PDF, exactly 1 PDF per document post | Human A | DONE | DOC-01 | ADR-012 on 2026-10-18; T-UP-LIM cases specified, runtime QA NOT RUN |
 | AN-08 | P1 | Human A confirms immediate PDF publish + Admin hide/delete after posting | Human A | DONE | DOC-01 + ADR-011/012 | ADR-013 confirmed 2026-10-18; T-PUBLISH-01..06 NOT RUN |
+| AN-09 | P1 | Record low-cost/no-cost-inflation constraint for two-student project | Human A + AI | DONE | AN-00 | Human A stated budget concern 2026-10-18, ADR-014; **zero recurring fee target is PROPOSED, not vendor approval** |
 | AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review |
 | AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft |
 | AN-03 | P1 | Permission matrix, account/student verification decisions | Human A + AI | TODO | AN-02 | Decisions pending |
@@ -37,7 +38,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | FE-05 | P1 | Edit/delete post UI with ownership | UNASSIGNED | TODO | DS-03/04 | BE routes exist |
 | BE-03 | P1 | Admin hide/delete after PDF publication | UNASSIGNED | TODO | AN-03/DS-03/ADR-013 | Admin post-moderation confirmed; report/appeal UX remains PROPOSED |
 | DOC-01 | P1 | Human A selects direct PDF upload for free documents | Human A | DONE | AN-00 | User confirmed B 2026-10-17; ADR-010; detailed spec awaiting review |
-| DOC-02 | P1 | Finish PDF storage/retention/moderation API design | Human A + AI | TODO | DOC-01 + ADR-011/012/013 CONFIRMED; storage/report/retention open | Auto-publish confirmed; API/storage DRAFT; no endpoint |
+| DOC-02 | P1 | Finish PDF storage/retention/moderation API design without paid infrastructure | Human A + AI | TODO | DOC-01 + ADR-011/012/013 and ADR-014 cost constraint; local vs online demo requirement OPEN | STORAGE_COST_REVIEW recommendations; local storage NOT approved, no endpoint |
 | DOC-03 | P1 | Implement authenticated single-PDF upload, validation and storage | UNASSIGNED | BLOCKED | DOC-02 design approval + SEC-04 | Existing source URL-only |
 | DOC-04 | P1 | Implement authenticated PDF download, guest metadata/login CTA, cleanup and UI | UNASSIGNED | BLOCKED | DOC-03 + DOC-02 design approval | ADR-011 approved; no code/test yet |
 | SEC-04 | P0 | Replace vulnerable Multer 1.x with reviewed patched release before upload implementation | UNASSIGNED | TODO | DOC-01 + compatibility check | Repo package.json declares 1.4.5-lts.1; GHSA-wc9g-mqfw-jrwm affects <2.3.0 |

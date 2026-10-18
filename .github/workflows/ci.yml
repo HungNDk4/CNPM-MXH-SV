@@ -59,3 +59,25 @@ jobs:
           node-version-file: .nvmrc
       - name: Check project continuity documentation
         run: node scripts/check-project-control.mjs
+
+  dep01-offline-smoke:
+    name: DEP-01 offline Express/source probe (NOT cloud deployment)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install source dependencies
+        run: npm ci
+      - name: Express handler HTTP smoke (no DB/cloud)
+        run: node --test ../scripts/dep01-express-smoke.test.cjs
+      - name: Source-only deployment blockers (NOT live tests)
+        run: node ../scripts/dep01-readiness.mjs
+      - name: Audit contract tests
+        run: node --test ../scripts/dep01-readiness.test.mjs

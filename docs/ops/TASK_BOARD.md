@@ -15,7 +15,8 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | AN-08 | P1 | Human A confirms immediate PDF publish + Admin hide/delete after posting | Human A | DONE | DOC-01 + ADR-011/012 | ADR-013 confirmed 2026-10-18; T-PUBLISH-01..06 NOT RUN |
 | AN-09 | P1 | Record low-cost/no-cost-inflation constraint for two-student project | Human A + AI | DONE | AN-00 | Human A stated budget concern 2026-10-18, ADR-014; **zero recurring fee target is PROPOSED, not vendor approval** |
 | AN-10 | P0 | Human A requires a public online HTTPS website accessible at any time | Human A | DONE | AN-09 | ADR-015 confirmed 2026-10-18; provider/SLA NOT approved |
-| DEP-01 | P0 | Compare low-cost online frontend/Express/SQL/PDF options and run controlled PoC | AI + Human B review | TODO | AN-10, G0 review | ONLINE_DEPLOYMENT_OPTIONS DRAFT; Vercel/TiDB/Private Blob candidate; NO deployment |
+| DEP-01 | P0 | Source audit + protected online Express/SQL/PDF feasibility spike before provider selection | AI + Human B review | IN_PROGRESS | AN-10 confirmed; G0/DEP-A01..06 pending | DEP01_FEASIBILITY_AUDIT draft + offline smoke tests in branch docs/dep01-online-feasibility-20261018; **NO cloud PoC or deployment** |
+| DEP-01A | P0 | Offline Express handler smoke + source readiness audit, with CI evidence | AI + Human B review | IN_PROGRESS | DEP-01 branch + CI | scripts/dep01-* tests; CI status only after actual run, NOT a hosted PoC |
 | DEP-02 | P0 | Publish tested online demo and verify persistence across redeploy | UNASSIGNED | BLOCKED | DEP-01 approval, SEC-01/03/04, G4/G5 | Public HTTPS/DB/PDF/runtime proof required, NOT RUN |
 | AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review |
 | AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft |
@@ -67,4 +68,4 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 - Never let AI mark human approval or runtime QA PASS merely from static review.
 
 ## Next pull
-Human A confirmed **ADR-015 online public HTTPS** and **ADR-014 student budget-first**, not a specific vendor. **DEP-01 TODO**: validate Vercel+TiDB+Blob versus a MySQL VM alternative (upload 10 MiB and private-file auth critical). Review stacked Draft PRs #1-#6. Full G0/G1 and P0 SEC-01/03/04 still pending; no service/payment created.
+DEP-01 source baseline & offline Express probe are on **Draft PR #7 (pending publishing)**, stacked after PR #6. Run CI; status only reflects static/localhost proof. DEP-A01..06 cloud/runtime tests NOT RUN: require Human A/Human B agreement on isolated free-tier PoC and a supported provider connection. **Do NOT deploy existing insecure /uploads or payment routes publicly.** SEC-01/03/04, SQL migration and storage access remain P0 blockers. Review stacked #1–#7; G0/G1 not passed.

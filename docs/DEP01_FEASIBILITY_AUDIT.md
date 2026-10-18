@@ -73,3 +73,9 @@ Reviewed repository `HungNDk4/CNPM-MXH-SV` at branch `docs/pdf-upload-limits-202
 4. **DEP-01 offline Express/source probe** — PASS: `/api/health` HTTP handler on localhost, guest feed baseline 401 (known defect), static scanner and reproducibility tests.
 
 **Verdict DEP-A00:** EVIDENCE AVAILABLE / in Human B REVIEW (not formally accepted). **DEP-A01..DEP-A06 remain NOT RUN.** The added audit is informative: its PASS status means it identified baseline blockers, not that blockers were fixed. Follow-up handoff-only commit changes HEAD; verify its own CI before merge.
+
+## Stage A isolated cloud fixture — implementation prepared (NOT cloud deployed)
+- User requested isolated cloud PoC, but linked Vercel account has no accessible team. Vercel `get_git_deployment_context` and `list_teams` return empty teams; mapped `get_team` gave 403 Forbidden. Project listing sees historical project metadata, **not authorization to deploy under that scope**. Do not use a different team/personal account.
+- `poc/dep01-cloud-isolated` is an independent Node Function/HTML fixture with **no imports from legacy backend, no payment endpoints, no credentials/DB/Blob, no paid APIs, no file upload**. Correct Vercel project root must be this folder only, separate Preview deployment and no production promotion.
+- CI smoke verifies GET 200 with `database:NOT_CONNECTED`, `pdfStorage:NOT_CONNECTED`, HEAD 200, POST 405, no dependencies. Passing this still leaves DEP-A01 HTTPS cloud NOT RUN.
+- **Next verification:** new CI fifth job; real HTTPS preview only after correct team authorization. See [../poc/dep01-cloud-isolated/README.md](../poc/dep01-cloud-isolated/README.md).

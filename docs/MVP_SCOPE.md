@@ -44,3 +44,6 @@ Students upload PDF files through the website; **external-link-only is not the s
 **Related:** docs/DECISIONS.md ADR-003/004, docs/SRS.md, docs/ops/TASK_BOARD.md.
 
 **PDF limit decision reference:** [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md) · ADR-012 in [DECISIONS.md](DECISIONS.md). Upload flow is not implemented or QA-verified yet.
+
+## ADR-013 confirmed (2026-10-18) — Automatic publish, moderation afterwards
+Human A selected **A — publish valid free PDF immediately**, with no admin preapproval. After successful PDF validation, secure storage and DB commit, post becomes `active`; guest can browse public document metadata, signed-in users can download. An admin may hide/delete a violation **after** publication; no direct/API PDF access after hide/delete. Upload failure must not leave a visible post. Report/appeal UX remains DRAFT. See [DECISIONS.md](DECISIONS.md), [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).

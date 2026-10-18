@@ -42,3 +42,6 @@ For free/public/active PDF documents only: **guests can discover and read public
 - SEC-04: upgrade multipart parser from known vulnerable Multer 1.x before enabling upload; SEC-01/03 block legacy paid exposure.
 - BE-01/ADR-002: separately decide/implement Guest access to *general posts* if desired.
 - CI or source-only checks do not verify T-DOCFREE tests; require runtime tests on temporary MySQL data.
+
+## Subsequent ADR-013 — Public after successful upload; Admin may hide/delete
+Human A confirmed (2026-10-18): a free PDF becomes `active` and publicly discoverable immediately after safe upload, file storage and DB commit, without manual Admin approval. The Guest metadata vs authenticated download split remains as in ADR-011. Admin hide/delete after publication must revoke public metadata and normal download eligibility **immediately at server-side status checks**. Report/appeal flow and exact backend response code for concealed records remain DRAFT. See [DECISIONS.md](DECISIONS.md) and [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).

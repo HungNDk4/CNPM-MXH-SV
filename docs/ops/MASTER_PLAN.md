@@ -46,7 +46,7 @@ Dependencies: G1/G2; G3 for exposing data.
 
 ## Phase P5 — Free documents first; Sandbox payments deferred
 **Goal:** verified document sharing; paid-document flow only if approved.
-Tasks: **DOC-01 Human A confirmed direct PDF upload**, DOC-02 finalize upload schema/API/storage (ADR-011 guest metadata/login download and **ADR-012 size 10 MiB/one PDF-post confirmed**, storage/moderation/retention still open), SEC-04 review/upgrade vulnerable Multer 1.x before accepting uploads, DOC-03 implement validated PDF upload, DOC-04 safe download/UI/ownership/cleanup. **PAY-01/02 deferred** until Human A/teammate explicitly reopen scope and approve security design.
+Tasks: **DOC-01 Human A confirmed direct PDF upload**, DOC-02 finalize upload schema/API/storage (ADR-011 guest metadata/login download and **ADR-012 size 10 MiB/one PDF-post confirmed**, storage/retention/report workflow still open; ADR-013 **publish immediately after validation+storage+DB success and Admin hide/delete after posting** confirmed), SEC-04 review/upgrade vulnerable Multer 1.x before accepting uploads, DOC-03 implement validated PDF upload, DOC-04 safe download/UI/ownership/cleanup. **PAY-01/02 deferred** until Human A/teammate explicitly reopen scope and approve security design.
 Deliverables MVP: PDF upload/download UI, storage and metadata contract, validation and ownership, QA evidence; Sandbox remains optional future deliverable.
 Gate **G5 MVP**: approved PDF constraints enforced server-side: exactly one PDF/post, 1..10,485,760 bytes; T-UP-LIM-01..06 have actual results; free-documents work end-to-end, paid paths remain disabled; VNPay checkout/Sandbox testing is **not** a mandatory MVP exit criterion. A future paid-feature extension must have its own security and payment QA gate.
 Dependencies: G3, G4, and ADR on whether paid docs mandatory.
@@ -84,3 +84,7 @@ P0 security or data corruption preempts any feature PR. New feature scope only v
 
 ## Acceptance packet for EACH task
 Task ID & owner, FR/UC links, current branch and commit, related PR, changed file manifest, tests actually run with PASS/FAIL/SKIP, human review decision, operational handoff. See [SESSION_HANDOFF_TEMPLATE.md](SESSION_HANDOFF_TEMPLATE.md).
+
+### ADR-013 confirmed 2026-10-18 (publication gate)
+- Automatic `active` publish on successful free PDF upload/persistence (no manual Admin approval); after-the-fact Admin hide/delete revokes public listing and direct download access.
+- Tests T-PUBLISH-01..06 are required at G5 but NOT RUN now; report/appeal UX design remains open.

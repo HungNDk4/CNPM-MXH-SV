@@ -15,6 +15,7 @@
 | ADR-010 | DOC-01: phương thức chia sẻ tài liệu miễn phí | **Phương án B: upload PDF trực tiếp vào website**, không chỉ dán external URL; dung lượng/giới hạn số file cần duyệt riêng | CONFIRMED Human A (2026-10-17); detailed design DRAFT |
 | ADR-011 | Quyền xem / tải PDF miễn phí | **Guest được xem danh sách, tiêu đề, mô tả; phải đăng nhập mới tải PDF**. Sinh viên đã đăng nhập được tải tài liệu miễn phí còn active | CONFIRMED Human A (2026-10-18); triển khai/QA chưa thực hiện |
 | ADR-012 | Giới hạn upload PDF MVP | **Tối đa 10 MiB = 10.485.760 byte (bao gồm biên); 1 PDF duy nhất/bài tài liệu**. Từ chối 0 byte, sai loại, >10 MiB hoặc nhiều file | CONFIRMED Human A (2026-10-18); triển khai/QA chưa thực hiện |
+| ADR-013 | Xuất bản PDF sau upload | **Phương án A**: PDF tự chuyển `active`, xuất hiện ngay khi kiểm tra kỹ thuật và lưu thành công; không chờ Admin duyệt. Admin được ẩn/xóa vi phạm sau đăng; file ẩn/xóa phải chặn tải trực tiếp | CONFIRMED Human A (2026-10-18); code/QA NOT RUN |
 
 ## Decision evidence — 2026-10-17
 Human A explicitly chose: "Chốt phương án B: VNPay Sandbox là chức năng mở rộng. Ưu tiên mạng xã hội và chia sẻ miễn phí." This approves the **product priority only**, not full SRS, detailed upload method, payment security, G0/G1, or teammate acceptance.
@@ -38,3 +39,10 @@ Khi chốt quyết định: bổ sung ngày, người phê duyệt, phương án
 - **Storage, quotas per user, retention, moderation, deployment provider:** still OPEN. Keep these proposals separate from approved limits.
 - **Source/test status:** Current source does not implement PDF upload; no runtime tests performed. See [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md), [TEST_PLAN.md](TEST_PLAN.md), and Task DOC-02/03/04.
 - **Historical note:** At the time ADR-011 was written the 10 MiB/one-file caps were proposals. They are confirmed later by **ADR-012**; don't revise old approvals retroactively.
+
+## ADR-013 — Publish immediately after successful upload (2026-10-18)
+- **Human A selected option A:** newly uploaded FREE PDF appears publicly as `active` immediately after required technical checks, protected file storage and DB commit succeed. **No manual admin approval queue** in MVP.
+- Admin may hide/delete violating PDFs after publication. Hidden/deleted content disappears from public metadata, and even authenticated download requests must be denied (including the original uploader). Server-side post status must be checked on each download.
+- Invalid, too large, interrupted, failed-to-store or failed-to-commit uploads must **not** be published; no orphaned public file. This choice does not waive safe content validation.
+- **Not decided by this choice:** user report/flag workflow, appeals/unhide, detailed moderation UI, storage/provider, scanning implementation, university verification or general feed Guest access.
+- **Engineering evidence:** [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md), tests `T-PUBLISH-01..06` in [TEST_PLAN.md](TEST_PLAN.md). Existing source is not yet implementing/QA-verifying this flow.

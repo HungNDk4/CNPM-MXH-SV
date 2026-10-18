@@ -84,3 +84,17 @@ Reference: [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md). The mechanism is 
 | T-UP-LIM-06 | Accept a valid PDF under the limit as 1 file, with concurrent/aborted requests | Exactly one document association per successful post; aborted/failed upload leaves no orphan |
 
 **Do not fabricate PDF bytes** during review; fixture generating/test execution belongs to implementation QA. Endpoint path/error shape is proposed in [API_CONTRACT.md](API_CONTRACT.md); access rules in [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md).
+
+## ADR-013 — Immediate publication / post-moderation tests (NOT RUN)
+Human A confirmed Option A on 2026-10-18. These test cases are defined but **have not been executed**.
+
+| ID | Case | Expected |
+|---|---|---|
+| T-PUBLISH-01 | Authenticated Student uploads valid PDF, server validates, stores and commits successfully | 201, one `active` free document; guest public metadata visible immediately; no Admin approval |
+| T-PUBLISH-02 | Guest lists/views newly active document then tries direct download | Public safe metadata available; file bytes denied 401; signed-in student can download |
+| T-PUBLISH-03 | Oversize/wrong MIME, failed storage or DB write, interrupted upload | No active public post, no orphan file, no misleading published success |
+| T-PUBLISH-04 | Admin hides previously active PDF | Disappears from guest search/list/detail; signed-in author and other users denied direct PDF bytes |
+| T-PUBLISH-05 | Admin deletes PDF, then access attempted with stale/raw URL | No public file bytes or metadata; HTTP access policy applied even for cached URLs |
+| T-PUBLISH-06 | Ordinary Student tries to hide/delete another student's PDF | Backend rejects unauthorized modification (403); original post state unchanged |
+
+**G5 gate:** real test evidence required, CI build/syntax/document checks do not establish PASS.

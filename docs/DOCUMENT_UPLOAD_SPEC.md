@@ -1,5 +1,5 @@
 # Free PDF Upload — Functional & Technical Draft
-**DOC-01 direct PDF upload CONFIRMED** 2026-10-17; **ADR-011 Guest metadata / login download CONFIRMED** 2026-10-18; **ADR-012 10 MiB inclusive and 1 PDF/post CONFIRMED** 2026-10-18. Remaining storage/API/QA details DRAFT.
+**DOC-01 direct PDF upload CONFIRMED** 2026-10-17; **ADR-011 Guest metadata / login download CONFIRMED** 2026-10-18; **ADR-012 10 MiB inclusive and 1 PDF/post CONFIRMED** 2026-10-18. **ADR-013 immediate publication after successful upload, post-moderation by Admin confirmed** 2026-10-18. Remaining storage/API/QA details DRAFT.
 **Relevant requirements:** FR-11, FR-04, FR-05, FR-06; **tasks:** DOC-02, DOC-03, DOC-04, SEC-04; **extension:** FR-13/14 DEFERRED.
 
 ## 1. Scope / proposed constraints
@@ -95,3 +95,19 @@ Response/error draft: 201 created with ID/meta; 400 invalid data; 401 unauthenti
 - **Client UX:** allow selection of only one PDF, display “Tối đa 10 MiB (10.485.760 byte)”; invalid/oversize message without creating a post; backend remains authoritative.
 - **Test IDs:** T-UP-LIM-01..06. Existing `T-UP-04` now uses fixed 10 MiB cap. Tests have NOT RUN; implementation NOT STARTED.
 - **Not approved:** PDF replacement after posting, number of posts per user, malware scanning vendor, or storage provider. See [DECISIONS.md](DECISIONS.md), ADR-012.
+
+## 10. ADR-013 — Publish immediately after validated PDF, Admin moderation afterwards
+```text
+Student login → select 1 PDF ≤ 10 MiB → validate metadata/file
+  → securely store PDF → persist post + file metadata atomically
+  → mark post active → success → guest-safe list/detail/search
+  → signed-in Student download (login check and latest post status)
+Admin finds violation → mark hidden/deleted → public metadata excluded
+  → all ordinary direct PDF download attempts denied
+Any failure before successful save/commit → no active post, clean temp/orphan data
+```
+- **Product rule APPROVED (2026-10-18):** no manual admin approval before public release; `active` follows successful upload/validation/persistence. The source already has `active|hidden|deleted` statuses, but must implement full lifecycle/authorizations; no new `pending_approval` state is required for this MVP.
+- Use a DB+file failure-compensation strategy to prevent public/orphan rows/files; protect against direct static URL, cache bypass and hidden/deleted file downloads. No admin permission should be inferred from frontend buttons alone.
+- Admin **hide/delete post-publication** is approved. Reporting by other users, admin appeal/reinstatement and detailed moderation interface remain PROPOSED, not approved.
+- Filename/type checks are not comprehensive malware scanning; required security architecture remains under review.
+- **T-PUBLISH-01..06 NOT RUN**. See [TEST_PLAN.md](TEST_PLAN.md) and [DECISIONS.md](DECISIONS.md).

@@ -111,3 +111,12 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Local worktree:** NOT VERIFIED (remote branch only); `main` unchanged at start of this session.
 **Next:** Human A decides whether successfully validated PDF auto-publishes or waits for admin review; two human teammates review stacked PRs; then G0 and analysis AN-01/AN-02.
 **CI caveat:** this handoff-only follow-up commit advances PR HEAD; verify its own run independently.
+
+## SESSION-20261018-AN-08 — Immediate PDF publication selected
+**Actor:** Human A selected **A — Hiển thị ngay**; AI updated docs through GitHub. **Task:** AN-08 DONE as product choice, NOT implementation.
+**Decision ADR-013:** validated FREE PDF becomes `active` and publicly discoverable immediately after file storage + DB commit succeed. No admin manual preapproval. Admin may hide/delete violations afterwards; hidden/deleted PDF must be absent from public metadata and denied on direct download even for uploader.
+**Approval boundary:** user-report/flag UI, appeal/unhide, durable PDF storage/retention and exact moderator UI NOT approved by this choice. Existing ADR-011 and ADR-012 unchanged.
+**Branch/PR:** `docs/pdf-upload-limits-20261018` / https://github.com/HungNDk4/CNPM-MXH-SV/pull/6 (Draft), stacked after #5. Updated within current PR (no seventh PR), no direct `main` modification.
+**Files changed:** DECISIONS, MVP_SCOPE, SRS, DOCUMENT_UPLOAD_SPEC, DOCUMENT_ACCESS_POLICY, API_CONTRACT, TEST_PLAN, REQUIREMENTS_TRACEABILITY, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, SESSION_LOG.
+**Test specification:** T-PUBLISH-01..06, **NOT RUN**; no application controller, model, database migration, payment or PDF upload code changed. SEC-01/SEC-03/SEC-04 unresolved; physical worktrees unverified.
+**Next:** verify new PR #6 HEAD and CI; Human A/Human B review stacked PRs; next technical decision storage/retention and optional reporter workflow; G0/G1 not yet approved.

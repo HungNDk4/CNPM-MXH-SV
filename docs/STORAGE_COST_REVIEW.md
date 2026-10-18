@@ -42,3 +42,11 @@ Client browser (React/Vite)
 - What is the actual approved monetary cap, if any? Human A only said cost should not inflate.
 - Where are **durable storage and backups** hosted? What PDF retention/deletion policy is needed?
 - No hosting purchase, setup or external service registration was performed. Save technical architecture decision separately after answers.
+
+## Requirement correction (2026-10-18) — Final demo MUST be online
+Human A has explicitly required an online HTTPS link accessible at arbitrary times without student laptop. Therefore earlier "local disk on team backend machine" is **development-only**, NOT adequate final architecture. Keep 0-VND monthly subscription as a target only, not a guarantee or exact approved budget.
+
+**Candidate PoC, NOT approved:** Vercel Hobby (static React, Express serverless) + TiDB Cloud Starter MySQL-compatible (5 GiB row data + 50M RUs/month) + **Vercel Blob Private** (Hobby 1 GB free) with browser direct upload. Vercel Functions have **4.5 MB request body limit**, so never POST a 10 MiB PDF via Express function. Authenticated direct Blob upload + server-verified size/content + gated `active` publish is required. Private download through authenticated streaming. TiDB compatibility with Sequelize v6/schema remains to be verified.
+Render Free sleeps after 15 minutes; R2 has a wider 10 GB-month Standard free allocation but potentially billable overages and additional operations. Free quotas may suspend service without fees. No account, service, storage bucket, billing setting, custom domain or code change performed.
+
+See [ONLINE_DEPLOYMENT_OPTIONS.md](ONLINE_DEPLOYMENT_OPTIONS.md) for options and test gates.

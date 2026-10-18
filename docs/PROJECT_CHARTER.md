@@ -40,3 +40,6 @@ Source + cấu hình mẫu không có secret; SRS; use case; ERD; API contract; 
 
 ## Chưa xác nhận
 Tên chính thức đề tài, thời hạn nộp, nhân sự/phân công, định nghĩa đối tượng sinh viên, yêu cầu upload file thật, và VNPay có bắt buộc trong kỳ này không. Ghi quyết định vào `docs/DECISIONS.md`.
+
+## Deployment requirement confirmed (2026-10-18)
+The instructor must have a **public HTTPS website link reachable at arbitrary times**, independent of students' laptops. Minimize recurring operating expenses, but no 100% free-tier SLA or provider choice has been approved. Persistent backend data and PDF uploads plus reviewed access security are mandatory for online demonstration; local-only screenshots do not meet the final requirement. See [ONLINE_DEPLOYMENT_OPTIONS.md](ONLINE_DEPLOYMENT_OPTIONS.md).

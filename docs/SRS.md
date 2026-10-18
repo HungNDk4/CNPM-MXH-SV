@@ -92,3 +92,9 @@ Danh sách use case chi tiết, ngoại lệ và sơ đồ UML sẽ được b�
 
 ## NFR-08 — Budget guardrail (human cost constraint CONFIRMED, numeric target PROPOSED)
 The two-person student team requires low-cost operations. **Recommendation only:** avoid paid subscriptions and target zero incremental recurring cloud fees in the local-development/classroom-demo stage using local Node/Express+MySQL and private PDF disk storage. Any online/demo deployment must document backend, database, storage, domain and bandwidth costs, free-tier quotas, card/billing requirements and an explicit approval gate **before incurring fees**. A free storage tier alone does not mean the entire website is free. No hosting/storage provider approved yet. See [STORAGE_COST_REVIEW.md](STORAGE_COST_REVIEW.md) and ADR-014 in [DECISIONS.md](DECISIONS.md).
+
+## NFR-09 — Website public online accessible anytime (Human A confirmed 2026-10-18)
+- Demo must have an HTTPS public URL accessible by the instructor at arbitrary times without student's PC running. Local-only hosting and relying on laptop/tunnel is insufficient.
+- User/post relational data and private PDFs must persist after app redeploy/restart. Public metadata/guest and authenticated download/moderation flows must work from an outside network.
+- No free service offers guaranteed 100% uptime; report quotas, known outages, cold starts, operational backup/restore rather than claim zero downtime.
+- Keep services inexpensive, preferably within reviewed free quotas; no provider, card or actual spending approved. Technical feasibility and live E2E remain NOT RUN. See [ONLINE_DEPLOYMENT_OPTIONS.md](ONLINE_DEPLOYMENT_OPTIONS.md), ADR-014/015.

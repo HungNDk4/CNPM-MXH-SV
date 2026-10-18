@@ -134,3 +134,11 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Docs:** `docs/STORAGE_COST_REVIEW.md`, DECISIONS ADR-014, SRS NFR-08, TASK_BOARD AN-09, CURRENT_STATE, SESSION_LOG.
 **GitHub scope:** update existing Draft PR #6 only, **no new PR**, no source/schema/hosting/credentials change. CI check is docs/build/syntax only; PDF E2E/security tests NOT RUN.
 **Next product question:** classroom/local demo versus a continuously accessible public online deployment, since this determines infrastructure need. Confirm actual budget/provider only when needed. Update current-state and CI evidence after publication if possible.
+
+## SESSION-20261018-AN-10 — Instructor-accessible public online deployment requirement
+**Human A explicitly confirmed:** the Mini Study Network website must be reachable via a public online link at arbitrary times, independent of student's laptop. Local-only demo does not satisfy final delivery. **Decision ADR-015 CONFIRMED**. Cost minimization ADR-014 remains.
+**Provider choice:** NONE approved; zero subscription is only target, not an uptime SLA. AI researched official Vercel Express/Functions/Blob docs, TiDB Cloud Starter and Sequelize compatibility, Render Free sleep/disk and Oracle Always Free VM.
+**Candidate for DEP-01 PoC:** Vercel Hobby React+Express Function; TiDB Starter MySQL-compatible for Sequelize v6 with integration tests; Vercel Blob Private for 10 MiB direct client uploads. Vercel Function payload **4.5 MB** prohibits server-proxied 10 MiB PDF. Auth token, post-upload server content check, hidden-post denial and streaming required.
+**Docs:** ADR-015, NFR-09, docs/ONLINE_DEPLOYMENT_OPTIONS.md, corrected STORAGE_COST_REVIEW, Charter, TASK_BOARD AN-10 DONE/DEP-01 TODO/DEP-02 BLOCKED, MASTER_PLAN, CURRENT_STATE, RISK_REGISTER, DOCUMENT_UPLOAD_SPEC, SESSION_LOG.
+**Execution status:** docs-only on existing Draft PR #6. No cloud account, backend deployment, database migration, file service, payment card or local worktree created. DEP-T01..07 tests **NOT RUN**; no source implementation. Human A+Human B must review provider feasibility and PR dependency stack #1→#6 before implementation.
+**Next:** publish docs commit to PR #6 and verify exact HEAD/CI; review DEP-01 and establish user-authorized cloud account connections only if needed.

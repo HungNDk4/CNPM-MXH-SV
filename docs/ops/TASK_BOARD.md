@@ -14,6 +14,9 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | AN-07 | P1 | Human A confirms max 10 MiB PDF, exactly 1 PDF per document post | Human A | DONE | DOC-01 | ADR-012 on 2026-10-18; T-UP-LIM cases specified, runtime QA NOT RUN |
 | AN-08 | P1 | Human A confirms immediate PDF publish + Admin hide/delete after posting | Human A | DONE | DOC-01 + ADR-011/012 | ADR-013 confirmed 2026-10-18; T-PUBLISH-01..06 NOT RUN |
 | AN-09 | P1 | Record low-cost/no-cost-inflation constraint for two-student project | Human A + AI | DONE | AN-00 | Human A stated budget concern 2026-10-18, ADR-014; **zero recurring fee target is PROPOSED, not vendor approval** |
+| AN-10 | P0 | Human A requires a public online HTTPS website accessible at any time | Human A | DONE | AN-09 | ADR-015 confirmed 2026-10-18; provider/SLA NOT approved |
+| DEP-01 | P0 | Compare low-cost online frontend/Express/SQL/PDF options and run controlled PoC | AI + Human B review | TODO | AN-10, G0 review | ONLINE_DEPLOYMENT_OPTIONS DRAFT; Vercel/TiDB/Private Blob candidate; NO deployment |
+| DEP-02 | P0 | Publish tested online demo and verify persistence across redeploy | UNASSIGNED | BLOCKED | DEP-01 approval, SEC-01/03/04, G4/G5 | Public HTTPS/DB/PDF/runtime proof required, NOT RUN |
 | AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review |
 | AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft |
 | AN-03 | P1 | Permission matrix, account/student verification decisions | Human A + AI | TODO | AN-02 | Decisions pending |
@@ -64,4 +67,4 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 - Never let AI mark human approval or runtime QA PASS merely from static review.
 
 ## Next pull
-Review Draft PRs #1–#6 in dependency order. DOC-01 and ADR-011/012/013 are CONFIRMED; do not re-ask. Next unapproved matters: durable PDF storage/retention and optional report/appeal workflow; AN-01/AN-02 and G0 remain awaiting review. SEC-01/03/04 block public PDF/payment demo.
+Human A confirmed **ADR-015 online public HTTPS** and **ADR-014 student budget-first**, not a specific vendor. **DEP-01 TODO**: validate Vercel+TiDB+Blob versus a MySQL VM alternative (upload 10 MiB and private-file auth critical). Review stacked Draft PRs #1-#6. Full G0/G1 and P0 SEC-01/03/04 still pending; no service/payment created.

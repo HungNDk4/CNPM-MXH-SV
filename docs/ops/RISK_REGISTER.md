@@ -18,3 +18,12 @@
 **Decision Option B (2026-10-17):** deferring payment does not eliminate R-01/02/03 unless direct API/file access is denied and tested; until then they remain unresolved P0 exposure.
 
 Re-evaluate at each gate. Do not implement real-money operations or expose sensitive files without the P0 gates.
+
+## Online public demo new risks (2026-10-18, ADR-015)
+| ID | Priority | Risk | Mitigation / evidence required | Owner |
+|---|---|---|---|---|
+| R-11 | P0 | Local-only or sleeping free backend means lecturer cannot use link reliably any time | DEP-01 provider selection + off-network uptime/cold-start checks, recovery | Unassigned |
+| R-12 | P0 | File bytes saved on ephemeral serverless disk lost after restart | Private durable Blob and relational DB, redeploy persistence smoke, no public static PDFs | Unassigned |
+| R-13 | P0 | Vercel Function 4.5 MB payload rejects approved 10 MiB PDF | Client direct private Blob upload; verify bytes/MIME/owner before active, test 10 MiB and 10 MiB+1 | Unassigned |
+| R-14 | P1 | TiDB MySQL protocol compatibility is not identical to existing MySQL 8/Sequelize 6 migrations | Disposable TiDB PoC: FK, ENUM, JSON, indexes, auth CRUD, transactions | Unassigned |
+| R-15 | P1 | Free quota exhaustion, plan changes or unintended billing interrupt demo | Verified quota/spending limits, snapshots/backup, approval before any paid tier | Human A + Human B |

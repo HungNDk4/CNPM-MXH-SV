@@ -111,3 +111,8 @@ Any failure before successful save/commit → no active post, clean temp/orphan 
 - Admin **hide/delete post-publication** is approved. Reporting by other users, admin appeal/reinstatement and detailed moderation interface remain PROPOSED, not approved.
 - Filename/type checks are not comprehensive malware scanning; required security architecture remains under review.
 - **T-PUBLISH-01..06 NOT RUN**. See [TEST_PLAN.md](TEST_PLAN.md) and [DECISIONS.md](DECISIONS.md).
+
+## 11. Public online availability ADR-015 (CONFIRMED human requirement, vendor DRAFT)
+- The final website must run at a **public HTTPS link without student's laptop**, with relational data and uploaded PDFs surviving app redeploy/restart. Local disk beside a serverless function is NOT durable storage.
+- On Vercel Functions, maximum body payload is **4.5 MB**, smaller than the 10 MiB accepted PDF. If this platform is selected, browser must upload directly to **private** object storage using a short-lived backend-authenticated token (with one-file, user and MIME constraints), then backend verifies the actual stored object size/type/content and DB ownership **before** publishing `active`. Failed/oversized uploads cleaned. Download through authenticated streaming; hidden/deleted/paid path blocked, raw URLs not exposed.
+- Vercel Hobby + TiDB Starter + Vercel Blob Private is **one candidate**, not approved. TiDB SQL/Sequelize compatibility, cloud quotas, public uptime and private-Blob protocol require DEP-01 integration PoC; upload E2E NOT RUN. See [ONLINE_DEPLOYMENT_OPTIONS.md](ONLINE_DEPLOYMENT_OPTIONS.md), ADR-015.

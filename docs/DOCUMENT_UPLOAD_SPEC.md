@@ -1,11 +1,11 @@
 # Free PDF Upload — Functional & Technical Draft
-**2026-10-17. Product choice DOC-01:** **CONFIRMED by Human A**: directly upload PDF to the website, not external-link-only. **Detailed design / tests / size cap:** DRAFT, awaiting review.
+**DOC-01 direct PDF upload CONFIRMED** 2026-10-17; **ADR-011 Guest metadata / login download CONFIRMED** 2026-10-18; **ADR-012 10 MiB inclusive and 1 PDF/post CONFIRMED** 2026-10-18. Remaining storage/API/QA details DRAFT.
 **Relevant requirements:** FR-11, FR-04, FR-05, FR-06; **tasks:** DOC-02, DOC-03, DOC-04, SEC-04; **extension:** FR-13/14 DEFERRED.
 
 ## 1. Scope / proposed constraints
 - MVP document post has title, description, subject/category, uploader, created date, original display name, size, and downloadable **PDF** content.
 - Only authenticated student accounts may UPLOAD (proposed, aligned with general write access); GUEST may browse **public metadata** but may NOT download PDF bytes (ADR-011 CONFIRMED 2026-10-18).
-- Initial cap **10 MiB per PDF** and **1 PDF per document post** are engineering proposals, NOT approved decisions. Need team review for exact limit, quota/user, PDF page count and data retention.
+- **ADR-012 APPROVED:** each new document post carries exactly **1 PDF file**, **1 ≤ size_bytes ≤ 10,485,760** (10 MiB inclusive). Two files, empty file, non-PDF and any PDF of **10,485,761+ bytes** are denied. Need team review separately for per-user quota, file version/replacement, page count and retention.
 - URL-based external sharing is **not the selected MVP path**; existing `file_url` code is not the new upload pipeline.
 - PDF inline preview, document version history, OCR/text indexing, paid access and storage on third-party clouds are NOT automatically in scope.
 
@@ -66,7 +66,7 @@ Response/error draft: 201 created with ID/meta; 400 invalid data; 401 unauthenti
 | T-UP-10 | Multipart malformed field names / abort floods | Parser patched and bounded; no service crash (SEC-04) |
 
 ## 7. Engineering task split and human review
-- **DOC-02:** guest download policy now confirmed by ADR-011; still decide size, count, retention and storage; approve wireframe, model/migration and API.
+- **DOC-02:** guest download policy confirmed ADR-011 and PDF caps confirmed ADR-012; still decide retention, storage/deployment, moderation, safe file inspection; approve wireframe, model/migration and API.
 - **SEC-04:** patched multipart library with security regression tests.
 - **DOC-03:** backend upload with storage and DB metadata (branch + PR).
 - **DOC-04:** post detail/upload/download frontend integration and ownership cleanup.
@@ -86,3 +86,12 @@ Response/error draft: 201 created with ID/meta; 400 invalid data; 401 unauthenti
 5. Filename, storage and Content-Disposition safety constraints still apply; inline preview is out of decision scope.
 
 **Reference:** [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md). These are requirements, **not implemented or tested**.
+
+## 9. Approved PDF size & count limits — ADR-012 (2026-10-18)
+- **Unit:** MiB (binary), not MB decimal. `MAX_PDF_BYTES = 10 * 1024 * 1024 = 10485760`.
+- **Per document post:** EXACTLY 1 PDF file. Multipart request with 0 files / >1 file (even if both under cap) fails; never silently ignore extra files.
+- **Size:** valid positive PDF with exactly **10,485,760 bytes passes the size-boundary check**; 10,485,761 bytes rejected (413 suggested); zero bytes rejected as invalid (400/422 suggested). Passing the size boundary does **not** override content/PDF security checks.
+- **Server:** enforce limits at multipart parser and validate true byte count after receipt, MIME/extension and file header/content; stream/drop excess without exhausting memory. Stop/clean temporary writes and avoid database records on failure. Restrict fields/parts to bounded values.
+- **Client UX:** allow selection of only one PDF, display “Tối đa 10 MiB (10.485.760 byte)”; invalid/oversize message without creating a post; backend remains authoritative.
+- **Test IDs:** T-UP-LIM-01..06. Existing `T-UP-04` now uses fixed 10 MiB cap. Tests have NOT RUN; implementation NOT STARTED.
+- **Not approved:** PDF replacement after posting, number of posts per user, malware scanning vendor, or storage provider. See [DECISIONS.md](DECISIONS.md), ADR-012.

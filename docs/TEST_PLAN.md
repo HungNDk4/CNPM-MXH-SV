@@ -70,3 +70,17 @@ Reference: [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md). The mechanism is 
 | T-DOCFREE-06 | Guest uploads or Student A modifies Student B's PDF | Guest 401, unauthorized student 403; no mutation |
 
 **Status:** ADR-011 business requirement CONFIRMED by Human A 2026-10-18; implementation/integration tests NOT RUN. Do not mark PASS on documentation or CI build alone. See [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md).
+
+## ADR-012 size and single-PDF boundary tests (NOT RUN)
+**Approved by Human A 2026-10-18:** up to **10 MiB = 10,485,760 bytes** inclusive and exactly one PDF per document post. These test designs are **NOT RUN**, not evidence upload works.
+
+| Test ID | Case | Expected |
+|---|---|---|
+| T-UP-LIM-01 | Logged-in student uploads structurally valid PDF of exactly 10,485,760 bytes | Not rejected solely for size, create one document post/file if all other validations pass |
+| T-UP-LIM-02 | Logged-in student uploads PDF of 10,485,761 bytes | Reject as too large (413 suggested), no post, no temporary orphan |
+| T-UP-LIM-03 | Upload 2 PDFs in same request (any sizes) | Reject excess file count (4xx), no post/files persisted |
+| T-UP-LIM-04 | Upload with no `file` field or zero-byte file | Reject (400/422 suggested), no post persisted |
+| T-UP-LIM-05 | Upload one small non-PDF disguised as `.pdf` | Reject on server-side content/type validation; clean up |
+| T-UP-LIM-06 | Accept a valid PDF under the limit as 1 file, with concurrent/aborted requests | Exactly one document association per successful post; aborted/failed upload leaves no orphan |
+
+**Do not fabricate PDF bytes** during review; fixture generating/test execution belongs to implementation QA. Endpoint path/error shape is proposed in [API_CONTRACT.md](API_CONTRACT.md); access rules in [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md).

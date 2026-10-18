@@ -14,6 +14,7 @@
 | ADR-009 | Phân công, deadline, tiêu chí chấm | Cần nhóm và giảng viên cung cấp | OPEN |
 | ADR-010 | DOC-01: phương thức chia sẻ tài liệu miễn phí | **Phương án B: upload PDF trực tiếp vào website**, không chỉ dán external URL; dung lượng/giới hạn số file cần duyệt riêng | CONFIRMED Human A (2026-10-17); detailed design DRAFT |
 | ADR-011 | Quyền xem / tải PDF miễn phí | **Guest được xem danh sách, tiêu đề, mô tả; phải đăng nhập mới tải PDF**. Sinh viên đã đăng nhập được tải tài liệu miễn phí còn active | CONFIRMED Human A (2026-10-18); triển khai/QA chưa thực hiện |
+| ADR-012 | Giới hạn upload PDF MVP | **Tối đa 10 MiB = 10.485.760 byte (bao gồm biên); 1 PDF duy nhất/bài tài liệu**. Từ chối 0 byte, sai loại, >10 MiB hoặc nhiều file | CONFIRMED Human A (2026-10-18); triển khai/QA chưa thực hiện |
 
 ## Decision evidence — 2026-10-17
 Human A explicitly chose: "Chốt phương án B: VNPay Sandbox là chức năng mở rộng. Ưu tiên mạng xã hội và chia sẻ miễn phí." This approves the **product priority only**, not full SRS, detailed upload method, payment security, G0/G1, or teammate acceptance.
@@ -29,3 +30,11 @@ Khi chốt quyết định: bổ sung ngày, người phê duyệt, phương án
 - **In scope:** metadata tài liệu miễn phí công khai (active); guest không được truy cập bytes PDF, file path, storage key, public static URL; unauthenticated download returns 401 from backend. Authenticated active users may download free public PDFs; post status and moderation checks still apply.
 - **Not decided by this ADR:** guest đọc tất cả bài hỏi đáp/thảo luận (ADR-002), xác minh email trường, PDF inline preview, giới hạn dung lượng/số file, storage provider.
 - **Reference:** [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md); SRS FR-11; test IDs T-DOCFREE-01..06. Human B/instructor and complete SRS sign-off remain pending.
+
+## ADR-012 — PDF upload maximum size and file count (2026-10-18)
+- **Human A confirmed:** 10 MiB PDF upload limit and one PDF attachment per document post. 1 MiB = 1,048,576 bytes; the inclusive maximum is **10,485,760 bytes**. This is not decimal 10 MB.
+- **Functional bounds:** accept valid nonempty PDF of size 1..10,485,760 bytes; reject 0 bytes, non-PDF, >=10,485,761 bytes or more than one file in one request. Client prevalidation improves UX; **backend enforcement is mandatory**.
+- **One file per post** is a business constraint; an optional post-edit replacement/versioning workflow is **NOT APPROVED** by this decision. New post requires exactly one PDF and valid metadata.
+- **Storage, quotas per user, retention, moderation, deployment provider:** still OPEN. Keep these proposals separate from approved limits.
+- **Source/test status:** Current source does not implement PDF upload; no runtime tests performed. See [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md), [TEST_PLAN.md](TEST_PLAN.md), and Task DOC-02/03/04.
+- **Historical note:** At the time ADR-011 was written the 10 MiB/one-file caps were proposals. They are confirmed later by **ADR-012**; don't revise old approvals retroactively.

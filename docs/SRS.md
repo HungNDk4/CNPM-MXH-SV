@@ -20,7 +20,7 @@
 | FR-08 | STUDENT | Like/unlike bài/bình luận; chống like trùng | BE có code, FE thiếu |
 | FR-09 | GUEST/STUDENT | Tìm kiếm theo từ khóa, loại bài, môn học | BE hỗ trợ một phần; FE chưa nối |
 | FR-10 | GUEST/STUDENT | Xem profile công khai; người dùng sửa hồ sơ và đổi mật khẩu của mình | BE có code; FE profile stub |
-| FR-11 | GUEST/STUDENT | **MVP:** Student upload PDF trực tiếp; Guest xem danh sách/tiêu đề/mô tả; người đăng nhập mới tải được PDF công khai còn active. Giới hạn file/storage còn DRAFT | URL nhập tay; upload/download kiểm soát chưa có |
+| FR-11 | GUEST/STUDENT | **MVP:** Upload đúng **1 PDF/bài**, dung lượng **1..10.485.760 byte (≤10 MiB)**; Guest xem metadata, đăng nhập để tải PDF active miễn phí. Storage vẫn DRAFT | Source hiện nhập URL; chưa có upload/download an toàn |
 | FR-12 | ADMIN | Ẩn/xóa bài vi phạm, kiểm soát tài khoản | Quyền admin nền tảng; UI/quy trình thiếu |
 | FR-13 | STUDENT/VNPAY | **DEFERRED:** mua tài liệu bằng VNPay Sandbox; không bắt buộc MVP | BE khung, FE thiếu; phải chặn an toàn khi chưa mở |
 | FR-14 | STUDENT | **DEFERRED:** phân quyền tài liệu trả phí | Model tồn tại; hiện chưa an toàn, phải chặn paid path trong MVP |
@@ -29,16 +29,17 @@
 - **MVP DRAFT requirements:** FR-01 tới FR-12; nhóm cần duyệt chi tiết trước khi gọi SRS APPROVED.
 - **DEFERRED:** FR-13 và FR-14; không yêu cầu chạy VNPay Sandbox trong demo MVP.
 - **BẮT BUỘC trước demo:** dù payment deferred, API checkout/callback/paid document từ source cũ vẫn có thể truy cập; phải chặn từ backend và kiểm thử trực tiếp, không chỉ ẩn giao diện. Không được rò URL file trả phí.
-- **CONFIRMED DOC-01:** website tiếp nhận PDF trực tiếp. **ADR-011 CONFIRMED:** guest xem metadata tài liệu, phải login mới download. **OPEN:** dung lượng tối đa, số PDF mỗi bài, storage deployment, quyền Guest với các post loại khác và admin.
+- **CONFIRMED DOC-01:** website tiếp nhận PDF trực tiếp. **ADR-011 CONFIRMED:** guest xem metadata tài liệu, phải login mới download. **ADR-012 CONFIRMED:** tối đa 10 MiB (10.485.760 byte, inclusive) và đúng 1 PDF/bài. **OPEN:** storage/deployment, retention, chống mã độc/quota, Guest với các post khác, moderation/admin.
 
 ## FR-11 — Free PDF upload (product mechanism CONFIRMED, detailed behavior DRAFT)
 - Sinh viên đăng nhập gửi `multipart/form-data` chứa PDF + metadata của bài tài liệu.
-- Backend giới hạn số lượng file và dung lượng, kiểm tra extension/MIME/file signature, lưu với key ngẫu nhiên không dùng original filename cho filesystem.
+- **ADR-012:** Backend chỉ cho phép đúng **1 file PDF trong mỗi bài tài liệu**, có kích thước **>0 và ≤10.485.760 byte**. Thừa file, file rỗng, quá ngưỡng, không phải PDF → reject, không tạo bài/file dở dang. Frontend chỉ kiểm tra sớm, không thay backend validation.
+- Backend kiểm tra extension/MIME/file signature, lưu với key ngẫu nhiên không dùng original filename cho filesystem.
 - Dữ liệu DB lưu metadata/file key, không đặt nội dung PDF vào bảng `posts` theo phương án thiết kế; storage location cần duyệt.
 - Guest được xem danh sách và metadata công khai của tài liệu active; yêu cầu tải PDF thiếu token/phiên hợp lệ phải bị API từ chối 401. Sinh viên đăng nhập được tải PDF miễn phí active; hidden/deleted không được tải.
 - File invalid/oversize, unauthenticated upload, interrupted upload, unauthorized delete, removed document phải có response/test và cleanup.
 - Hiện source chỉ ghi `file_url`, `server/uploads` public; **chưa triển khai** upload PDF theo quyết định mới.
-- Chi tiết thiết kế/test: [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md); 10 MiB/bài một file chỉ là **đề xuất**, không được đánh dấu APPROVED.
+- Chi tiết thiết kế/test: [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md). **10 MiB/1 PDF mỗi bài đã được Human A phê duyệt trong ADR-012**. Cách lưu file và kiểm duyệt vẫn là bản thiết kế.
 
 ## Quy tắc nghiệp vụ cần duyệt
 1. Một email tương ứng tối đa một tài khoản.
@@ -72,3 +73,11 @@ Danh sách use case chi tiết, ngoại lệ và sơ đồ UML sẽ được b�
 - **Upload/update/delete:** write action requires authentication and existing owner/admin checks; exact administrative policy still DRAFT.
 - **Not implied:** guest access to other post types, inline PDF preview, university-verification requirement or new file-size limits.
 - **Tests:** T-DOCFREE-01..06; see [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md), [TEST_PLAN.md](TEST_PLAN.md). Current source does not implement this; do not label QA PASS.
+
+## BR-DOC-UPLOAD-01 — PDF quantity and size, confirmed Human A 2026-10-18
+1. New document post must contain exactly **one** uploaded PDF (field `file` in proposed multipart API); zero or two+ files are invalid.
+2. PDF byte count must be **1 through 10,485,760 inclusive** (10 MiB = 10 × 1,048,576). At exactly 10 MiB a structurally acceptable valid PDF is not denied solely due to size; at 10 MiB + 1 byte it must be rejected. Empty file rejected.
+3. MIME, extension and content checks are backend requirements; merely renaming a non-PDF file does not grant acceptance. Security scanning and handling hostile PDFs remain architectural concerns.
+4. Reject invalid uploads without partial public post, database row or orphaned object. Return bounded error with clear reason. UI displays size/count/type validation errors.
+5. **Not decided:** editing/replacing an attached PDF, storage capacity/quotas, administrative preapproval, or max page count. Paid documents/VNPay remain DEFERRED.
+6. Acceptance tests: T-UP-LIM-01..06 in [TEST_PLAN.md](TEST_PLAN.md). All **NOT RUN** until implemented and exercised.

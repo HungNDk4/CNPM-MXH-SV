@@ -91,3 +91,12 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Local worktree:** UNVERIFIED (remote branch only).
 **Next:** Human A reviews technical PDF size/count and ADR-002 general feed scope; both humans review PR chain; then implement auth/download API and test.
 **Handoff:** this entry and registry changes produce a new HEAD; check its CI separately, do not attribute previous CI result to new HEAD.
+
+## SESSION-20261018-AN-07 — Human A confirms 10 MiB and one PDF per document post
+**Actor:** Human A (business requirement), AI (docs via GitHub connector). **Task:** AN-07. **Status:** product decision DONE; docs awaiting review.
+**Decision:** maximum **10 MiB = 10,485,760 bytes** inclusive, **exactly one PDF** per document post. This supersedes *proposal status* of the same limits in earlier documentation, not historical evidence. Must reject zero bytes, multiple files, wrong type and 10,485,761+ bytes. UI may pre-check, server must enforce.
+**Branch:** `docs/pdf-upload-limits-20261018` based on `docs/guest-metadata-auth-download-20261018` @ `4d101fcb5b63f79af49811c86566be594d6d7191`. Draft PR expected targeting that branch, not main; verify PR and CI when published.
+**Files/doc scope:** ADR-012, MVP_SCOPE, SRS, DOCUMENT_UPLOAD_SPEC, API_CONTRACT, DATA_MODEL, TEST_PLAN, REQUIREMENTS_TRACEABILITY, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, WORKTREE_REGISTRY, SESSION_LOG; source controllers/schema untouched.
+**QA:** T-UP-LIM-01..06 specified, NOT RUN (no upload implementation); CI on new commit pending verification.
+**Still OPEN:** provider/storage approach, file replacement policy, retention/deletion, admin moderation/publish approval, full G0/G1 acceptance, other general-post guest access ADR-002.
+**Next:** publish/verify dependent Draft PR #6; ask Human A whether PDF is published immediately after passing validation or requires admin approval. Continue human review of stacked docs PRs #1-#6 and start AN-01/AN-02 after G0. GitHub-only branch: local worktree UNVERIFIED.

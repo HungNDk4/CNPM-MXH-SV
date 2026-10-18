@@ -11,6 +11,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | OPS-04 | P0 | Review PR stack, agree 2-person module ownership, merge | Human A + Human B | BLOCKED | OPS-02/03 | Await human approval |
 | AN-00 | P1 | Human A confirms free-first MVP; VNPay Sandbox extension | Human A | DONE | None | User confirmed Option B 2026-10-17; ADR-003/004; details SRS still DRAFT |
 | AN-06 | P1 | Human A confirms Guest document metadata browse; authenticated PDF download only | Human A | DONE | DOC-01 | User confirmed access policy 2026-10-18; ADR-011 + DOCUMENT_ACCESS_POLICY (QA NOT RUN) |
+| AN-07 | P1 | Human A confirms max 10 MiB PDF, exactly 1 PDF per document post | Human A | DONE | DOC-01 | ADR-012 on 2026-10-18; T-UP-LIM cases specified, runtime QA NOT RUN |
 | AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review |
 | AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft |
 | AN-03 | P1 | Permission matrix, account/student verification decisions | Human A + AI | TODO | AN-02 | Decisions pending |
@@ -35,7 +36,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | FE-05 | P1 | Edit/delete post UI with ownership | UNASSIGNED | TODO | DS-03/04 | BE routes exist |
 | BE-03 | P1 | Admin moderation (approved scope) | UNASSIGNED | TODO | AN-03/DS-03 | Design pending |
 | DOC-01 | P1 | Human A selects direct PDF upload for free documents | Human A | DONE | AN-00 | User confirmed B 2026-10-17; ADR-010; detailed spec awaiting review |
-| DOC-02 | P1 | Finish PDF metadata/storage/download specification and file size/retention review | Human A + AI | TODO | DOC-01 + ADR-011 confirmed; final storage/limits open | DOCUMENT_ACCESS_POLICY + DOCUMENT_UPLOAD_SPEC DRAFT; no endpoint |
+| DOC-02 | P1 | Finish PDF metadata/storage, permissions, retention and moderation design | Human A + AI | TODO | DOC-01 + ADR-011 + ADR-012 confirmed; storage and retention open | DOCUMENT_UPLOAD_SPEC/ACCESS_POLICY DRAFT; 10 MiB/1 file CONFIRMED, no endpoint |
 | DOC-03 | P1 | Implement authenticated single-PDF upload, validation and storage | UNASSIGNED | BLOCKED | DOC-02 design approval + SEC-04 | Existing source URL-only |
 | DOC-04 | P1 | Implement authenticated PDF download, guest metadata/login CTA, cleanup and UI | UNASSIGNED | BLOCKED | DOC-03 + DOC-02 design approval | ADR-011 approved; no code/test yet |
 | SEC-04 | P0 | Replace vulnerable Multer 1.x with reviewed patched release before upload implementation | UNASSIGNED | TODO | DOC-01 + compatibility check | Repo package.json declares 1.4.5-lts.1; GHSA-wc9g-mqfw-jrwm affects <2.3.0 |
@@ -61,4 +62,4 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 - Never let AI mark human approval or runtime QA PASS merely from static review.
 
 ## Next pull
-First: review PR #1/#2 plus scope PR #3, DOC-01 is CONFIRMED; guest PDF policy now CONFIRMED ADR-011; next decide max PDF size and one-file-per-post, then AN-01/AN-02. SEC-01 and SEC-03 block MVP demo; payment implementation SEC-02 remains deferred.
+First: review PR #1/#2 plus scope PR #3, DOC-01 is CONFIRMED; guest PDF policy ADR-011 and 10 MiB/one-PDF limit ADR-012 CONFIRMED. Next: decide whether PDF goes live immediately after upload or awaits admin review; then AN-01/AN-02. Storage/retention details remain design-level. SEC-01 and SEC-03 block MVP demo; payment implementation SEC-02 remains deferred.

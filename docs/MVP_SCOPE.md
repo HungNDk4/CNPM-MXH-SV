@@ -13,7 +13,7 @@ VNPay Sandbox, paid documents, checkout, orders and purchased-file rights are **
 | FR-04/05/06 | Posts | Ask, discuss, view post, edit/delete own content |
 | FR-07/08 | Interaction | Comment/reply, like/unlike |
 | FR-10 | Profile | View user profile, edit own details, change password |
-| FR-11 | Free documents | Direct PDF upload confirmed; **guest views public metadata, login required for file download**; size/storage rules DRAFT |
+| FR-11 | Free documents | Direct upload of **exactly 1 PDF/post up to 10 MiB**, Guest views active metadata, authenticated download; storage provider DRAFT |
 | FR-12 | Moderation | Minimal admin controls for inappropriate posts/accounts; exact policy OPEN |
 
 ## Proposed MVP user journeys
@@ -36,9 +36,11 @@ VNPay Sandbox, paid documents and order history; real-money payouts; livestream,
 ## DOC-01 CONFIRMED: upload PDF trực tiếp (Human A, 2026-10-17)
 Students upload PDF files through the website; **external-link-only is not the selected core document flow**. Current source only supports entering `file_url`; upload has not been implemented. See [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).
 
-**Detailed design proposals (NOT approved yet):** one PDF per document post, initial 10 MiB size cap, private storage with controlled download, PDF signature + MIME validation. Also verify access rules, hosting, antivirus/scanning plan and moderation.
+**ADR-012 CONFIRMED (2026-10-18):** each document post must upload **exactly one valid PDF**, maximum **10 MiB (10,485,760 bytes inclusive)**; oversize/multiple/empty or wrong type is denied at backend. **Remaining design proposals (NOT approved yet):** private storage, controlled download endpoint details, MIME/content validation strategy, hosting, antivirus/scan, quotas and moderation.
 **ADR-011 CONFIRMED (2026-10-18):** guest may view document list/title/description; PDF download requires login. Backend enforces 401 for unauthenticated requests; no public static PDF link. See [DOCUMENT_ACCESS_POLICY.md](DOCUMENT_ACCESS_POLICY.md).
 
 **Pending questions:** anonymous access to non-document feed content (ADR-002), who qualifies as student, admin moderation depth, team role assignments and instructor/deadline constraints. Never infer these have been approved.
 
 **Related:** docs/DECISIONS.md ADR-003/004, docs/SRS.md, docs/ops/TASK_BOARD.md.
+
+**PDF limit decision reference:** [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md) · ADR-012 in [DECISIONS.md](DECISIONS.md). Upload flow is not implemented or QA-verified yet.

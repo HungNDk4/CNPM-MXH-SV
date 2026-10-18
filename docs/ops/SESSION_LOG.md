@@ -100,3 +100,14 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **QA:** T-UP-LIM-01..06 specified, NOT RUN (no upload implementation); CI on new commit pending verification.
 **Still OPEN:** provider/storage approach, file replacement policy, retention/deletion, admin moderation/publish approval, full G0/G1 acceptance, other general-post guest access ADR-002.
 **Next:** publish/verify dependent Draft PR #6; ask Human A whether PDF is published immediately after passing validation or requires admin approval. Continue human review of stacked docs PRs #1-#6 and start AN-01/AN-02 after G0. GitHub-only branch: local worktree UNVERIFIED.
+
+## SESSION-20261018-AN-07-PR — PDF upload limits published for review
+**Actor:** AI via GitHub connector; **task:** AN-07 (human decision DONE; docs in REVIEW).
+**Draft PR #6:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/6 → `docs/guest-metadata-auth-download-20261018` (dependent on Draft PRs #1-#5).
+**Initial commit:** `c15e59b19740d278ef6cf409400c322a8d03ce3d`. Verified GitHub Actions: https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39137384913 **3/3 PASS** (frontend production build, backend JS syntax, project control docs integrity).
+**Human A confirmed:** exactly one PDF per new document post and limit 10 MiB = 10,485,760 bytes inclusive. 10 MiB + 1 byte rejected.
+**Docs:** ADR-012, SRS, MVP_SCOPE, DOCUMENT_UPLOAD_SPEC, DOCUMENT_ACCESS_POLICY, API_CONTRACT, DATA_MODEL, TEST_PLAN, REQUIREMENTS_TRACEABILITY, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, WORKTREE_REGISTRY, SESSION_LOG.
+**Runtime status:** no app/upload/backend/schema change; T-UP-LIM-01..06 **NOT RUN**; static CI success does not prove PDF upload works.
+**Local worktree:** NOT VERIFIED (remote branch only); `main` unchanged at start of this session.
+**Next:** Human A decides whether successfully validated PDF auto-publishes or waits for admin review; two human teammates review stacked PRs; then G0 and analysis AN-01/AN-02.
+**CI caveat:** this handoff-only follow-up commit advances PR HEAD; verify its own run independently.

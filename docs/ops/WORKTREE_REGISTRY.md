@@ -8,7 +8,7 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 | WT-SCOPE | AI | docs/mvp-scope-option-b-20261017 | Draft PR #3 → docs/session-worktree-control-20261017 | NO (GitHub-only) | REVIEW | Human A confirmed Option B only; docs & build/syntax initial CI PASS |
 | WT-PDF | AI | docs/pdf-upload-scope-20261017 | **Draft PR #4** → docs/mvp-scope-option-b-20261017 | NO (GitHub-only) | REVIEW | Direct PDF product decision confirmed; initial 3 CI checks PASS; details DRAFT |
 | WT-ACCESS | AI | docs/guest-metadata-auth-download-20261018 | **Draft PR #5** → docs/pdf-upload-scope-20261017 | NO (GitHub-only) | REVIEW | ADR-011 approved; initial CI 3 jobs PASS, detailed SRS and runtime QA pending |
-| WT-LIMITS | AI | docs/pdf-upload-limits-20261018 | Planned Draft PR #6 → docs/guest-metadata-auth-download-20261018 | NO (GitHub-only) | IN_PROGRESS | ADR-012 approved size/count; tests not run; no physical worktree verified |
+| WT-LIMITS | AI | docs/pdf-upload-limits-20261018 | **Draft PR #6** → docs/guest-metadata-auth-download-20261018 | NO (GitHub-only) | REVIEW | ADR-012 approved; initial 3-job CI PASS; runtime tests NOT RUN |
 | WT-ANALYSIS | Human A (proposed) | Not created | Base reviewed main after merge | NO | PLANNED | Requirements/UC/ERD session |
 | WT-DEV | Human B (proposed) | Not created | Base reviewed main after merge | NO | PLANNED | Independently scoped coding |
 | WT-QA | Unassigned | Not created | Base reviewed main after merge | NO | OPTIONAL | Integration/regression tests |

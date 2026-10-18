@@ -62,3 +62,14 @@ Reviewed repository `HungNDk4/CNPM-MXH-SV` at branch `docs/pdf-upload-limits-202
 - Legacy specs: [ONLINE_DEPLOYMENT_OPTIONS.md](ONLINE_DEPLOYMENT_OPTIONS.md), [SRS.md](SRS.md), [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).
 
 **Verdict:** `CONDITIONAL / BLOCKED BEFORE LIVE POC`. The candidate stack is plausible, but **DEP-01 is not completed**, and no cloud/runtime/Sequelize or PDF E2E test may be called PASS without actual evidence. 
+
+## DEP-A00 offline CI evidence (2026-10-18)
+**Draft PR #7:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/7
+**Initial validated commit:** `4c75b2086ea1a8cfa013a769095e8fefa7553db2`
+**GitHub Actions:** https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39141647075 — **4 of 4 jobs PASS**:
+1. Frontend production build — PASS.
+2. Backend JavaScript syntax — PASS.
+3. Project control static checks — PASS.
+4. **DEP-01 offline Express/source probe** — PASS: `/api/health` HTTP handler on localhost, guest feed baseline 401 (known defect), static scanner and reproducibility tests.
+
+**Verdict DEP-A00:** EVIDENCE AVAILABLE / in Human B REVIEW (not formally accepted). **DEP-A01..DEP-A06 remain NOT RUN.** The added audit is informative: its PASS status means it identified baseline blockers, not that blockers were fixed. Follow-up handoff-only commit changes HEAD; verify its own CI before merge.

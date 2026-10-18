@@ -16,7 +16,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | AN-09 | P1 | Record low-cost/no-cost-inflation constraint for two-student project | Human A + AI | DONE | AN-00 | Human A stated budget concern 2026-10-18, ADR-014; **zero recurring fee target is PROPOSED, not vendor approval** |
 | AN-10 | P0 | Human A requires a public online HTTPS website accessible at any time | Human A | DONE | AN-09 | ADR-015 confirmed 2026-10-18; provider/SLA NOT approved |
 | DEP-01 | P0 | Source audit + protected online Express/SQL/PDF feasibility spike before provider selection | AI + Human B review | IN_PROGRESS | AN-10 confirmed; G0/DEP-A01..06 pending | DEP01_FEASIBILITY_AUDIT draft + offline smoke tests in branch docs/dep01-online-feasibility-20261018; **NO cloud PoC or deployment** |
-| DEP-01A | P0 | Offline Express handler smoke + source readiness audit, with CI evidence | AI + Human B review | IN_PROGRESS | DEP-01 branch + CI | scripts/dep01-* tests; CI status only after actual run, NOT a hosted PoC |
+| DEP-01A | P0 | Offline Express handler smoke + source readiness audit, with CI evidence | AI + Human B review | REVIEW | DEP-01 branch + Human B review | Draft PR #7 initial commit 4c75b208; Actions 39141647075 4/4 PASS including offline smoke; cloud DEP-A01..06 NOT RUN |
 | DEP-02 | P0 | Publish tested online demo and verify persistence across redeploy | UNASSIGNED | BLOCKED | DEP-01 approval, SEC-01/03/04, G4/G5 | Public HTTPS/DB/PDF/runtime proof required, NOT RUN |
 | AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review |
 | AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft |
@@ -68,4 +68,4 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 - Never let AI mark human approval or runtime QA PASS merely from static review.
 
 ## Next pull
-DEP-01 source baseline & offline Express probe are on **Draft PR #7 (pending publishing)**, stacked after PR #6. Run CI; status only reflects static/localhost proof. DEP-A01..06 cloud/runtime tests NOT RUN: require Human A/Human B agreement on isolated free-tier PoC and a supported provider connection. **Do NOT deploy existing insecure /uploads or payment routes publicly.** SEC-01/03/04, SQL migration and storage access remain P0 blockers. Review stacked #1–#7; G0/G1 not passed.
+DEP-01 source baseline & offline Express probe are on **Draft PR #7 (OPEN; checks PASS on initial commit)**, stacked after PR #6. Run CI; status only reflects static/localhost proof. DEP-A01..06 cloud/runtime tests NOT RUN: require Human A/Human B agreement on isolated free-tier PoC and a supported provider connection. **Do NOT deploy existing insecure /uploads or payment routes publicly.** SEC-01/03/04, SQL migration and storage access remain P0 blockers. Review stacked #1–#7; G0/G1 not passed.

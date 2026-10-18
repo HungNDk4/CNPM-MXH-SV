@@ -120,3 +120,9 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Files changed:** DECISIONS, MVP_SCOPE, SRS, DOCUMENT_UPLOAD_SPEC, DOCUMENT_ACCESS_POLICY, API_CONTRACT, TEST_PLAN, REQUIREMENTS_TRACEABILITY, MASTER_PLAN, TASK_BOARD, CURRENT_STATE, SESSION_LOG.
 **Test specification:** T-PUBLISH-01..06, **NOT RUN**; no application controller, model, database migration, payment or PDF upload code changed. SEC-01/SEC-03/SEC-04 unresolved; physical worktrees unverified.
 **Next:** verify new PR #6 HEAD and CI; Human A/Human B review stacked PRs; next technical decision storage/retention and optional reporter workflow; G0/G1 not yet approved.
+
+## SESSION-20261018-AN-08-CI — ADR-013 docs PR CI evidence
+**Draft PR #6:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/6 (title updated to include ADR-012 and ADR-013).
+**Verified commit:** `19cd787cf6de365fe9475a96fbecf67f7d145a25`. **GitHub Actions:** https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39138720270 — CI **PASS** (frontend build, backend JS syntax, project control docs).
+**Scope:** Documentation-only decision & handoff, **NOT** upload, download, moderation, DB integration or P0 security regression QA. `main` was still `0993a42154feb37e8842ef8bb3ed4d0a03627889` when verified.
+**Next:** review this PR within stacked dependencies; choose persistent storage, retention and whether report flow is needed. This log-only follow-up advances branch HEAD and triggers a new CI run; verify it live.

@@ -9,7 +9,7 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 | WT-PDF | AI | docs/pdf-upload-scope-20261017 | **Draft PR #4** → docs/mvp-scope-option-b-20261017 | NO (GitHub-only) | REVIEW | Direct PDF product decision confirmed; initial 3 CI checks PASS; details DRAFT |
 | WT-ACCESS | AI | docs/guest-metadata-auth-download-20261018 | **Draft PR #5** → docs/pdf-upload-scope-20261017 | NO (GitHub-only) | REVIEW | ADR-011 approved; initial CI 3 jobs PASS, detailed SRS and runtime QA pending |
 | WT-LIMITS | AI | docs/pdf-upload-limits-20261018 | **Draft PR #6** → docs/guest-metadata-auth-download-20261018 | NO (GitHub-only) | REVIEW | ADR-012 approved; initial 3-job CI PASS; runtime tests NOT RUN |
-| WT-DEP01 | AI | docs/dep01-online-feasibility-20261018 | **Draft PR #7** → docs/pdf-upload-limits-20261018 | NO (GitHub-only) | REVIEW | 4 GitHub Actions jobs PASS on initial commit; offline only, DEP-01 cloud gates NOT RUN |
+| WT-DEP01 | AI | docs/dep01-online-feasibility-20261018 | **Draft PR #7** → docs/pdf-upload-limits-20261018 | NO (GitHub-only) | REVIEW | 5/5 GitHub Actions PASS initial scaffold commit 3ebee966, Vercel 403 blocks HTTPS live stage, no local worktree |
 | WT-ANALYSIS | Human A (proposed) | Not created | Base reviewed main after merge | NO | PLANNED | Requirements/UC/ERD session |
 | WT-DEV | Human B (proposed) | Not created | Base reviewed main after merge | NO | PLANNED | Independently scoped coding |
 | WT-QA | Unassigned | Not created | Base reviewed main after merge | NO | OPTIONAL | Integration/regression tests |

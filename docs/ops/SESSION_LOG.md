@@ -165,3 +165,11 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Scope of PoC code:** `poc/dep01-cloud-isolated/` contains independent zero-dependency static HTML, Node Function GET/HEAD `/api/health`, no app source import, no DB/Blob credentials, no user data, no payment or upload endpoints, safe response metadata, local Node smoke test and Vercel root config.
 **CI:** isolated smoke job added to `.github/workflows/ci.yml` — pending real run at publishing. **Cloud:** Vercel HTTPS DEP-A01 NOT RUN, TiDB DEP-A02 NOT RUN, private Blob DEP-A03 NOT RUN. No resource created, no charge incurred. 
 **Next:** commit PoC onto existing Draft PR #7 branch, verify 5 jobs; get approved team access; then deploy ONLY `poc/dep01-cloud-isolated` to separate preview under authorized Hobby scope. Never deploy existing backend with P0 SEC-01/03.
+
+## SESSION-20261018-DEP-01B-CI — Standalone cloud probe scaffold verified offline
+**Draft PR #7:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/7 targeting `docs/pdf-upload-limits-20261018`.
+**Initial scaffold commit:** `3ebee96643b873e726fc1f3c11fe508f2cf8107f`.
+**Verified GitHub Actions run:** https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39143252600 — **5/5 PASS**: existing frontend build, backend syntax, project control checks, DEP-01 source/Express offline probe and new standalone cloud scaffold HTTP tests.
+**Actual PoC stage:** `poc/dep01-cloud-isolated` standalone health-only Vercel-ready source, **not uploaded/deployed to Vercel**. No credentials, database/blob, student files, vulnerable source imports or payment routes. Stage-A real HTTPS DEP-A01 **BLOCKED ACCESS (403)** due team permission; TiDB DEP-A02 and Blob DEP-A03 **NOT RUN**.
+**Cost / security:** 0 new cloud resources and 0 new subscriptions. Existing Vercel team's ID not accessible through connector; reauthorization required, not account switching. No production/main changes. DEP-01B in REVIEW for Human B, NOT formally DONE. Cloud PoC as a whole remains IN_PROGRESS.
+**Next:** verify CI after this log-only commit; ask Human A to reconnect Vercel app with correct authorized team or grant team membership; then inspect Hobby plan and deploy preview only from isolated root. Do not deploy existing CNPM backend until SEC-01/03/04 resolved.

@@ -28,3 +28,10 @@ Vercel connector currently lists projects attached to team scope but `get_team` 
 Only DEP-A01 can be marked PASS after **real public HTTPS request evidence**. GitHub Actions or localhost Node smoke PASS is OFFLINE_PREPARED, **not cloud PASS**.
 
 All other goals remain NOT_RUN, including 10 MiB direct Blob flow, paid route shutdown, MySQL-compatible integration and deploy/restart durability.
+
+## 2026-10-19 — Live Stage-A deployment observed (supersedes old 403 blocker)
+- Vercel personal Hobby `hunny-17` permitted creating `mini-study-network-dep01` even though list_teams was empty; the previous 403 was team-specific.
+- This exact standalone package was uploaded via Vercel connector (no Git auto-link). Deployment `dpl_Umv7RsTsnEycnxyKXzQsrbLRrwtq` is **READY** at https://mini-study-network-dep01.vercel.app/.
+- **Actual target = production** (not Preview), even though staging was requested; no sensitive CNPM application code or student data is included.
+- Human A supplied **Incognito screenshot** of page and automatic cloud API status success. **DEP-A01 REVIEW / browser success observed**; independent network raw HTTP, long-term uptime, DB and PDF test gates NOT RUN.
+- See [../../docs/DEP01_LIVE_EVIDENCE.md](../../docs/DEP01_LIVE_EVIDENCE.md). Do not attempt to deploy the insecure full application to this safe proof project.

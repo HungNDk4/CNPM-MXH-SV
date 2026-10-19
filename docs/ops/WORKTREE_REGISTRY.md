@@ -13,6 +13,7 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 | WT-UBUNTU | AI | chore/ubuntu-dev-setup-20261019 | **Draft PR #8** → docs/dep01-online-feasibility-20261018 | NO (GitHub-only) | REVIEW | Ubuntu 24.04 + MySQL 8 CI PASS 6/6 at fix commit 01077636, human laptop NOT TESTED, no physical worktree |
 | WT-ANALYSIS | Human A (proposed) | Not created | Base reviewed main after merge | NO | PLANNED | Requirements/UC/ERD session |
 | WT-DEV | Human B (proposed) | Not created | Base reviewed main after merge | NO | PLANNED | Independently scoped coding |
+| WT-WBS | AI (docs drafting only; human work unassigned) | docs/two-track-wbs-unassigned-20261020 | Draft PR forthcoming → chore/ubuntu-dev-setup-20261019 (#8) | NO (GitHub-only) | REVIEW | WBS A/B/G are options, not assignments; source and task board owners unchanged |
 | WT-QA | Unassigned | Not created | Base reviewed main after merge | NO | OPTIONAL | Integration/regression tests |
 
 ## Fields required when confirming a real local worktree

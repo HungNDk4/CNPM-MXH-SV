@@ -1,16 +1,20 @@
 # Team Workflow — Nhóm hai thành viên + AI
-**Trạng thái:** Đề xuất vận hành dựa trên thông tin nhóm có đúng **2 thành viên**; ngày 2026-10-17. Người dùng sẽ duyệt/chỉnh kết quả phân tích và thiết kế AI. Chưa xác định tên/khả năng/phân công chính thức của thành viên còn lại.
+**Updated DRAFT v0.2 · 2026-10-20. Ownership: UNASSIGNED.**
 
-## Trách nhiệm
-| Hoạt động | Thành viên phụ trách phân tích/thiết kế | Thành viên còn lại | AI assistant |
+**CẢNH BÁO:** Hai thành viên **chưa chọn luồng công việc nào**. Mọi vai trò từng ghi như "thành viên phụ trách phân tích thiết kế" hay "thành viên còn lại phụ trách code" trước đây chỉ là gợi ý, **không phải phân công đã chốt**. Human A/B trong Task Board chỉ là nhãn phối hợp/nhân sự dự kiến, không tương đương "người đã nhận module". Không giả định ai có năng lực/vị trí nào.
+
+**Bản phân rã mới:** [TEAM_WBS_UNASSIGNED.md](TEAM_WBS_UNASSIGNED.md) (43 gói A01–A16 / B01–B19 / G01–G08, điều kiện bắt đầu và tiêu chí nghiệm thu) và [TEAM_WORK_RULES_UNASSIGNED.md](TEAM_WORK_RULES_UNASSIGNED.md) (bàn giao, folder/file boundaries, hợp đồng/API/DB, Git/QA, selection).
+
+## Hai hướng lựa chọn, chưa gán tên
+| Hoạt động | Luồng A: Phân tích/UX/Frontend (slot, chưa có người) | Luồng B: API/DB/Security/Infra (slot, chưa có người) | Lớp G: phải có 2 human review |
 |---|---|---|---|
-| Chốt vấn đề, scope, yêu cầu | Quyết định/duyệt | Đóng góp phản biện | Tổng hợp evidence và đề xuất |
-| SRS, Use Case, UML, ERD, API | Review/duyệt version | Review khả thi kỹ thuật | Nghiên cứu, viết bản nháp, trace |
-| Coding / integration | Có thể tham gia + review | Nhận module được giao (đề xuất) | Viết/kiểm tra code trên branch riêng |
-| QA/UAT | Duyệt acceptance và demo | Chạy lại luồng / phản biện | Thiết kế test, tự động kiểm tra nếu có runtime |
-| Merge / release | Một người có quyền merge sau review | Review chéo | Tạo PR, **không tự merge khi chưa được yêu cầu** |
+| Business/requirements | SRS/UC/user flow, frontend constraints | kiểm tra feasibility, data/security constraints | Quyết định scope, quyền và contract |
+| Implementation | React screens/components/adapter & UX tests | Express routes/controllers/models, MySQL, storage, API tests | Integration slice, E2E, security review |
+| Documents | business/design/UI part; user manual | technical/API/DB/deployment part | one report integrator selected later |
+| Merge/release | candidate + review, not ownership | candidate + review, not ownership | one merger per PR after two humans agree |
+| AI | supports either with isolated PR and evidence | supports either with isolated PR and evidence | cannot count as human or self-approve |
 
-AI không phải thành viên con người thứ ba; AI không được tự phê duyệt tài liệu hoặc giả mạo kết quả kiểm thử. Hai thành viên nên phân công theo khả năng và lịch học thay vì cứng nhắc như bảng trên.
+**Không chia A cho người dùng và B cho người còn lại cho tới khi có lựa chọn explicit của cả nhóm và cập nhật Task Board.**
 
 ## Single source of truth (SoT)
 1. `docs/DECISIONS.md`: các lựa chọn nghiệp vụ/tech đã chốt; mục PROPOSED không phải đã phê duyệt.

@@ -25,6 +25,11 @@ Sinh viên đăng câu hỏi, thảo luận và chia sẻ tài liệu học tậ
 
 Hướng dẫn và lưu ý: [docs/DEV_SETUP.md](docs/DEV_SETUP.md).
 
+## WBS/Quy trình cho nhóm 2 người — CHƯA PHÂN CÔNG
+- [TEAM_WBS_UNASSIGNED.md](docs/TEAM_WBS_UNASSIGNED.md): 43 work packages, phụ thuộc độc lập/cần hợp đồng/cần runtime/cần sign-off, chia theo 2 luồng A/B **không gán tên người**.
+- [TEAM_WORK_RULES_UNASSIGNED.md](docs/TEAM_WORK_RULES_UNASSIGNED.md): file boundaries, contract freeze, review/merge, QA/evidence, báo cáo/demo.
+- [TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md): quy trình phối hợp, cập nhật rõ chưa chọn thành viên làm A/B.
+
 ## Bắt đầu làm việc trong nhóm
 - [AGENTS.md](AGENTS.md) — quy tắc dành cho các AI coding agents.
 - [docs/TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) — cách phối hợp 2 thành viên và AI.

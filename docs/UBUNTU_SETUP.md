@@ -69,14 +69,14 @@ JWT_REFRESH_EXPIRES=7d
 Tạo **hai** secret riêng bằng `openssl rand -hex 32` (chạy hai lần). Không chia sẻ/commit `.env`. `DB_AUTO_SYNC=false` ngăn backend dev tự `sequelize.sync({ alter:true })` thay đổi schema đã import.
 
 ## 5. Chạy app với hai Ubuntu terminal
-Terminal backend:
+Mở hai terminal Ubuntu **đều bắt đầu ở thư mục gốc repository**. Terminal backend:
 ```bash
-cd CNPM-MXH-SV/server
+cd server
 npm run dev
 ```
 Terminal frontend:
 ```bash
-cd CNPM-MXH-SV/client
+cd client
 npm run dev
 ```
 Lệnh kiểm tra `curl -fsS http://127.0.0.1:5000/api/health`, mở http://localhost:5173. Vite dev proxy `/api` sang localhost:5000.
@@ -93,3 +93,5 @@ Lệnh kiểm tra `curl -fsS http://127.0.0.1:5000/api/health`, mở http://loca
 2. Health API 200 và trang React hiển thị.
 3. GitHub Actions Ubuntu 24.04 + MySQL 8 PASS trên exact PR HEAD.
 4. Máy Ubuntu của nhóm: sau khi chạy, gửi terminal kết quả để xác thực thật; CI không thay thế kiểm thử laptop.
+
+**CI evidence (2026-10-19):** Ubuntu 24.04 + MySQL 8 job **PASS** on commit `01077636e162a84fc9293ba4f40947facdc05b3c`: https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39288366164. **6/6 CI jobs PASS**. Initial integration run exposed a preexisting JWT refresh collision: registration/login within one second yielded identical refresh tokens and MySQL UNIQUE error 409. This branch now signs refresh JWTs with a random `jti`, confirmed by repeat login and rotation negative/regression tests. Final handoff commit will require its own CI.

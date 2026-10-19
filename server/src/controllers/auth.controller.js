@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
+const { randomUUID } = require('node:crypto');
 const { User, RefreshToken } = require('../models');
 const { createError } = require('../middlewares/error.middleware');
 
@@ -10,7 +11,9 @@ const generateTokens = (user) => {
   const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
     expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m',
   });
-  const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+  // Every newly issued refresh token must be unique, even within the same second.
+  // Otherwise two login/registration sessions for one user can violate token UNIQUE in MySQL.
+  const refreshToken = jwt.sign({ ...payload, jti: randomUUID() }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES || '7d',
   });
 

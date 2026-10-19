@@ -65,12 +65,20 @@ test('Ubuntu + MySQL 8: timestamps, register, login, refresh, create/list', { ti
     assert.equal(login.status, 200, JSON.stringify(login.data));
     assert.ok(login.data?.data?.accessToken);
     assert.ok(login.data?.data?.refreshToken);
+    assert.notEqual(login.data.data.refreshToken, register.data.data.refreshToken,
+      'Registration/login within one second must issue distinct refresh JWTs');
 
     const refresh = await call('/api/auth/refresh', {
       method: 'POST', body: { refreshToken: login.data.data.refreshToken }
     });
     assert.equal(refresh.status, 200, JSON.stringify(refresh.data));
     assert.ok(refresh.data?.data?.accessToken);
+    assert.notEqual(refresh.data.data.refreshToken, login.data.data.refreshToken,
+      'Refresh token rotation must issue a new unique token');
+    const reused = await call('/api/auth/refresh', {
+      method: 'POST', body: { refreshToken: login.data.data.refreshToken }
+    });
+    assert.equal(reused.status, 401, 'Revoked refresh token must not be reusable');
 
     const create = await call('/api/posts', {
       method: 'POST', token: login.data.data.accessToken,

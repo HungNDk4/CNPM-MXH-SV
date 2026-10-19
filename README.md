@@ -47,3 +47,10 @@ Hướng dẫn và lưu ý: [docs/DEV_SETUP.md](docs/DEV_SETUP.md).
 - Hai trang `PostDetailPage` và `ProfilePage` vẫn là placeholder; nhiều UI chưa nối API.
 - Script schema có admin seed dùng hash **placeholder**, không phải tài khoản admin có thể đăng nhập.
 - CI đầu tiên chỉ kiểm tra cú pháp JS backend và build frontend; **chưa có test DB, unit/e2e hoặc kiểm thử Sandbox**.
+
+## Ubuntu 24.04 LTS — Development environment
+- **Complete instructions:** [docs/UBUNTU_SETUP.md](docs/UBUNTU_SETUP.md).
+- After installing Node.js 24 (nvm), MySQL 8 and Git: `bash scripts/ubuntu/doctor.sh` then `bash scripts/ubuntu/setup.sh`.
+- Configure the generated **local-only** `server/.env`, create dedicated MySQL user/database, import `database/schema.sql`, and run backend/client in two Ubuntu terminals.
+- The Ubuntu MySQL integration GitHub Actions job uses an **ephemeral MySQL 8 container** with no real data; no local Ubuntu laptop has yet been configured remotely.
+- **Never expose** the current Express app publicly: legacy payment routes, raw `/uploads` and PDF permissions still require P0 fixes.

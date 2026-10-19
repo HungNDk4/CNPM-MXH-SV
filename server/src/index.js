@@ -11,7 +11,7 @@ async function bootstrap() {
     console.log('✅ MySQL connected successfully.');
 
     // Sync models (chỉ dùng trong dev, production dùng migrations)
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' && process.env.DB_AUTO_SYNC !== 'false') {
       await sequelize.sync({ alter: true });
       console.log('✅ Database models synchronized.');
     }

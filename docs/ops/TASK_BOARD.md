@@ -51,7 +51,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | SEC-04 | P0 | Replace vulnerable Multer 1.x with reviewed patched release before upload implementation | UNASSIGNED | TODO | DOC-01 + compatibility check | Repo package.json declares 1.4.5-lts.1; GHSA-wc9g-mqfw-jrwm affects <2.3.0 |
 | PAY-01 | P2 | Order/history/payment state UI | UNASSIGNED | DEFERRED | New explicit scope decision | VNPay Sandbox extension only |
 | PAY-02 | P2 | Sandbox full flow/negative/idempotency tests | UNASSIGNED | DEFERRED | SEC-02 + scope reopened | NOT TESTED; out of MVP |
-| QA-02 | P1 | Disposable MySQL integration suite | UNASSIGNED | TODO | G4 | No tests |
+| QA-02 | P1 | Disposable MySQL integration suite | UNASSIGNED | REVIEW | G4 / Ubuntu CI | Ubuntu 24.04 + real MySQL 8 auth, refresh-token uniqueness/rotation, post CRUD smoke PASS run 39288366164; full integration suite still NOT RUN |
 | QA-03 | P1 | Browser E2E smoke and responsive test | UNASSIGNED | TODO | G4 | No tests |
 | QA-04 | P1 | Security/regression review | UNASSIGNED | TODO | G4/G5 | No tests |
 | OPS-05 | P1 | Deployment/setup rehearsal | Human B + AI | TODO | G4 | README draft |
@@ -70,5 +70,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 - DEFERRED when excluded from current approved scope; do not silently drop task.
 - Never let AI mark human approval or runtime QA PASS merely from static review.
 
+| OPS-07 | P1 | Ubuntu 24.04 reproducible local development instructions and real MySQL CI | AI + Human B review | REVIEW | Existing Node/Vite/Sequelize source | Draft PR #8, Ubuntu/MySQL integration + frontend/back+PoC checks 6/6 PASS on initial fixed commit 01077636; human laptop Ubuntu NOT RUN |
+
 ## Next pull
-**2026-10-19: DEP-A01 is UNBLOCKED and REVIEW from user-incognito proof.** Hobby personal account `hunny-17` successfully created standalone PoC `mini-study-network-dep01` and Vercel deployment `dpl_Umv7RsTsnEycnxyKXzQsrbLRrwtq` is READY. Public alias: https://mini-study-network-dep01.vercel.app/ ; Chrome incognito loads the landing page and reports live API response without login. External probe from assistant environment is unavailable (DNS/network restriction); off-network uptime/redeploy persistence NOT RUN. Deployment target was **production** despite staging request; isolated code only, no business data. **Next:** DEP-A01 independent network / HEAD/POST HTTP checks then DEP-A02 disposable TiDB+Sequelize design/onboarding with separate approval; private Blob DEP-A03 NOT RUN. No main app deploy, no DB, no PDF, no VNPay. Review stacked Draft PR #1–#7; SEC-01/03/04 remain P0.
+**OPS-07 Ubuntu environment PREPARED and CI validated** on PR #8 (dependent on #7), commit `01077636`: https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39288366164 **6/6 PASS**, including Ubuntu 24.04/MySQL 8 DB integration smoke and refresh-token unique JWT `jti` regression. Status REVIEW until human review and actual local Ubuntu setup; final doc HEAD requires CI recheck. Human A should run docs/UBUNTU_SETUP.md on their Ubuntu machine; never share .env/password. Existing cloud PoC separate. Main not changed. P0 SEC-01/03/04 and full PDF and DB E2E NOT RUN; no public backend deployment.

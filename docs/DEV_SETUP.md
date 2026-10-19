@@ -31,3 +31,6 @@
 - Local manual: health, register/login, create/list, comment, profile, document permissions (theo `TEST_PLAN.md`).
 - CI hiện tại: syntax backend + production build frontend; chưa kết nối MySQL, chưa chạy functional tests.
 - Dùng issue/PR để ghi PASS/FAIL và bằng chứng thay vì kết luận từ source.
+
+## Ubuntu-specific setup
+Use [UBUNTU_SETUP.md](UBUNTU_SETUP.md) and `scripts/ubuntu/doctor.sh` / `setup.sh`. In Ubuntu local development with `database/schema.sql` imported, set `DB_AUTO_SYNC=false` to avoid Sequelize `sync({alter:true})` changing a handcrafted schema. The SQL baseline's fresh-install `likes.updated_at` and `refresh_tokens.updated_at` columns now match Sequelize timestamps; this is **not** a migration for existing populated databases. `npm ci` installs locked dependencies; Ubuntu GitHub CI must execute real MySQL 8 integration tests, not only Node syntax.

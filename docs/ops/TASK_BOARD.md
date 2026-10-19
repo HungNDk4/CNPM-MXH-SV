@@ -51,7 +51,7 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 | SEC-04 | P0 | Replace vulnerable Multer 1.x with reviewed patched release before upload implementation | UNASSIGNED | TODO | DOC-01 + compatibility check | Repo package.json declares 1.4.5-lts.1; GHSA-wc9g-mqfw-jrwm affects <2.3.0 |
 | PAY-01 | P2 | Order/history/payment state UI | UNASSIGNED | DEFERRED | New explicit scope decision | VNPay Sandbox extension only |
 | PAY-02 | P2 | Sandbox full flow/negative/idempotency tests | UNASSIGNED | DEFERRED | SEC-02 + scope reopened | NOT TESTED; out of MVP |
-| QA-02 | P1 | Disposable MySQL integration suite | UNASSIGNED | TODO | G4 | No tests |
+| QA-02 | P1 | Disposable MySQL integration suite | UNASSIGNED | IN_PROGRESS | G4 / Ubuntu CI | Initial Ubuntu 24.04 + MySQL 8 auth/post smoke introduced in Draft PR #8; real CI outcome pending, not full QA |
 | QA-03 | P1 | Browser E2E smoke and responsive test | UNASSIGNED | TODO | G4 | No tests |
 | QA-04 | P1 | Security/regression review | UNASSIGNED | TODO | G4/G5 | No tests |
 | OPS-05 | P1 | Deployment/setup rehearsal | Human B + AI | TODO | G4 | README draft |
@@ -69,6 +69,8 @@ Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assi
 - BLOCKED → TODO/IN_PROGRESS when explicit blocker resolved; record SESSION_LOG.
 - DEFERRED when excluded from current approved scope; do not silently drop task.
 - Never let AI mark human approval or runtime QA PASS merely from static review.
+
+| OPS-07 | P1 | Ubuntu 24.04 reproducible local development instructions and real MySQL CI | AI + Human B review | IN_PROGRESS | Existing Node/Vite/Sequelize source | Draft PR #8 (stacked on #7), Ubuntu scripts and database integration job pending CI; teammate local Ubuntu check NOT RUN |
 
 ## Next pull
 **2026-10-19: DEP-A01 is UNBLOCKED and REVIEW from user-incognito proof.** Hobby personal account `hunny-17` successfully created standalone PoC `mini-study-network-dep01` and Vercel deployment `dpl_Umv7RsTsnEycnxyKXzQsrbLRrwtq` is READY. Public alias: https://mini-study-network-dep01.vercel.app/ ; Chrome incognito loads the landing page and reports live API response without login. External probe from assistant environment is unavailable (DNS/network restriction); off-network uptime/redeploy persistence NOT RUN. Deployment target was **production** despite staging request; isolated code only, no business data. **Next:** DEP-A01 independent network / HEAD/POST HTTP checks then DEP-A02 disposable TiDB+Sequelize design/onboarding with separate approval; private Blob DEP-A03 NOT RUN. No main app deploy, no DB, no PDF, no VNPay. Review stacked Draft PR #1–#7; SEC-01/03/04 remain P0.

@@ -181,3 +181,11 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Unverified:** independent-network traffic not captured by assistant due DNS/network restrictions; HEAD/POST live HTTP, uptime, redeploy persistence, TiDB/Sequelize compatibility DEP-A02, Blob Private PDF DEP-A03, auth & admin rules and payment hard-deny still NOT RUN.
 **Task state:** DEP-01 IN_PROGRESS, DEP-A01 REVIEW (observed browser success), stage proof not full G6 acceptance. Record in DEP01_LIVE_EVIDENCE and refresh PR #7. Do not touch main or merge stacked PRs without human review.
 **Next:** verify HTTPS from a different device/network, inspect Vercel protection without weakening other projects, then design isolated TiDB Starter test after explicit account/zero-spend approval.
+
+## SESSION-20261019-OPS-07 — Reproducible Ubuntu local development
+**Actor:** Human A requested running project on Ubuntu. AI prepared GitHub-only branch `chore/ubuntu-dev-setup-20261019` stacked from DEP-01 Draft PR #7 at `10b92d3c304bfd4c96427d03b09b6dc70f5ee45b`.
+**Scope:** Ubuntu 24.04 LTS local dev (Node 24, MySQL 8, Vite/React+Express), no Docker prerequisite. Add `docs/UBUNTU_SETUP.md`, `scripts/ubuntu/{doctor,setup}.sh`, `scripts/ubuntu/mysql-integration.test.cjs`; CI Ubuntu 24.04 runner + MySQL 8 Docker service with fresh schema and backend integration tests.
+**Model/schema parity:** fresh bootstrap schema adds `updated_at` to `likes` and `refresh_tokens` to match Sequelize; these changes do **not** migrate existing DBs. `DB_AUTO_SYNC=false` suppresses `sync({alter:true})` when the fresh SQL is imported on Ubuntu local development (other development behavior unchanged).
+**Security boundaries:** local 127.0.0.1 only; no live document binary upload, no payment calls or public server exposure; old paid routes/static uploads still present. Never treat Ubuntu setup smoke as full security, online deployment or product E2E PASS.
+**Execution:** source/CI branch prepared; no human laptop, WSL installation or Ubuntu machine controlled by assistant. Initial CI status must be verified from GitHub before reporting PASS.
+**Next:** publish PR #8 targeting PR #7 branch, verify CI and provide user commands for own Ubuntu; tests after source review/human signoff.

@@ -80,6 +80,7 @@ CREATE TABLE likes (
   target_type ENUM('post','comment') NOT NULL,
   target_id   INT UNSIGNED NOT NULL,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_likes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   UNIQUE KEY uq_like (user_id, target_type, target_id),
   INDEX idx_likes_target (target_type, target_id)
@@ -136,6 +137,7 @@ CREATE TABLE refresh_tokens (
   expires_at DATETIME     NOT NULL,
   revoked    TINYINT(1)   NOT NULL DEFAULT 0,
   created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_rt_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_rt_user  (user_id),
   INDEX idx_rt_token (token(64))

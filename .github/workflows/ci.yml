@@ -99,3 +99,50 @@ jobs:
         run: node --test test/health.test.cjs
       - name: Check Vercel configuration JSON and isolated package manifests
         run: node -e "const fs=require('fs');const config=JSON.parse(fs.readFileSync('vercel.json'));const p=JSON.parse(fs.readFileSync('package.json'));if(config.version!==2||Object.keys(p.dependencies||{}).length)process.exit(1)"
+
+  ubuntu-mysql-integration:
+    name: Ubuntu 24.04 + MySQL 8 integration (isolated DB)
+    runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ubuntu_test_only_password
+          MYSQL_DATABASE: mini_study_network
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pubuntu_test_only_password"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: mini_study_network
+      DB_USER: root
+      DB_PASSWORD: ubuntu_test_only_password
+      JWT_ACCESS_SECRET: ci_only_ubuntu_access_secret_not_for_any_other_environment_2026
+      JWT_REFRESH_SECRET: ci_only_ubuntu_refresh_secret_not_for_any_other_environment_2026
+      CLIENT_URL: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install MySQL client (Ubuntu 24.04)
+        run: sudo apt-get update && sudo apt-get install -y default-mysql-client
+      - name: Import SQL schema on disposable MySQL
+        run: mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/schema.sql
+      - name: Install backend dependencies
+        working-directory: server
+        run: npm ci
+      - name: Test API with real MySQL (no payment/PDF testing)
+        working-directory: server
+        run: node --test ../scripts/ubuntu/mysql-integration.test.cjs
+      - name: Check Ubuntu scripts shell syntax
+        run: bash -n scripts/ubuntu/doctor.sh scripts/ubuntu/setup.sh
+      - name: Verify original SQL columns match Sequelize timestamps
+        run: |
+          mysql --protocol=tcp -h127.0.0.1 -uroot -p"$DB_PASSWORD" -D mini_study_network -e "SHOW COLUMNS FROM likes LIKE 'updated_at'; SHOW COLUMNS FROM refresh_tokens LIKE 'updated_at';"

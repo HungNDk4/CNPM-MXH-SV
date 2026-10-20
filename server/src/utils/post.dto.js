@@ -20,8 +20,8 @@ const toSafePost = (record) => {
     price: Number(post.price ?? 0).toFixed(2),
     view_count: post.view_count,
     status: post.status,
-    created_at: post.created_at,
-    updated_at: post.updated_at,
+    created_at: post.created_at ?? post.createdAt ?? null,
+    updated_at: post.updated_at ?? post.updatedAt ?? null,
     author: author ? {
       id: author.id,
       full_name: author.full_name,

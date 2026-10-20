@@ -10,8 +10,6 @@ const userRoutes    = require('./routes/user.routes');
 const postRoutes    = require('./routes/post.routes');
 const commentRoutes = require('./routes/comment.routes');
 const likeRoutes    = require('./routes/like.routes');
-const orderRoutes   = require('./routes/order.routes');
-const paymentRoutes = require('./routes/payment.routes');
 
 const { errorHandler } = require('./middlewares/error.middleware');
 
@@ -55,8 +53,6 @@ app.use('/api/users',    userRoutes);
 app.use('/api/posts',    postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/likes',    likeRoutes);
-app.use('/api/orders',   orderRoutes);
-app.use('/api/payment',  paymentRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────
 app.use('*', (req, res) => {

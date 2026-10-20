@@ -1,7 +1,7 @@
 # Team Workflow — Nhóm hai thành viên + AI
-**Updated DRAFT v0.2 · 2026-10-20. Ownership: UNASSIGNED.**
+**Updated DRAFT v0.3 · 2026-10-20. Role split newly discussed; per-task owner pending teammate acceptance.**
 
-**CẢNH BÁO:** Hai thành viên **chưa chọn luồng công việc nào**. Mọi vai trò từng ghi như "thành viên phụ trách phân tích thiết kế" hay "thành viên còn lại phụ trách code" trước đây chỉ là gợi ý, **không phải phân công đã chốt**. Human A/B trong Task Board chỉ là nhãn phối hợp/nhân sự dự kiến, không tương đương "người đã nhận module". Không giả định ai có năng lực/vị trí nào.
+**CẬP NHẬT 20/10:** Human A (người dùng) đã **chốt nhận Core Backend**; Human B được đề xuất nhận Frontend + Analysis/Design và tài liệu, nhưng phản hồi chấp nhận workload cụ thể từ Human B vẫn **PENDING**. Xem [CORE_BACKEND_TEAM_HANDOFF_20261020.md](CORE_BACKEND_TEAM_HANDOFF_20261020.md). Trước đây hai thành viên **chưa chọn luồng công việc nào**; mọi vai trò từng ghi như "thành viên phụ trách phân tích thiết kế" hay "thành viên còn lại phụ trách code" trước đây chỉ là gợi ý, **không phải phân công đã chốt**. Human A/B trong Task Board chỉ là nhãn phối hợp/nhân sự dự kiến, không tương đương "người đã nhận module". Không giả định ai có năng lực/vị trí nào.
 
 **Bản phân rã mới:** [TEAM_WBS_UNASSIGNED.md](TEAM_WBS_UNASSIGNED.md) (43 gói A01–A16 / B01–B19 / G01–G08, điều kiện bắt đầu và tiêu chí nghiệm thu) và [TEAM_WORK_RULES_UNASSIGNED.md](TEAM_WORK_RULES_UNASSIGNED.md) (bàn giao, folder/file boundaries, hợp đồng/API/DB, Git/QA, selection).
 
@@ -14,7 +14,7 @@
 | Merge/release | candidate + review, not ownership | candidate + review, not ownership | one merger per PR after two humans agree |
 | AI | supports either with isolated PR and evidence | supports either with isolated PR and evidence | cannot count as human or self-approve |
 
-**Không chia A cho người dùng và B cho người còn lại cho tới khi có lựa chọn explicit của cả nhóm và cập nhật Task Board.**
+**Vị trí hiện tại:** Human A đã xác nhận chọn luồng kỹ thuật B (Core Backend); Human B được đề xuất luồng A (Frontend/Design). Quy ước luồng A/B trong WBS không phải Human A/B. Chưa gán chính thức các task cho Human B khi chưa có phản hồi xác nhận; canonical Task Board là nguồn trạng thái cuối.
 
 ## Single source of truth (SoT)
 1. `docs/DECISIONS.md`: các lựa chọn nghiệp vụ/tech đã chốt; mục PROPOSED không phải đã phê duyệt.

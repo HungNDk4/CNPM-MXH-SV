@@ -14,6 +14,7 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 | WT-ANALYSIS | UNASSIGNED | Not created | Base reviewed main after merge | NO | PLANNED | Requirements/UC/ERD session |
 | WT-DEV | UNASSIGNED | Not created | Base reviewed main after merge | NO | PLANNED | Independently scoped coding |
 | WT-WBS | AI (docs drafting only; human work unassigned) | docs/two-track-wbs-unassigned-20261020 | Draft PR #9 → chore/ubuntu-dev-setup-20261019 (#8) | NO (GitHub-only) | REVIEW | WBS A/B/G are options, not assignments; source and task board owners unchanged |
+| WT-HANDOFF | AI docs drafting; Human A chose BE role, Human B task acceptance pending | docs/core-backend-handoff-20261020 | Draft PR forthcoming → docs/two-track-wbs-unassigned-20261020 (#9) | NO (GitHub-only) | REVIEW | Role-level handoff, no source/DB changes, no per-task owner claim |
 | WT-QA | Unassigned | Not created | Base reviewed main after merge | NO | OPTIONAL | Integration/regression tests |
 
 ## Fields required when confirming a real local worktree

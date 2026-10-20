@@ -1,7 +1,7 @@
 # TASK BOARD — canonical status and ownership
 Baseline 2026-10-17 · status states: `TODO | IN_PROGRESS | BLOCKED | REVIEW | DONE | DEFERRED`.
 **This is the only canonical status table.** A phase gate does not become PASS just because associated documents exist.
-Owner: `Human A` = user/design reviewer; `Human B` = other teammate; `AI` = assistant executing in branch. Proposed allocation is not a human commitment. `UNASSIGNED` means not accepted.
+Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend at role level**; `Human B` = other teammate, **Frontend + Analysis/Design proposed and pending own acceptance of task scope**; `AI` = assistant executing only on explicitly allowed branches. Existing `Owner (proposed)` column is older planning data, **NOT task acceptance** and is not auto-changed by role selection. Exact package mapping in `docs/CORE_BACKEND_TEAM_HANDOFF_20261020.md`. `UNASSIGNED` means not accepted.
 
 | Task ID | Priority | Scope / acceptance summary | Owner (proposed) | Status | Dependency | Evidence / PR |
 |---|---|---|---|---|---|---|

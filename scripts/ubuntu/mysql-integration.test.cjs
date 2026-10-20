@@ -103,19 +103,10 @@ test('Ubuntu + MySQL 8: timestamps, register, login, refresh, create/list', { ti
     }
     if (started) await new Promise((resolve, reject) =>
       server.close(error => error ? reject(error) : resolve()));
-    await sequelize.close();
+    // Connection closes in final suite.
   }
 });
 
 
-// Run SEC-01 independently after the baseline closes its Sequelize pool.
-// This reuses the existing disposable MySQL CI job without modifying the
-// shared workflow also edited by QA-01 PR #21.
-test('SEC-01: Post privacy and protected PDF negative suite', { timeout: 120_000 }, () => {
-  const { spawnSync } = require('node:child_process');
-  const run = spawnSync(process.execPath,
-    ['--test', require.resolve('./pdf-security.test.cjs')],
-    { stdio: 'inherit', env: process.env, timeout: 115_000 });
-  if (run.error) throw run.error;
-  assert.equal(run.status, 0, 'SEC-01 subprocess must PASS');
-});
+// Load security tests in the same test runner.
+require('./pdf-security.test.cjs');

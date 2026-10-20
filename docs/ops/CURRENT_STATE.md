@@ -50,3 +50,12 @@
 
 ## Operational warning
 This is a snapshot, not the source of truth for task status or branch state. Do not create worktrees, claim local paths, update payments, or modify main without specific verified context.
+
+## 2026-10-20 LIVE CHECKPOINT — Overrides dated setup/role paragraphs above (DO NOT assume task done)
+- User confirmed **Human A Core Backend**; second teammate **proposed** Frontend + Analysis/Design; Human B acceptance of exact tasks still PENDING. WBS stream A/B labels are independent of Human A/B identities.
+- User Ubuntu WSL 26.04.1 / Node 24.22 / npm 11.19 / MySQL 8.4.11/7 imported tables: Express health HTTP 200, React/Vite UI loaded, **Auth/Post smoke test 7/7 PASS** (register, login, /me, create post, read post, feed, refresh, logout), MySQL SELECT confirms stored post ID 1 on 2026-10-20. Not equivalent to 2-user authorization/security/PDF E2E.
+- Remote main remains `0993a421...`, stacked Draft PR #1–#10 are NOT MERGED. User WSL working branch `chore/ubuntu-dev-setup-20261019` at `f4a4c86` clean, tracked remote; `server/.env` ignored by git. Do not reset or force move it.
+- Team preview integration branch `integration/team-dev-20261020` forked from PR #10 HEAD `b840f16...`, contains docs & setup to start two independent feature branches; preview is NOT main approval/merge. Initial base CI 6/6 PASS GitHub Actions run 39448540132; sprint docs HEAD CI needs recheck.
+- GitHub Issues for first iteration: TEAM contract [#11](https://github.com/HungNDk4/CNPM-MXH-SV/issues/11), CORE legacy paid shutdown [#12](https://github.com/HungNDk4/CNPM-MXH-SV/issues/12), CORE safe DTO [#13](https://github.com/HungNDk4/CNPM-MXH-SV/issues/13), CORE 2-account negative tests [#14](https://github.com/HungNDk4/CNPM-MXH-SV/issues/14), FE PostDetail [#15](https://github.com/HungNDk4/CNPM-MXH-SV/issues/15), FE Profile [#16](https://github.com/HungNDk4/CNPM-MXH-SV/issues/16), FE SRS/UC/Wireframe [#17](https://github.com/HungNDk4/CNPM-MXH-SV/issues/17), TEAM two-machine setup [#18](https://github.com/HungNDk4/CNPM-MXH-SV/issues/18). All issues created with GitHub assignees empty; accepting tasks happens later.
+- Source still contains payment/order endpoints, public `/uploads`, Multer 1.x; public full app deployment blocked by P0 security. Vercel live PoC = **health-only**, not the full app.
+- **New read-first for concurrent work:** [TEAM_SPRINT01_20261020.md](TEAM_SPRINT01_20261020.md). Canonical board task statuses remain unchanged; issue links added only.

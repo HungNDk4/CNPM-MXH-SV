@@ -76,4 +76,10 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { authenticate, authorize };
+// Guest PDF metadata is optional; a supplied invalid token is never downgraded.
+const optionalAuthenticate = (req, res, next) => {
+  if (req.headers.authorization === undefined) return next();
+  return authenticate(req, res, next);
+};
+
+module.exports = { authenticate, optionalAuthenticate, authorize };

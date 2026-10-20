@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const path = require('path');
 const rateLimit = require('express-rate-limit');
 
 const authRoutes    = require('./routes/auth.routes');
@@ -40,7 +39,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // ─── Static Files (uploads) ──────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// No public static mount for protected PDFs (SEC-01).
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

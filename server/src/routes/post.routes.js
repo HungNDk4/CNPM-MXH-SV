@@ -1,10 +1,10 @@
 const router = require('express').Router();
 const { getPosts, getPostById, createPost, updatePost, deletePost } = require('../controllers/post.controller');
-const { authenticate } = require('../middlewares/auth.middleware');
+const { authenticate, optionalAuthenticate } = require('../middlewares/auth.middleware');
 
-// Public routes (có thể có token, có thể không)
-router.get('/',    authenticate, getPosts);     // dùng authenticate để kiểm tra access, không bắt buộc
-router.get('/:id', authenticate, getPostById);
+// Optional authentication is scoped in the controller to active/free PDF metadata.
+router.get('/',    optionalAuthenticate, getPosts);
+router.get('/:id', optionalAuthenticate, getPostById);
 
 // Protected routes
 router.post('/',       authenticate, createPost);

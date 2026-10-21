@@ -62,7 +62,9 @@ if (process.env.NODE_ENV === 'production' && process.env.SERVE_CLIENT_DIST === '
   const dist = path.resolve(__dirname, '../../client/dist');
   app.use(express.static(dist, { index: false, dotfiles: 'deny' }));
   app.get('*', (req, res, next) => {
-    if (req.path === '/api' || req.path.startsWith('/api/')) return next();
+    if (req.path === '/api' || req.path.startsWith('/api/') ||
+        req.path === '/uploads' || req.path.startsWith('/uploads/') ||
+        req.path === '/private-documents' || req.path.startsWith('/private-documents/')) return next();
     res.sendFile(path.join(dist, 'index.html'), err => {
       if (err) next(err);
     });

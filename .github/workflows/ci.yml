@@ -157,3 +157,91 @@ jobs:
       - name: Verify original SQL columns match Sequelize timestamps
         run: |
           mysql --protocol=tcp -h127.0.0.1 -uroot -p"$DB_PASSWORD" -D mini_study_network -e "SHOW COLUMNS FROM likes LIKE 'updated_at'; SHOW COLUMNS FROM refresh_tokens LIKE 'updated_at';"
+
+  e2e01-browser-fullstack:
+    name: E2E-01 Chrome + React + Express + MySQL + PDF
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: e2e01_ci_only
+          MYSQL_DATABASE: mini_study_network
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pe2e01_ci_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: test
+      DB_AUTO_SYNC: 'false'
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: mini_study_network
+      DB_USER: root
+      DB_PASSWORD: e2e01_ci_only
+      JWT_ACCESS_SECRET: e2e01_only_access_secret_not_for_production_20261021
+      JWT_REFRESH_SECRET: e2e01_only_refresh_secret_not_for_production_20261021
+      CLIENT_URL: http://127.0.0.1:5173
+      DOCUMENT_PRIVATE_DIR: /tmp/e2e01-private
+      PORT: 5000
+      E2E_DISPOSABLE_DB: 'true'
+      E2E_UI_URL: http://127.0.0.1:5173
+      E2E_API_URL: http://127.0.0.1:5000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+      - name: Import schema and PDF migration into disposable MySQL 8
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/schema.sql
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/migrations/20261021_document_files.sql
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" -D mini_study_network -e 'SHOW TABLES LIKE "document_files";'
+      - name: Install locked backend and frontend dependencies
+        run: |
+          npm --prefix server ci
+          npm --prefix client ci
+      - name: Install isolated Playwright runner and Chromium (CI-only)
+        run: |
+          npm --prefix client install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          cd client && npx playwright install --with-deps chromium
+      - name: Start actual Express and Vite HTTP servers
+        run: |
+          mkdir -p "$DOCUMENT_PRIVATE_DIR"
+          node server/src/index.js > "$RUNNER_TEMP/e2e01-backend.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/e2e01-backend.pid"
+          npm --prefix client run dev -- --host 127.0.0.1 --strictPort > "$RUNNER_TEMP/e2e01-vite.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/e2e01-vite.pid"
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5000/api/health >/dev/null &&
+               curl -fsS http://127.0.0.1:5173/ >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          echo "HTTP startup failed"; cat "$RUNNER_TEMP/e2e01-backend.log" "$RUNNER_TEMP/e2e01-vite.log"
+          exit 1
+      - name: Run real Chromium browser E2E against MySQL/private disk
+        run: node --test client/e2e/e2e01.test.cjs
+      - name: Show process logs for diagnostics on failure
+        if: failure()
+        run: |
+          test ! -f "$RUNNER_TEMP/e2e01-backend.log" || tail -n 100 "$RUNNER_TEMP/e2e01-backend.log"
+          test ! -f "$RUNNER_TEMP/e2e01-vite.log" || tail -n 100 "$RUNNER_TEMP/e2e01-vite.log"
+      - name: Cleanup isolated processes and PDF fixtures
+        if: always()
+        run: |
+          for name in backend vite; do
+            if test -f "$RUNNER_TEMP/e2e01-$name.pid"; then
+              kill "$(cat "$RUNNER_TEMP/e2e01-$name.pid")" 2>/dev/null || true
+            fi
+          done
+          if test -n "$DOCUMENT_PRIVATE_DIR" && test -d "$DOCUMENT_PRIVATE_DIR"; then
+            rm -rf -- "$DOCUMENT_PRIVATE_DIR"
+          fi

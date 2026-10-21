@@ -149,6 +149,9 @@ jobs:
       - name: DOC-03 PDF upload regression (disposable DB)
         working-directory: server
         run: node --test ../scripts/ubuntu/pdf-upload.test.cjs
+      - name: DOC-04 authenticated PDF download regression
+        working-directory: server
+        run: node --test ../scripts/ubuntu/pdf-download.test.cjs
       - name: Check Ubuntu scripts shell syntax
         run: bash -n scripts/ubuntu/doctor.sh scripts/ubuntu/setup.sh
       - name: Verify original SQL columns match Sequelize timestamps

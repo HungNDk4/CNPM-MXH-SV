@@ -3,7 +3,7 @@ const router = require('express').Router();
 const multer = require('multer');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const { createError } = require('../middlewares/error.middleware');
-const { uploadDocument } = require('../controllers/document.controller');
+const { uploadDocument, downloadDocument } = require('../controllers/document.controller');
 
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
 const parser = multer({
@@ -25,4 +25,5 @@ function parseUpload(req, res, next) {
 
 router.post('/', authenticate, authorize('student'), parseUpload, uploadDocument);
 
+router.get('/:postId/download', authenticate, downloadDocument);
 module.exports = router;

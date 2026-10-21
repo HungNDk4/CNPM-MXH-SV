@@ -111,14 +111,19 @@ test('SEC-01: private PDF/static guard + SafePost + guest permissions', { timeou
         fakeRel,
         fakeRel + '?download=1',
         fakeRel.replace('private-', '%70rivate-'),
-        fakeRel.replace('/uploads/', '//uploads/'),
-        '/api/documents/' + free.id + '/download'
+        fakeRel.replace('/uploads/', '//uploads/')
       ];
       for (const uri of paths) {
         const r = await request(uri);
         assert.equal(r.status, 404, 'Raw path must not be routable: ' + uri);
         assert.ok(!r.text.includes(sentinel));
       }
+    });
+
+    await step('Guest document download requires active login (401)', async () => {
+      const r = await request('/api/documents/' + free.id + '/download');
+      assert.equal(r.status, 401);
+      assert.ok(!r.text.includes(sentinel));
     });
 
     await step('Guest general feed/question requests remain 401', async () => {

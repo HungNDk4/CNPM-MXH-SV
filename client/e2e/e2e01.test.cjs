@@ -6,8 +6,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const { randomUUID } = require('node:crypto');
 const { chromium } = require('playwright');
-const { User, DocumentFile, sequelize } = require('../../server/src/models');
+const { User, Post, RefreshToken, DocumentFile, sequelize } = require('../../server/src/models');
 const storage = require('../../server/src/services/private-document-storage');
+const serverRequire = require('node:module').createRequire(require.resolve('../../server/package.json'));
+const jwt = serverRequire('jsonwebtoken');
 
 const UI = process.env.E2E_UI_URL || 'http://127.0.0.1:5173';
 const API = process.env.E2E_API_URL || 'http://127.0.0.1:5000';
@@ -66,7 +68,7 @@ async function check(label, action) {
 test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, async () => {
   if (process.env.E2E_DISPOSABLE_DB !== 'true' || process.env.NODE_ENV !== 'test' ||
       !process.env.DOCUMENT_PRIVATE_DIR ||
-      !process.env.DB_NAME || !/test|mini_study_network/.test(process.env.DB_NAME)) {
+      !process.env.DB_NAME || !/^(?:e2e01_[a-z0-9_]+|mini_study_network)$/.test(process.env.DB_NAME)) {
     throw new Error('E2E requires explicit disposable DB, NODE_ENV=test and private test storage');
   }
   const browser = await chromium.launch({
@@ -168,12 +170,59 @@ test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, a
       await guest.getByRole('button', { name: /Tải PDF/ }).click();
       const downloaded = await pending;
       assert.deepEqual(await fs.readFile(await downloaded.path()), PDF);
+      const before = (await Post.findByPk(postId)).toJSON();
       assert.equal((await jsonRequest('/api/posts/' + postId, {
         method:'PUT', token:tokenB, body:{title:'should fail'}
       })).status, 403);
       assert.equal((await jsonRequest('/api/posts/' + postId, {
         method:'DELETE', token:tokenB
       })).status, 403);
+      assert.deepEqual((await Post.findByPk(postId)).toJSON(), before);
+    });
+
+    await check('Expired Blob download refreshes once, rotates session and retries original PDF', async () => {
+      const session = await guest.evaluate(async () => {
+        const { useAuthStore } = await import('/src/stores/authStore.js');
+        const { user, refreshToken } = useAuthStore.getState();
+        return { id: user.id, refreshToken };
+      });
+      const expiredToken = jwt.sign({
+        id: session.id, exp: Math.floor(Date.now() / 1000) - 60,
+      }, process.env.JWT_ACCESS_SECRET);
+      await guest.evaluate(async accessToken => {
+        const { useAuthStore } = await import('/src/stores/authStore.js');
+        useAuthStore.getState().setAuth({ ...useAuthStore.getState(), accessToken });
+      }, expiredToken);
+
+      let refreshCount = 0;
+      const observeRefresh = request => {
+        if (new URL(request.url()).pathname === '/api/auth/refresh') refreshCount++;
+      };
+      guest.on('request', observeRefresh);
+      try {
+        const denied = guest.waitForResponse(r =>
+          new URL(r.url()).pathname === '/api/documents/' + postId + '/download' && r.status() === 401);
+        const refreshed = guest.waitForResponse(r =>
+          new URL(r.url()).pathname === '/api/auth/refresh');
+        const pending = guest.waitForEvent('download');
+        await guest.getByRole('button', { name: /Tải PDF/ }).click();
+        assert.match((await denied).headers()['content-type'], /application\/json/);
+        assert.equal((await refreshed).status(), 200);
+        const download = await pending;
+        assert.equal(await download.failure(), null);
+        assert.deepEqual(await fs.readFile(await download.path()), PDF);
+        const current = await guest.evaluate(async () => {
+          const { useAuthStore } = await import('/src/stores/authStore.js');
+          const { accessToken, refreshToken } = useAuthStore.getState();
+          return { accessToken, refreshToken };
+        });
+        tokenB = current.accessToken;
+        assert.notEqual(current.refreshToken, session.refreshToken);
+        assert.equal((await RefreshToken.findOne({ where: { token: session.refreshToken } })).revoked, true);
+        assert.equal(refreshCount, 1, 'One refresh for one expired download');
+      } finally {
+        guest.off('request', observeRefresh);
+      }
     });
 
     await check('Server rejects invalid PDF and file over 10 MiB', async () => {

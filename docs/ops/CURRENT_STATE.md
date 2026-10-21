@@ -1,11 +1,8 @@
 # CURRENT STATE — Read this before taking action
-## 2026-10-21 human scope — DEP-01 website for coursework only
-- Human A selected **short-term 1–3 month demo/report/defense**, not indefinite operation. Prioritize **$0 recurring fees** with no cloud spend, payment card or vendor authorization inferred. Keep private 10 MiB PDF invariants and public HTTPS accessible independently of student laptops. Candidate comparison updated in `docs/DEP01_PUBLIC_HTTPS_READINESS_20261021.md` (PR #31); cloud app remains NOT DEPLOYED.
-- PR #30 at `0771428`: GitHub Actions 39595181401 **7/7 PASS**, Chromium E2E **12/12 PASS**, local backend **5/5 PASS**, local frontend **BLOCKED by Windows ACL**; independent human review/merge pending. This scope decision does not approve PR/merge or cloud provisioning.
-
-## 2026-10-21 DEP-01 public HTTPS preparation (not a live full app)
-- Source: integration/team-dev-20261020 @ 7bbe302623191d5f28e967424ae529df307a13e7. Independent deploy-readiness docs branch `docs/dep01-public-https-readiness-20261021` includes `docs/DEP01_PUBLIC_HTTPS_READINESS_20261021.md`. Existing Vercel `mini-study-network-dep01` deployment is **health-only**, not React+MySQL+PDF public app. Provider selection, budget/credit approval and actual cloud migration/deployment are **NOT DONE**.
-- QA-03 Draft PR #30 has passing CI but no independent recorded human review at check time; its latest source added Blob-refresh E2E, while dated report remained stale and local DB guard required hardening. Do not merge/deploy on AI signoff alone.
+## 2026-10-21 — PR #30 merged; DEP-01 free-first coursework demo
+- **Verified GitHub merge:** PR #30 CLOSED/MERGED on 2026-10-21T12:16:47Z → `integration/team-dev-20261020`, merge SHA `f5c974b3d3f7aa41374949a5b7e7078a60d15ee9`. Source HEAD `0771428336d3a46d0b81128d99229763d85e4114`, Actions 39595181401 **7/7 PASS**, Chromium browser 12/12; local backend 5/5 PASS. Local frontend Windows ACL **BLOCKED**, local full-stack PARTIAL. GitHub reviews were empty at inspection; do not infer independent approvals from merge.
+- Human A decided **short 1–3 month coursework demo/report/defense**; **$0/month free-first target**, NOT a hosted provider/card/paid-plan approval. Keep public HTTPS independent of student laptops, private PDF upload/download bound at 10 MiB, persistent data and post-course shutdown.
+- **DEP-01 PR #31** documents candidate L1 long-running Express/free credits+private volume, L2 serverless secure direct private Blob upload rewrite, L3 VM, with quota and persistence gates. Existing Vercel `mini-study-network-dep01` is health-only and **not** full public website; no cloud DB/PDF store/app deployed. Older QA Draft assertions lower down in the historical record are superseded by this verified status. `main` remains unchanged.
 
 **As-of:** 2026-10-18 (snapshot from linked GitHub evidence at creation; verify real-time refs when starting). **Approval status:** DRAFT / awaiting two-member review.
 
@@ -73,3 +70,7 @@ This is a snapshot, not the source of truth for task status or branch state. Do 
 - Both Human A and Human B must accept the same revision and R1..R5 review choices. Neither approval exists yet. No product/source/schema/env change; Issue #13 implementation NOT STARTED pending that gate. ADR-002 remains OPEN.
 - At inspection, #20 `8a4a3b6` and #21 `96d6efc` are still Draft/open/unmerged; integration still mounts legacy payments, whereas #20/#21 do not. #21 is based on #20. Their existing PASS evidence is preserved in the contract; it is not evidence for candidate safe DTOs/PDF access. Prefer #20's human-reviewed merge before #13 app.js work; otherwise select a dependency branch with one editor or wait.
 - Static project-control, 22 synthetic example/13-route fixture validation and diff whitespace checks PASS. No new API/MySQL/Frontend rebuild or manual WSL checkpoint. Next: both-human contract review, then recheck integration/PR dependencies before starting #13. Older source/setup/task-status notes above remain historical, not overrides of this scoped checkpoint.
+
+### E2E-01 additional local execution evidence
+- Native isolated MySQL 8.4.13 / Node 24.19: existing backend regression 5 runner tests PASS (QA-01 15/15, DOC-03 9/9); offline checks 9/9. Exact fixture cleanup verified; temporary DB process stopped. No production data or .env touched.
+- Local build/browser assertions remain BLOCKED before Vite loads by Windows profile ancestor ACL; source/test head 4dde753 has 7/7 CI SUCCESS in run 39593775029, including all 12 browser checkpoints. Full local acceptance PARTIAL; human PR review/merge pending. Canonical report section 6 carries environment and overlap details.

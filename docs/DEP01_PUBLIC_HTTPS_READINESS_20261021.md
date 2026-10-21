@@ -11,8 +11,8 @@
 
 
 ## 1. Verified baseline (avoid confusing PoC and complete website)
-- Source baseline: `integration/team-dev-20261020` @ `7bbe302623191d5f28e967424ae529df307a13e7`. PRs #20–#29 integrated payment shutdown, security, private PDF routes and React upload/download; PDF E2E CI evidence exists on **separate Ready-for-Review PR #30**, not yet merged to this baseline.
-- GitHub [E2E PR #30](https://github.com/HungNDk4/CNPM-MXH-SV/pull/30) latest verified HEAD `0771428336d3a46d0b81128d99229763d85e4114`, run [39595181401](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39595181401) 7/7 PASS (12 scenarios); Ready for Review, independent human sign-off still pending; local Windows frontend is ACL-BLOCKED while local backend 5/5 PASS. This branch deliberately does not consume #30 yet.
+- **Current integrated HEAD:** `integration/team-dev-20261020` @ `f5c974b3d3f7aa41374949a5b7e7078a60d15ee9` after PR #30. Planning baseline was `7bbe3026`; QA/browser test files are now integrated, but `main` remains separate.
+- GitHub [E2E PR #30](https://github.com/HungNDk4/CNPM-MXH-SV/pull/30) **MERGED 2026-10-21T12:16:47Z** with merge commit `f5c974b3d3f7aa41374949a5b7e7078a60d15ee9`; source HEAD `0771428336d3a46d0b81128d99229763d85e4114`, [Actions 39595181401](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39595181401) 7/7 SUCCESS and Chromium 12/12. Local backend 5/5 PASS; Windows local frontend ACL-BLOCKED. Review records empty on GitHub at verification; merge alone does not establish independent sign-off.
 - Existing Vercel project `mini-study-network-dep01` (id `prj_YZzSucZKTjpzzghzVBFmZf02ZY21`) has a READY isolated **health-only** deployment `dpl_Umv7RsTsnEycnxyKXzQsrbLRrwtq`, HTTPS alias https://mini-study-network-dep01.vercel.app. It is NOT React+Express+database+PDF production; no sensitive source or file API present.
 - `main` stays untouched. **ADR-015:** public HTTPS must work without student laptop; **ADR-014:** low/no cost is a constraint, not authorization for a billable provider.
 
@@ -60,7 +60,7 @@ Official/current information (checked 2026-10-21):
 Do not deploy from `main` while stacked PR #1–#10 are unresolved. Any real preview must take an reviewed feature integration commit, never unreviewed legacy main.
 
 ## 5. Acceptance gates in strict order
-1. **G-DEP01-0 — Review:** accept PR #30 after two-person/human review (CI already 7/7 at 0771428, local frontend ACL-blocked); independently review merged integration revision; Human A/Human B confirm FREE hosting lane, account owner, actual $0 spend cap and 1–3 month lifetime.
+1. **G-DEP01-0 — Review:** PR #30 already MERGED into integration (f5c974b) with CI/browser PASS. Human A/B review integrated revision and PR #31 plan; confirm genuinely $0 suitable account/provider, private storage, ownership and quota for 1–3 months. No provisioning implied by QA merge.
 2. **G-DEP01-1 — Provision only a sandbox:** named nonproduction project and isolated disposable remote DB/storage, no real user data; record HTTPS URL, account owner, quota and rollback. No credit card or paid upgrade without human approval.
 3. **G-DEP01-2 — DB health and compatibility:** remote TLS `authenticate`, import reviewed schema+migration once, verify Sequelize model timestamps, add records/read/transactions/rollback and delete only test fixtures.
 4. **G-DEP01-3 — HTTP + SPA:** production Vite build, deep-link refresh fallback, backend health, guest feed, auth register/login/refresh across public HTTPS with correct CORS/rewrites. No Vite dev proxy in deployment.

@@ -123,7 +123,7 @@ test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, a
       assert.equal(payload.data.status, 'active');
       assert.ok(!JSON.stringify(payload).includes('storage_key'));
       await page.waitForURL(u => u.pathname === '/documents/' + postId);
-      assert.equal(await page.locator('h1').filter({ hasText: title }).count(), 1);
+      await page.getByRole('heading', { name: title, exact: true }).waitFor();
     });
 
     await check('React PDF download returns the original bytes', async () => {

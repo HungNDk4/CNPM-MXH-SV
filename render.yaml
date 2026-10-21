@@ -1,0 +1,42 @@
+# DEP-01C: reviewed Free-only coursework sandbox. Never add paid resources.
+services:
+  - type: web
+    name: mini-study-network-dep01-demo
+    runtime: node
+    plan: free
+    region: singapore
+    autoDeploy: false
+    buildCommand: npm --prefix server ci && npm --prefix client ci && npm --prefix client run build
+    startCommand: node server/src/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SERVE_CLIENT_DIST
+        value: "true"
+      - key: DB_AUTO_SYNC
+        value: "false"
+      - key: TIDB_CLOUD
+        value: "true"
+      - key: TIDB_ENABLE_SSL
+        value: "true"
+      - key: DOCUMENT_STORAGE_DRIVER
+        value: vercel-blob
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: BLOB_READ_WRITE_TOKEN
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: CLIENT_URL
+        sync: false

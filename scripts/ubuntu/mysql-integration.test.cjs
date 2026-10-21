@@ -1,5 +1,5 @@
 'use strict';
-/* Ubuntu MySQL 8 disposable CI integration; no cloud, PDF or payment tests. */
+/* Ubuntu MySQL 8 disposable CI integration; no cloud or payment tests. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
@@ -103,6 +103,10 @@ test('Ubuntu + MySQL 8: timestamps, register, login, refresh, create/list', { ti
     }
     if (started) await new Promise((resolve, reject) =>
       server.close(error => error ? reject(error) : resolve()));
-    await sequelize.close();
+    // Connection closes in final suite.
   }
 });
+
+
+// Load security tests in the same test runner.
+require('./pdf-security.test.cjs');

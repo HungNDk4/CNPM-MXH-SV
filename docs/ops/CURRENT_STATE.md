@@ -1,4 +1,11 @@
 # CURRENT STATE — Read this before taking action
+## 2026-10-21 E2E-01 — latest GitHub verification (read first)
+
+- Integration baseline `integration/team-dev-20261020` confirmed at `7bbe302623191d5f28e967424ae529df307a13e7`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. On integration, PDF security/API/React PRs #20/#21/#23/#24/#25/#26/#27/#29 have been merged; historical older rows/paragraphs below are not current source assertions.
+- QA-03/E2E-01: remote-only branch `test/e2e01-fullstack-20261021`, Draft PR #30 targeting integration. Existing fullstack GitHub Actions `39591122500` at `c117d6b7`: **7/7 jobs SUCCESS**, including **real Chromium browser ↔ Vite proxy ↔ Express ↔ disposable MySQL 8 ↔ filesystem** with 11 logged browser/API checks.
+- Disposable migration `20261021_document_files.sql` verified on MySQL 8. PDF upload/download, guest metadata, cross-user free download, 401/403/404 access checks, invalid/10MiB+1/inclusive 10MiB, hide/delete, register/login/refresh passed; browser download bytes equal source PDF. Full evidence: `docs/testing/E2E01_INTEGRATION_REPORT.md`.
+- **Not verified:** either student's local physical worktree/Windows setup, mobile/responsive browser, persistent cloud storage, public HTTPS app, redeploy durability. E2E automation uses a CI runner, NOT the user's PC. Do not merge to `main` without human reviews. New safety-only test guard/docs commit after `c117d6b7` requires fresh CI recheck.
+
 **As-of:** 2026-10-18 (snapshot from linked GitHub evidence at creation; verify real-time refs when starting). **Approval status:** DRAFT / awaiting two-member review.
 
 ## Project and people

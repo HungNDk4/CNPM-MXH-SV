@@ -64,7 +64,8 @@ async function check(label, action) {
 }
 
 test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, async () => {
-  if (process.env.NODE_ENV !== 'test' || !process.env.DOCUMENT_PRIVATE_DIR ||
+  if (process.env.E2E_DISPOSABLE_DB !== 'true' || process.env.NODE_ENV !== 'test' ||
+      !process.env.DOCUMENT_PRIVATE_DIR ||
       !process.env.DB_NAME || !/test|mini_study_network/.test(process.env.DB_NAME)) {
     throw new Error('E2E requires explicit disposable DB, NODE_ENV=test and private test storage');
   }

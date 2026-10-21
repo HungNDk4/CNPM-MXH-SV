@@ -52,7 +52,7 @@ Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend
 | PAY-01 | P2 | Order/history/payment state UI | UNASSIGNED | DEFERRED | New explicit scope decision | VNPay Sandbox extension only |
 | PAY-02 | P2 | Sandbox full flow/negative/idempotency tests | UNASSIGNED | DEFERRED | SEC-02 + scope reopened | NOT TESTED; out of MVP |
 | QA-02 | P1 | Disposable MySQL integration suite | UNASSIGNED | REVIEW | G4 / Ubuntu CI | Ubuntu 24.04 + real MySQL 8 auth, refresh-token uniqueness/rotation, post CRUD smoke PASS run 39288366164; full integration suite still NOT RUN |
-| QA-03 | P1 | Browser E2E smoke and responsive test | UNASSIGNED | TODO | G4 | No tests |
+| QA-03 | P1 | E2E-01 full-stack browser smoke (responsive/manual hardware follow-up) | AI + Human A review | REVIEW | Preview integration + DOC-03/04 | Draft PR #30; Chromium/Vite/Express/MySQL 8/private PDF 11 scenario checks PASS at c117d6b7, Actions 39591122500 (7/7 jobs); device/responsive/local Windows NOT RUN |
 | QA-04 | P1 | Security/regression review | UNASSIGNED | TODO | G4/G5 | No tests |
 | OPS-05 | P1 | Deployment/setup rehearsal | Human B + AI | TODO | G4 | README draft |
 | QA-05 | P1 | Triage defects and release freeze | Two humans | TODO | QA-02/03/04 | No release |

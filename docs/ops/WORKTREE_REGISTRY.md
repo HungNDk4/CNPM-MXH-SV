@@ -19,6 +19,8 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 | WT-QA | Unassigned | Not created | Base reviewed main after merge | NO | OPTIONAL | Integration/regression tests |
 | WT-CONTRACT | Codex drafts for Human A; Human A + Human B review pending | docs/api-contract-v1-20261021 | Issue #11 docs PR -> integration/team-dev-20261020 at dffe5ae | YES, this session: work/CNPM-MXH-SV; branch/HEAD/status/worktree verified | REVIEW | Dedicated contract branch; doc/mocks/control handoff only, no product changes. Published SHA/PR in Issue #11. Not member B's checkout or proof of approval. |
 
+| WT-E2E01 | AI (QA-03; Human A review) | test/e2e01-fullstack-20261021 | Draft PR #30 → integration/team-dev-20261020 | NO (GitHub CI runner only) | REVIEW | Browser/full-stack test on disposable CI MySQL 8; 11 checkpoints PASS at c117d6b7, local teammate worktree unverified, no cloud. |
+
 ## Fields required when confirming a real local worktree
 - Worktree ID, owner, machine alias (optional), **local path** (relative/sanitized), branch, base/head SHA, current PR, lock/dirty status, timestamp checked.
 - Verify with `git worktree list --porcelain`, `git -C <path> branch --show-current`, `git -C <path> status --short` and `git -C <path> rev-parse HEAD`.

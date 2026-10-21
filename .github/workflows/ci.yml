@@ -186,6 +186,7 @@ jobs:
       CLIENT_URL: http://127.0.0.1:5173
       DOCUMENT_PRIVATE_DIR: /tmp/e2e01-private
       PORT: 5000
+      E2E_DISPOSABLE_DB: 'true'
       E2E_UI_URL: http://127.0.0.1:5173
       E2E_API_URL: http://127.0.0.1:5000
     steps:

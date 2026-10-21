@@ -1,12 +1,12 @@
 # E2E01 INTEGRATION REPORT — 2026-10-21
 
-**Task:** QA-03 / E2E-01. **State:** REVIEW — automated CI E2E PASS, manual student machine / cloud NOT RUN. **Repo:** HungNDk4/CNPM-MXH-SV.
+**Task:** QA-03 / E2E-01. **State:** REVIEW — automated CI E2E PASS; local backend PASS, local frontend ACL-blocked; cloud NOT RUN. **Repo:** HungNDk4/CNPM-MXH-SV.
 
 ## 1. Branch and source evidence
 
 - Base: `integration/team-dev-20261020` @ `7bbe302623191d5f28e967424ae529df307a13e7`; reviewed branch comparison was identical.
 - Working remote branch: `test/e2e01-fullstack-20261021` → [Draft PR #30](https://github.com/HungNDk4/CNPM-MXH-SV/pull/30). **No merge to main or integration.** Main remains `0993a42154feb37e8842ef8bb3ed4d0a03627889` when checked.
-- Tested code head: `31a546784db087880d4f8bdaeb12a8aa98073c63`, [GitHub Actions run 39592227079](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39592227079), **7/7 jobs SUCCESS** (frontend build, backend syntax, docs check, DEP01 smoke/scaffold, MySQL regression and new real-browser E2E).
+- Tested code head: `4dde75387fb4ef95673de6f62cf90d01abb3dfa5`, [GitHub Actions run 39593775029](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39593775029), **7/7 jobs SUCCESS** (frontend build, backend syntax, docs check, DEP01 smoke/scaffold, MySQL regression and new real-browser E2E).
 - Changed application business/frontend files: **none**. Test harness: `client/e2e/e2e01.test.cjs`; CI: `.github/workflows/ci.yml`.
 
 ## 2. Environment actually executed
@@ -40,10 +40,24 @@ All 12 checkpoints were logged in job **E2E-01 Chrome + React + Express + MySQL 
 - First browser run asserted a heading immediately after route navigation, before React finished rendering; replaced the flaky immediate count assertion with an explicit browser wait. Failed run [39590875943](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39590875943) is preserved. These were **test harness defects**, not confirmed application bugs.
 - No backend/frontend business defect was reproduced by the final executed scenarios; **this is not proof that all possible defects are absent**.
 - **NOT RUN:** manual Windows/WSL worktree reproduction, viewport/responsive/mobile test, independent cloud DB, public HTTPS app, object storage durability, rollback/redeploy persistence, load test, concurrent refresh races, full comments/likes/profile/admin browser paths and production security audit.
-- React automatic retry of an expired **Blob download** was explicitly simulated on Chromium and PASS on Actions run 39592227079. This is not proof of all concurrent refresh races or all network failures.
+- React automatic retry of an expired **Blob download** was explicitly simulated on Chromium and PASS on Actions run 39593775029. This is not proof of all concurrent refresh races or all network failures.
 
 ## 5. Reproduction and guardrails
 
 CI reproduces with a **fresh disposable MySQL 8 service** and pinned Chromium; open PR #30 and run the workflow. For local reproduction use an **empty throwaway localhost database named `e2e01_*` only** (never the team's regular `mini_study_network`), set all required DB/JWT test env vars, `NODE_ENV=test`, `E2E_DISPOSABLE_DB=true`, `DOCUMENT_PRIVATE_DIR` to a new private test-only directory, and explicitly disable auto schema sync. Prepare isolated copies of the schema and DOC-03 migration with `CREATE DATABASE` / `USE mini_study_network` replaced by the disposable database name *before running either SQL script*; do not run the originals unmodified locally; `npm ci` in both app folders, install Playwright 1.56.1 CI-only in client, start server and Vite on 5000/5173 and run `node --test client/e2e/e2e01.test.cjs`. Never point test vars at the team's persistent DB.
 
-This audit reflects tested source commit `31a5467`; the subsequent documentation/local-test guard correction needs a fresh CI check on its own exact HEAD. Final **QA-03 verdict: REVIEW / automated browser E2E PASS**, subject to human acceptance; local environment + responsive verification **PARTIAL**, and cloud deployment **NOT RUN**. No cloud resources created, no merge to main.
+This audit reflects source/test head `4dde753` including the stricter local disposable DB guard, verified by run `39593775029` (7/7 SUCCESS). This subsequent local-evidence documentation update needs its own exact-head CI check. Final **QA-03 verdict: REVIEW / automated browser E2E PASS**, subject to human acceptance; local environment + responsive verification **PARTIAL**, and cloud deployment **NOT RUN**. No cloud resources created, no merge to main.
+
+## 6. Additional local audit — executed separately from CI
+
+Codex prepared a native Windows **MySQL 8.4.13** instance from the official portable archive (download-page MD5 matched), in a new data directory, bound only to 127.0.0.1:33077 with MySQL X disabled. Existing XAMPP/MariaDB and WSL data were untouched. The existing schema and PDF migration were applied to a fresh `e2e01_local_<random>` database with only the database name substituted in memory; 8 tables, dedicated application DB user, generated local-only JWT/DB secrets outside Git, NODE_ENV=test and DB_AUTO_SYNC=false. No .env was edited or committed.
+
+**Local automated backend PASS:** Node 24.19.0, locked backend/frontend dependency installation; `node --test --test-concurrency=1 scripts/ubuntu/mysql-integration.test.cjs scripts/ubuntu/auth-ownership.test.cjs scripts/ubuntu/pdf-upload.test.cjs scripts/ubuntu/pdf-download.test.cjs` completed **5 runner tests, 0 failures** (the smoke entry also loads pdf-security). QA-01 logged 15/15; DOC-03 logged 9/9. Offline Express/source/scaffold checks passed 9/9; project-control integrity passed.
+
+**Local frontend/build remains BLOCKED, not PASS:** native esbuild cannot enumerate the Windows profile ancestor and stops before loading vite.config.js. Additional read grants did not fix the underlying ACL. A C:/Dev runtime-copy attempt did not produce a completed verified build; the shell launcher subsequently reported setup-refresh errors. Chromium 148.0.7778.96 itself launched, but that alone proves no UI assertion. WSL enumeration returned E_ACCESSDENIED. CI used matched Chromium with Playwright 1.56.1 and ran all 12 checkpoints successfully, including production build in the same 7/7 run.
+
+**Cleanup verified:** disposable DB counts after local regression were users=1 (original schema admin placeholder), posts=0, refresh_tokens=0, document_files=0; private test storage contained 0 entries. The exact temporary MySQL process was stopped after verifying its executable path. No DROP/TRUNCATE was used; its diagnostic data directory remains outside Git.
+
+**Overlap resolution:** reused existing PR #30 and its canonical `client/e2e/e2e01.test.cjs`. An overlapping local prototype was retained only as a clean, unpublished `scratch/e2e01-local-audit-20261021` checkpoint (`f4e4096`), not pushed or merged. The delivered follow-up adds only missing Blob refresh coverage, a SQL authorization invariant and a tighter test DB-name guard; it does not add a second browser suite, another CI job or a new dependency. Canonical delivery branch is the remote branch named above; the local scratch checkout is not claimed to mirror it.
+
+**Final scope verdict:** automated CI integration **PASS**, local complete full-stack acceptance **PARTIAL** due to the filesystem blocker. Human reviewer owns acceptance/merge. No identical manual checkpoint or cloud work is requested.

@@ -15,6 +15,12 @@ const { errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
 
+// Render terminates TLS at its trusted proxy. Trust only the nearest hop,
+// never all forwarded IPs. Local tests and other hosts retain default setting.
+if (process.env.RENDER === 'true' && process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // ─── Security Middlewares ────────────────────────────────────────
 app.use(helmet());
 app.use(cors({

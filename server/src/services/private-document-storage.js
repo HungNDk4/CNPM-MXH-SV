@@ -53,10 +53,17 @@ function createBlobAdapter(sdk, token) {
         throw new Error('Invalid PDF storage size');
       }
       const key = crypto.randomUUID() + '.pdf';
-      const result = await sdk.put(key, new Blob([buffer], { type: 'application/pdf' }), {
-        access: 'private', token, contentType: 'application/pdf',
-        addRandomSuffix: false, cacheControlMaxAge: 60,
-      });
+      let result;
+      try {
+        result = await sdk.put(key, new Blob([buffer], { type: 'application/pdf' }), {
+          access: 'private', token, contentType: 'application/pdf',
+          addRandomSuffix: false, cacheControlMaxAge: 60,
+        });
+      } catch {
+        // A timeout may happen after remote persistence. Attempt compensating cleanup.
+        await sdk.del(key, { token }).catch(() => {});
+        throw new Error('Private Blob upload unavailable');
+      }
       // Guard against accidentally connecting a *public* store.
       if (result?.pathname !== key || !result.url?.includes('.private.blob.vercel-storage.com/')) {
         await sdk.del(key, { token }).catch(() => {});

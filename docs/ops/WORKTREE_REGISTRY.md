@@ -17,6 +17,7 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 | WT-HANDOFF | AI docs drafting; Human A chose BE role, Human B task acceptance pending | docs/core-backend-handoff-20261020 | Draft PR forthcoming → docs/two-track-wbs-unassigned-20261020 (#9) | NO (GitHub-only) | REVIEW | Role-level handoff, no source/DB changes, no per-task owner claim |
 | WT-SHARED-PREVIEW | G02 shared integration baseline (not owned as task by one human) | integration/team-dev-20261020 | From PR #10 b840f16; #1–#10 still Draft, no main merge | NO (remote-only) | PREVIEW | Shared branch for one-task/one-PR work; never use it as feature editing branch |
 | WT-QA | Unassigned | Not created | Base reviewed main after merge | NO | OPTIONAL | Integration/regression tests |
+| WT-CONTRACT | Codex drafts for Human A; Human A + Human B review pending | docs/api-contract-v1-20261021 | Issue #11 docs PR -> integration/team-dev-20261020 at dffe5ae | YES, this session: work/CNPM-MXH-SV; branch/HEAD/status/worktree verified | REVIEW | Dedicated contract branch; doc/mocks/control handoff only, no product changes. Published SHA/PR in Issue #11. Not member B's checkout or proof of approval. |
 
 ## Fields required when confirming a real local worktree
 - Worktree ID, owner, machine alias (optional), **local path** (relative/sanitized), branch, base/head SHA, current PR, lock/dirty status, timestamp checked.

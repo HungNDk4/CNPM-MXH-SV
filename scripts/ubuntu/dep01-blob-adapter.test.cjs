@@ -71,3 +71,15 @@ test('DEP-01C local mode remains default and cloud requires server-only token', 
     else process.env.BLOB_READ_WRITE_TOKEN=previousToken;
   }
 });
+
+test('DEP-01C failed remote put attempts compensating delete', async () => {
+  let cleaned=false;
+  const sdk={
+    async put() { throw new Error('upstream token or network detail must stay server-only'); },
+    async get() { throw new Error('unused'); },
+    async del() { cleaned=true; },
+  };
+  const adapter=storage.createBlobAdapter(sdk,'dummy_test_token');
+  await assert.rejects(adapter.save(Buffer.from('%PDF-1.4\n%%EOF')), /Private Blob upload unavailable/);
+  assert.equal(cleaned,true);
+});

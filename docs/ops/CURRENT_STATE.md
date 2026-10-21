@@ -1,4 +1,8 @@
 # CURRENT STATE — Read this before taking action
+## 2026-10-21 DEP-01 public HTTPS preparation (not a live full app)
+- Source: integration/team-dev-20261020 @ 7bbe302623191d5f28e967424ae529df307a13e7. Independent deploy-readiness docs branch `docs/dep01-public-https-readiness-20261021` includes `docs/DEP01_PUBLIC_HTTPS_READINESS_20261021.md`. Existing Vercel `mini-study-network-dep01` deployment is **health-only**, not React+MySQL+PDF public app. Provider selection, budget/credit approval and actual cloud migration/deployment are **NOT DONE**.
+- QA-03 Draft PR #30 has passing CI but no independent recorded human review at check time; its latest source added Blob-refresh E2E, while dated report remained stale and local DB guard required hardening. Do not merge/deploy on AI signoff alone.
+
 **As-of:** 2026-10-18 (snapshot from linked GitHub evidence at creation; verify real-time refs when starting). **Approval status:** DRAFT / awaiting two-member review.
 
 ## Project and people

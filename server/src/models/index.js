@@ -2,6 +2,7 @@ const User          = require('./User');
 const Post          = require('./Post');
 const Comment       = require('./Comment');
 const Order         = require('./Order');
+const DocumentFile  = require('./DocumentFile');
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
@@ -23,6 +24,10 @@ const DocumentAccess = sequelize.define('DocumentAccess', {
   granted_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, { tableName: 'document_access', timestamps: false,
      indexes: [{ unique: true, fields: ['user_id', 'post_id'] }] });
+
+// DocumentFile: private metadata, one PDF per document post.
+Post.hasOne(DocumentFile, { foreignKey: 'post_id', as: 'privateFile' });
+DocumentFile.belongsTo(Post, { foreignKey: 'post_id', as: 'post' });
 
 // ── RefreshToken model ───────────────────────────────────────────
 const RefreshToken = sequelize.define('RefreshToken', {
@@ -68,4 +73,4 @@ DocumentAccess.belongsTo(Order, { foreignKey: 'order_id' });
 User.hasMany(RefreshToken, { foreignKey: 'user_id' });
 RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 
-module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken };
+module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile };

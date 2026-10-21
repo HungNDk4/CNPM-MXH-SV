@@ -135,12 +135,17 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y default-mysql-client
       - name: Import SQL schema on disposable MySQL
         run: mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/schema.sql
+      - name: Apply DOC-03 document_files migration (disposable DB)
+        run: mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/migrations/20261021_document_files.sql
       - name: Install backend dependencies
         working-directory: server
         run: npm ci
       - name: Test API with real MySQL (no payment/PDF testing)
         working-directory: server
         run: node --test ../scripts/ubuntu/mysql-integration.test.cjs
+      - name: DOC-03 PDF upload regression (disposable DB)
+        working-directory: server
+        run: node --test ../scripts/ubuntu/pdf-upload.test.cjs
       - name: Check Ubuntu scripts shell syntax
         run: bash -n scripts/ubuntu/doctor.sh scripts/ubuntu/setup.sh
       - name: Verify original SQL columns match Sequelize timestamps

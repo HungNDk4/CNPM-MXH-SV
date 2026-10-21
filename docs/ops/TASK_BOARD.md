@@ -28,7 +28,7 @@ Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend
 | AN-05 | P1 | Requirements traceability and sign-off | Human A + Human B | TODO | AN-04 | FR matrix draft |
 | DS-01 | P1 | Context, component, deployment diagram | AI + Human A review | TODO | G1 | architecture draft |
 | DS-02 | P1 | ERD, cardinality, SQL/ORM reconciliation | AI + Human A review | TODO | G1 | database/schema.sql |
-| DS-03 | P1 | API/DTO/access-control contract | AI + Human B review | TODO | G1 | API contract draft; [issue #11](https://github.com/HungNDk4/CNPM-MXH-SV/issues/11) |
+| DS-03 | P1 | API/DTO/access-control contract | AI + Human B review | REVIEW | G1; both-human G03 acceptance pending | [Issue #11](https://github.com/HungNDk4/CNPM-MXH-SV/issues/11): API Contract v1 candidate DRAFT v0.1 + synthetic mocks on docs/api-contract-v1-20261021 from integration dffe5ae; static checks PASS; neither human has approved; #13 implementation NOT STARTED |
 | DS-04 | P1 | UI sitemap, user flows and wireframes | AI + Human A review | TODO | G1 | source UI; [issue #17](https://github.com/HungNDk4/CNPM-MXH-SV/issues/17) |
 | DS-05 | P1 | Sequence/activity diagrams for critical flows | AI + Human A review | TODO | DS-01/02/03 | Not started |
 | DS-06 | P0 | Threat model, design gate | AI + two humans review | TODO | DS-02/03/05 | P0 vulnerabilities |

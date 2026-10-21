@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 import { audit } from './dep01-readiness.mjs';
 
 test('DEP-01 audit is reproducible and does not claim a hosted proof', () => {
@@ -30,4 +32,17 @@ test('findings have inspectable source references and non-PASS statuses', () => 
     assert.ok(finding.finding);
     assert.notEqual(finding.status, 'PASS');
   }
+});
+
+// SEC-04 pre-upload security guard: verify installed version in CI, not only manifest.
+test('SEC-04 patched Multer version matches install, manifest and lock', () => {
+  const backendRequire = createRequire(new URL('../server/package.json', import.meta.url));
+  const installed = backendRequire('multer/package.json');
+  const manifest = backendRequire('./package.json');
+  const lock = JSON.parse(readFileSync(new URL('../server/package-lock.json', import.meta.url), 'utf8'));
+  assert.equal(manifest.dependencies.multer, '^2.4.0');
+  assert.equal(lock.packages[''].dependencies.multer, '^2.4.0');
+  assert.equal(lock.packages['node_modules/multer'].version, '2.4.0');
+  assert.equal(installed.version, '2.4.0');
+  assert.equal(typeof backendRequire('multer').memoryStorage, 'function');
 });

@@ -190,8 +190,9 @@ test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, a
       exact.write('%PDF-', 0);
       exact.write('%%EOF', exact.length - 5);
       const response = await pdfUpload(tokenB, pdfForm(exact, 'boundary.pdf'));
-      assert.equal(response.status, 201, await response.text());
-      const post = (await response.json()).data;
+      const body = await response.text();
+      assert.equal(response.status, 201, body);
+      const post = JSON.parse(body).data;
       const file = await DocumentFile.findOne({where:{post_id:post.id}});
       assert.equal(file.size_bytes, MAX);
     });

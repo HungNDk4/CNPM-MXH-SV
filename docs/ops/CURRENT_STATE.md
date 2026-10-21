@@ -1,4 +1,8 @@
 # CURRENT STATE — Read this before taking action
+## 2026-10-21 DEP-01 official provider feasibility research
+- Official free-tier documentation checked: **conditional candidate** Render Free full-stack same-origin React+Express HTTPS + TiDB Cloud Starter (MySQL-compatible, 5GiB row storage, 50M RU/month) + Vercel Blob **Private** (1GB Hobby, SDK usable from external Express server). Railway Free **demoted**: $1/month usage credit is insufficient for a continuously resident backend at typical RAM cost. Render sleeps 15min, cold start ~1min and has no persistent disk; plan requires Blob adapter and cloud E2E.
+- Verdict: **provider-term research PASS; real cloud 10MiB PDF/MySQL/HTTPS NOT RUN, actual eligible $0 accounts NOT VERIFIED**. No new cloud resources, secrets, paid plan or public app deployment. Full gates and official sources in docs/DEP01_PUBLIC_HTTPS_READINESS_20261021.md (PR #31).
+
 ## 2026-10-21 — PR #30 merged; DEP-01 free-first coursework demo
 - **Verified GitHub merge:** PR #30 CLOSED/MERGED on 2026-10-21T12:16:47Z → `integration/team-dev-20261020`, merge SHA `f5c974b3d3f7aa41374949a5b7e7078a60d15ee9`. Source HEAD `0771428336d3a46d0b81128d99229763d85e4114`, Actions 39595181401 **7/7 PASS**, Chromium browser 12/12; local backend 5/5 PASS. Local frontend Windows ACL **BLOCKED**, local full-stack PARTIAL. GitHub reviews were empty at inspection; do not infer independent approvals from merge.
 - Human A decided **short 1–3 month coursework demo/report/defense**; **$0/month free-first target**, NOT a hosted provider/card/paid-plan approval. Keep public HTTPS independent of student laptops, private PDF upload/download bound at 10 MiB, persistent data and post-course shutdown.

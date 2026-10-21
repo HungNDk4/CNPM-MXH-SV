@@ -1,13 +1,59 @@
 # DEP-01 — PUBLIC HTTPS APP DEPLOYMENT READINESS
-**Date:** 2026-10-21. **Status:** PREPARATION / REVIEW — no production application deployment, no provider selection, no cloud DB/Blob created.
+**Date:** 2026-10-21. **Status:** PROVIDER-TERMS RESEARCH PASS / REAL CLOUD E2E NOT RUN — free-first candidate Render Free + TiDB Starter + private Vercel Blob, conditional on real eligibility, security adaptation, and account authorization; full website not deployed.
 
 ## Approved project time horizon and spending preference (Human A, 2026-10-21)
 - **Scope: short-term coursework demo, presentation and final defense only, approximately 1–3 months**, NOT a long-term public community service. After the course, take sanitized backup/evidence and decommission any cloud resources so nothing keeps consuming quota or charging.
 - **Student-cost policy:** first attempt **$0 recurring fee** using only actually eligible free quotas/trials; **no card, paid plan, spending limit above $0, or change of vendor/account without separate explicit Human A approval**. Zero-fee preference is NOT authorization to claim any provider selected or an environment fully provisioned.
 - **Usability gate remains ADR-015:** the public HTTPS URL must be available to the lecturer when student computers are offline, including after an idle period. Free tiers may sleep or stop at quota; do not promise 24/7 SLA. For an assessment window, verify externally before the event, keep sanitized backup and an offline demo recording for emergency fallback, without treating a recording as proof of live access.
-- **Priority lane for evaluation (not approval to provision):** test **L1 on Railway Free** only if its exact current free account/resource allowance allows the service to run throughout the needed demo window and a persistent volume is supported. Railway lists 30-day $5 trial, then $1/month of free *usage credit*, max 0.5 GB volume and 0.5 GB RAM; that credit may be exhausted before a whole month of always-on backend. The user did NOT select L1 or agree to pay. If L1 cannot satisfy the $0 + reliable-access constraints, evaluate L2 Vercel/TiDB/Blob with required 10 MiB upload/download rewrite, or propose a different free provider for approval. No storage shortcuts and no lowering the 10 MiB contract.
+- **Priority lane (research-only decision):** evaluate **Render Free full-stack Express+React / TiDB Cloud Starter MySQL-compatible / Vercel Blob Private** first. It meets documented $0 candidate capability only with secure external Blob storage adapter, TLS DB compatibility, and acceptance of Render cold-start (~1 minute). Railway Free is demoted for any sustained running application because $1 usage credit does not cover realistic always-on memory costs. Actual cloud compatibility and eligibility remain unverified; no account, vendor, billing or deployment authorization inferred.
 - **PoC rule:** start with a disposable, synthetic-data-only project; never deploy legacy `main` or publish real data; do not start cloud writes until provider scope and account ownership are explicitly authorized.
 
+
+
+## 2026-10-21 — Independent provider terms cross-check: $0 candidate decision (READ FIRST)
+**Decision:** `D1-DOCS-PASS / D2-LIVE-PENDING`. A viable **conditional $0 architecture** can be designed from official free-tier specifications, but none of the *full* app's cloud paths has passed a real external HTTPS browser + remote MySQL + remote private 10 MiB PDF integration test. **Do not call DEP-01 DONE or claim it is already deployed.** These are vendor-plan facts and implementation requirements; cloud account eligibility, third-party SLA, and the actual executable deploy still need proof.
+
+### A. Recommended first cloud PoC (zero-subscription, noncommercial coursework)
+- **Full-stack HTTPS web server:** `Render Free Web Service`. Serve production-built React `client/dist` via the **same Express instance** after API routes and before SPA 404 (preserve `/api/*` 404 JSON); same-origin browser `/api` avoids a Vercel edge/function proxy for 10 MiB uploads/downloads and avoids cross-origin JWT refresh changes. Build from repo root with locked `npm ci` per package, build client, start `node server/src/index.js`; bind Render `PORT` on `0.0.0.0`; isolate deployment branch from unfinished `main`.
+- **MySQL-compatible managed database:** `TiDB Cloud Starter (MySQL-compatible Free)` — per official plan: up to **5 GiB row data and 50 million RUs/month**, no credit card required for first eligible free instances. Sequelize v6/mysql2 needs remote TLS connection configuration, SQL schema and DOC-03 migration compatibility checks; do not assume SQL 8-specific FK/ENUM/TIMESTAMP/index semantics are identical. Run migrations only on disposable `mini_study_network` instance with synthetic rows, explicit rollback and owner tests. Ensure no spending limit enabling paid usage.
+- **Private PDF blob store:** `Vercel Blob Private (existing authorized Vercel Hobby account)` — Hobby includes **1 GB stored blobs, 10 GB Blob data transfer, 10k simple and 2k advanced operations** monthly. SDK `@vercel/blob` `put()`/`get()` supports private blobs from **outside Vercel** using a server-only `BLOB_READ_WRITE_TOKEN`; file maximum is far above 10 MiB. Browser **does not** see the blob URL/token; `POST /api/documents` streams/accepts at most 10,485,760 bytes through Render Express, verifies bytes, then `put(access:'private')`; DB `DocumentFile` stores a random internal key, not publicly accessible URL. On authenticated `GET /api/documents/:id/download`, recheck active/free post + JWT every time, stream private `get()` from Render to browser, never issue a long-lived public/signed URL. Keep compensating delete, one file/post, size/signature/hash/content length, hidden/deleted 404. No local disk dependence; no downgrade to public Blob.
+- **Capacity plan:** cap synthetic/demo PDF total to **at most 40 full-size 10 MiB PDFs** until real quota testing, so storage uses ~0.42 GB (decimal), with operational margin; store and transfer quotas can still be exhausted and service can then stop. Restrict sharing to demo data; run report/defense after cold-start warmup.
+
+**Known free-tier compromises:**
+1. Render Free idles after **15 minutes**; incoming request wakes it, taking **about 1 minute**. Link is independent of laptops, but immediate first-load availability/zero cold-start latency is **NOT** satisfied. It gets **750 running instance hours/month**; no persistent local disks. External TiDB/Blob calls may trigger Render free traffic restrictions or bandwidth exhaustion. Without adding a payment method, Render suspends rather than charging on bandwidth overage. A lecturer requiring immediate first-byte loading (no warmup) invalidates this candidate.
+2. TiDB Starter has quotas, SQL differences; project must not rely on MariaDB/SQL Server semantics or use `sequelize.sync({alter:true})` on cloud DB.
+3. Vercel Blob Hobby hard-stops access at quota rather than billing extra; private storage access and external SDK token behavior must be tested using real PDF data *before* publish. Private object keys/tokens must not leak via `SafePost`.
+4. A free provider does **not** guarantee uptime or freedom from account verification, abuse throttling, unannounced terms changes or resource suspensions. Keep an offline fallback recording, without counting it as online acceptance.
+
+### B. Provider candidates explicitly downgraded
+| Hosting lane | Decision for 1–3 months | Evidence / reason |
+|---|---|---|
+| Railway Free backend + its 0.5GB volume | **NOT THE DEFAULT for sustained $0 link** | After up to 30-day $5 trial, only **$1 resource credit/month**. Memory alone at **0.25GB average** costs ~$2.50/month based on official $10/GB-month rate (CPU/volume/network extra); 0.5GB ~ $5/month. Thus free credit cannot cover even a modest continuously running Express app. Railway remains conditional for intermittent use or if actual usage verified <= $1; do not call 24/7 $0. |
+| Render Free backend + local PDF folder | **REJECT** | No persistent disk, all uploaded files lost on sleep/redeploy. Use separate private Vercel Blob store instead. |
+| Vercel Functions + 10 MiB PDF through current Express controller | **REJECT unmodified** | Vercel Functions request and response body 4.5 MB limit conflicts with 10 MiB PDF. Redesign needed; cannot silently lower size. |
+| Koyeb Free | **LOW PRIORITY** | Free 512 MB/0.1 vCPU, sleeps after 1 hour; no volumes. Starter needs valid payment method; not preferred for no-card demo. |
+| Render free Postgres / Supabase Postgres as existing MySQL DB | **REJECT unmodified** | Different dialect would require Sequelize model migrations; Render free Postgres expires in 30 days. TiDB candidate preserves MySQL protocol pending actual cloud SQL tests. |
+| Cloudflare R2 Standard free | **POSSIBLE BACKUP, NOT $0 HARD GUARANTEED BY DEFAULT** | 10GB-month storage included, but requires R2 checkout subscription and can charge overage; explicit user approval/billing guard required. |
+
+### C. Go/no-go acceptance before real website publication
+| Gate | Mandatory real evidence | Status |
+|---|---|---|
+| D1 — documented capacity/terms | Official plan pages, $0 policy, exact source architecture, no false durable disk | **PASS for feasibility research**, not user/provider approval |
+| D2 — account eligibility | Render Free provision allowed, TiDB MySQL Starter free, Vercel Hobby private Blob store allowed; check payment method/eligible scope | **NOT RUN** |
+| D3 — actual cloud database | TLS Sequelize connect, schema + DOC-03 migration, FK/ENUM/JSON/DECIMAL/index/transactions and rollback, auth ownership | **NOT RUN** |
+| D4 — secured blob adapter | Private 10MiB upload and byte-accurate authorized download, >10MiB 413, spoof 415, hidden/deleted deny and orphan cleanup | **NOT RUN** |
+| D5 — public HTTPS browser | Real Render `*.onrender.com` HTTPS React SPA deep links, guest safe metadata, register/login/refresh, 2 users, PDF bytes, auth/ownership, no laptop on | **NOT RUN** |
+| D6 — reliability & shutdown | Cold start observed, redeploy persistence, quota email/alerts, sanitized backup/restore and 1–3mo decommission checklist | **NOT RUN** |
+
+**Next engineering sequence AFTER explicit environment authorization:** isolated cloud deployment branch & PR (not main); safe `render.yaml` or reviewed Render UI config, provider token *only in host secrets*, injectable private blob storage adapter, Sequelize/TiDB TLS guard, Express production built React routes; CI builds and database tests; disposable real cloud E2E; only then approve lecturer-facing HTTPS link. Keep old private-disk implementation as local/CI regression baseline; never break its proven E2E path.
+
+**Official sources (checked 2026-10-21):**
+- Render Free: https://render.com/docs/free ; Render Express HTTPS: https://render.com/docs/web-services ; monorepo: https://render.com/docs/monorepo-support ; no-card billing: https://render.com/docs/faq
+- TiDB Starter Free: https://docs.pingcap.com/tidbcloud/select-cluster-tier/ ; SQL compatibility: https://docs.pingcap.com/tidbcloud/mysql-compatibility/
+- Vercel Blob Hobby quota (updated 2026-09-23): https://vercel.com/docs/vercel-blob/usage-and-pricing ; private: https://vercel.com/docs/vercel-blob/private-storage ; external SDK + `get()`: https://vercel.com/docs/vercel-blob/using-blob-sdk
+- Railway credit/cost: https://docs.railway.com/pricing/free-trial ; https://docs.railway.com/pricing/plans
+- Koyeb free limitations/payment method: https://www.koyeb.com/docs/reference/instances ; https://www.koyeb.com/docs/reference/organizations
+- Cloudflare R2 free/checkout: https://developers.cloudflare.com/r2/pricing/ ; https://developers.cloudflare.com/r2/get-started/
 
 
 ## 1. Verified baseline (avoid confusing PoC and complete website)

@@ -25,7 +25,7 @@ export default function PostCard({ post }) {
           </div>
 
           {/* Title */}
-          <Link to={`/posts/${post.id}`} className="block">
+          <Link to={post.post_type === 'document' ? '/documents/' + post.id : '/posts/' + post.id} className="block">
             <h2 className="font-semibold text-slate-100 group-hover:text-primary-400 transition-colors line-clamp-2 text-[15px] leading-snug">
               {post.title}
             </h2>

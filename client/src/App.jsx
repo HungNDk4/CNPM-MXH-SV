@@ -10,6 +10,7 @@ import HomePage      from '@/pages/HomePage'
 import LoginPage     from '@/pages/auth/LoginPage'
 import RegisterPage  from '@/pages/auth/RegisterPage'
 import PostDetailPage from '@/pages/posts/PostDetailPage'
+import DocumentDetailPage from '@/pages/documents/DocumentDetailPage'
 import CreatePostPage from '@/pages/posts/CreatePostPage'
 import ProfilePage   from '@/pages/profile/ProfilePage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
@@ -34,6 +35,7 @@ export default function App() {
       <Route element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/posts/:id" element={<PostDetailPage />} />
+        <Route path="/documents/:id" element={<DocumentDetailPage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
         <Route path="/payment/result" element={<PaymentResult />} />
 

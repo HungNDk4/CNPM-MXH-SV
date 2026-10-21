@@ -37,3 +37,15 @@ export const userAPI = {
   updateProfile:   (data) => api.put('/users/profile', data),
   changePassword:  (data) => api.put('/users/change-password', data),
 }
+
+// Authenticated PDF upload (multipart browser boundary) and binary download.
+export const documentAPI = {
+  upload: (formData) => api.post('/documents', formData, {
+    headers: { 'Content-Type': undefined },
+    timeout: 90000,
+  }),
+  download: (postId) => api.get('/documents/' + encodeURIComponent(postId) + '/download', {
+    responseType: 'blob',
+    timeout: 90000,
+  }),
+}

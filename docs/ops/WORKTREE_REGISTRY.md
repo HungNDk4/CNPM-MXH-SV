@@ -21,6 +21,8 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 
 | WT-E2E01 | AI (QA-03; Human A review) | test/e2e01-fullstack-20261021 | Draft PR #30 → integration/team-dev-20261020 | Canonical remote verified; separate local scratch audit verified | REVIEW | Browser/full-stack test on disposable CI MySQL 8; 12 checkpoints PASS at 31a5467, local teammate worktree unverified, no cloud. |
 
+| WT-DEP01C | AI isolated code / Human A/B review | feat/dep01c-render-tidb-blob-poc-20261022 | Draft PR → integration/team-dev-20261020 | NO (GitHub remote only) | REVIEW | Source preview only; cloud Render/TiDB missing; private Blob store empty; no main merge. |
+
 ## Fields required when confirming a real local worktree
 - Worktree ID, owner, machine alias (optional), **local path** (relative/sanitized), branch, base/head SHA, current PR, lock/dirty status, timestamp checked.
 - Verify with `git worktree list --porcelain`, `git -C <path> branch --show-current`, `git -C <path> status --short` and `git -C <path> rev-parse HEAD`.

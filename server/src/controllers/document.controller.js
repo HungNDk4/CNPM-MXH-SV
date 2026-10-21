@@ -51,7 +51,12 @@ async function uploadDocument(req, res, next) {
     const { title, content, subject, tags, file } = validateRequest(req);
     // Create private bytes first. Database transaction makes Post and metadata
     // visible together; any failure compensates by removing the new object.
-    key = await storage.save(file.buffer);
+    try {
+      key = await storage.save(file.buffer);
+    } catch (error) {
+      console.error('Private PDF upload storage failed');
+      throw createError('Không thể lưu tài liệu lúc này.', 503);
+    }
     const post = await sequelize.transaction(async transaction => {
       const row = await Post.create({
         user_id: req.user.id,

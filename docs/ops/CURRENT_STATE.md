@@ -1,4 +1,8 @@
 # CURRENT STATE — Read this before taking action
+## 2026-10-22 — DEP-01C isolated cloud source preview
+- Human A requested try **Render Free + TiDB Starter Free + Vercel Blob Private** for the 1–3 month $0 coursework demo. Source branch `feat/dep01c-render-tidb-blob-poc-20261022` from integrated QA head f5c974b adds opt-in React/Express same-origin production serving, verified TiDB TLS, Vercel Private Blob adapter and no-cost Render blueprint. Private Vercel store exists, initial 0 objects; secrets absent from repo.
+- Tests must run at exact PR HEAD; **actual Render service, TiDB database, private Blob cloud writes, HTTPS and persistence are NOT RUN**. No paid service provisioned, no `main` or integration changes. See Issue #32 and docs/DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md.
+
 ## 2026-10-21 E2E-01 — latest GitHub verification (read first)
 
 - Integration baseline `integration/team-dev-20261020` confirmed at `7bbe302623191d5f28e967424ae529df307a13e7`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. On integration, PDF security/API/React PRs #20/#21/#23/#24/#25/#26/#27/#29 have been merged; historical older rows/paragraphs below are not current source assertions.

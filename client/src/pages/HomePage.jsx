@@ -1,12 +1,30 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { postAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
+import { useAuthStore } from '@/stores/authStore'
+
+const FILTERS = [
+  { label: 'Tất cả', value: 'all' },
+  { label: 'Hỏi đáp', value: 'question' },
+  { label: 'Tài liệu', value: 'document' },
+  { label: 'Thảo luận', value: 'discussion' },
+]
 
 export default function HomePage() {
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const [filter, setFilter] = useState('all')
+  // ADR-002 OPEN: guest may only request public document metadata.
+  const activeType = isAuthenticated ? filter : 'document'
+  const visibleFilters = isAuthenticated ? FILTERS : FILTERS.filter(item => item.value === 'document')
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['posts'],
-    queryFn:  () => postAPI.getAll({ limit: 20 }).then(r => r.data),
+    queryKey: ['posts', activeType, isAuthenticated],
+    queryFn: () => postAPI.getAll({
+      limit: 20,
+      ...(activeType === 'all' ? {} : { type: activeType }),
+    }).then(response => response.data),
+    retry: false,
   })
 
   return (
@@ -17,6 +35,7 @@ export default function HomePage() {
         <div className="card bg-gradient-to-br from-primary-900/50 to-accent-600/20 border-primary-800/50">
           <h1 className="text-2xl font-bold text-gradient mb-2">📚 Mini Study Network</h1>
           <p className="text-slate-400 text-sm">Chia sẻ tài liệu, hỏi đáp, học cùng nhau.</p>
+          {!isAuthenticated && <p className="text-xs text-amber-300 mt-2">Khách có thể xem tài liệu miễn phí. Đăng nhập để tải PDF hoặc tham gia hỏi đáp.</p>}
           <Link to="/posts/create" className="btn-primary inline-block mt-4 text-sm">
             ✏️ Đăng bài mới
           </Link>
@@ -24,9 +43,12 @@ export default function HomePage() {
 
         {/* Filter tabs */}
         <div className="flex gap-2 flex-wrap">
-          {['Tất cả', 'Hỏi đáp', 'Tài liệu', 'Thảo luận'].map(tab => (
-            <button key={tab} className="btn-secondary text-sm py-1.5 px-4">
-              {tab}
+          {visibleFilters.map(({ label, value }) => (
+            <button key={value} type="button" onClick={() => setFilter(value)}
+              aria-pressed={activeType === value}
+              className={'btn-secondary text-sm py-1.5 px-4 ' +
+                (activeType === value ? 'border-primary-500 text-primary-300' : '')}>
+              {label}
             </button>
           ))}
         </div>
@@ -76,7 +98,9 @@ export default function HomePage() {
             </div>
             <div className="flex justify-between">
               <span>Tài liệu miễn phí</span>
-              <span className="text-emerald-400 font-medium">∞</span>
+              <span className="text-emerald-400 font-medium">
+                {activeType === 'document' ? (data?.pagination?.total ?? 0) : '—'}
+              </span>
             </div>
           </div>
         </div>

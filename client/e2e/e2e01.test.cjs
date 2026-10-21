@@ -66,10 +66,18 @@ async function check(label, action) {
 }
 
 test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, async () => {
+  // Regular mini_study_network is ONLY allowed in a short-lived GitHub CI runner.
+  // Local runs must use an explicitly named, isolated DB on localhost.
+  const isDisposableRunner = process.env.GITHUB_ACTIONS === 'true' &&
+    Boolean(process.env.RUNNER_TEMP) && process.env.DB_NAME === 'mini_study_network';
+  const isIsolatedLocal = process.env.GITHUB_ACTIONS !== 'true' &&
+    /^e2e01_[a-z0-9_]+$/.test(process.env.DB_NAME || '');
+  const localhostOnly = ['127.0.0.1', 'localhost'].includes(process.env.DB_HOST);
   if (process.env.E2E_DISPOSABLE_DB !== 'true' || process.env.NODE_ENV !== 'test' ||
-      !process.env.DOCUMENT_PRIVATE_DIR ||
-      !process.env.DB_NAME || !/^(?:e2e01_[a-z0-9_]+|mini_study_network)$/.test(process.env.DB_NAME)) {
-    throw new Error('E2E requires explicit disposable DB, NODE_ENV=test and private test storage');
+      !process.env.DOCUMENT_PRIVATE_DIR || !localhostOnly ||
+      !(isDisposableRunner || isIsolatedLocal)) {
+    throw new Error('E2E refuses non-disposable DB: GitHub runner only for mini_study_network; ' +
+      'local runs require a distinct e2e01_* database on localhost');
   }
   const browser = await chromium.launch({
     headless: true,

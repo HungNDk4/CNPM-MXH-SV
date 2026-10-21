@@ -141,6 +141,9 @@ jobs:
       - name: Test API with real MySQL (no payment/PDF testing)
         working-directory: server
         run: node --test ../scripts/ubuntu/mysql-integration.test.cjs
+      - name: QA-01 two-account ownership and refresh regression (disposable MySQL)
+        working-directory: server
+        run: node --test ../scripts/ubuntu/auth-ownership.test.cjs
       - name: Check Ubuntu scripts shell syntax
         run: bash -n scripts/ubuntu/doctor.sh scripts/ubuntu/setup.sh
       - name: Verify original SQL columns match Sequelize timestamps

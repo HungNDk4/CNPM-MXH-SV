@@ -1,6 +1,4 @@
 'use strict';
-const fs = require('node:fs');
-const fsp = require('node:fs/promises');
 const crypto = require('node:crypto');
 const { sequelize, Post, DocumentFile } = require('../models');
 const { createError } = require('../middlewares/error.middleware');
@@ -84,7 +82,6 @@ async function uploadDocument(req, res, next) {
 // Auth middleware already verifies JWT signature, expiry and active DB user.
 // Recheck Post state on every request; private files are never served via static URLs.
 async function downloadDocument(req, res, next) {
-  let fileHandle;
   try {
     const postId = String(req.params.postId || '');
     if (!/^[1-9]\d*$/.test(postId)) throw createError('Tài liệu không tồn tại.', 404);
@@ -96,11 +93,20 @@ async function downloadDocument(req, res, next) {
     const entry = await DocumentFile.findOne({ where: { post_id: post.id } });
     if (!entry) throw createError('Tài liệu không tồn tại.', 404);
 
-    // Follow no untrusted path and reject symlinks even if storage is tampered.
-    fileHandle = await fsp.open(storage.filePath(entry.storage_key),
-      fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0));
-    const stat = await fileHandle.stat();
-    if (!stat.isFile() || stat.size !== entry.size_bytes) {
+    // Local filesystem or private Blob; only internal UUID key comes from DB.
+    // No provider URL/token is ever returned through the PDF endpoint.
+    let attachment;
+    try {
+      attachment = await storage.openRead(entry.storage_key);
+    } catch (error) {
+      if (error.code === 'ENOENT' || error.code === 'ELOOP') {
+        throw createError('Tài liệu không khả dụng.', 404);
+      }
+      console.error('Private PDF provider unavailable');
+      throw createError('Không thể tải tài liệu lúc này.', 503);
+    }
+    if (attachment.size !== entry.size_bytes) {
+      attachment.stream.destroy();
       throw createError('Tài liệu không khả dụng.', 404);
     }
 
@@ -109,23 +115,18 @@ async function downloadDocument(req, res, next) {
     const safeName = filename.toLowerCase().endsWith('.pdf') ? filename : 'document.pdf';
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Length': String(stat.size),
+      'Content-Length': String(attachment.size),
       'Content-Disposition': 'attachment; filename="' + safeName + '"',
       'Cache-Control': 'private, no-store',
       'X-Content-Type-Options': 'nosniff',
     });
-    const stream = fileHandle.createReadStream({ autoClose: true });
-    fileHandle = null;
+    const stream = attachment.stream;
     stream.on('error', err => {
       if (!res.headersSent) next(err);
       else res.destroy(err);
     });
     stream.pipe(res);
   } catch (error) {
-    if (fileHandle) await fileHandle.close().catch(() => {});
-    if (error.code === 'ENOENT' || error.code === 'ELOOP') {
-      return next(createError('Tài liệu không khả dụng.', 404));
-    }
     next(error);
   }
 }

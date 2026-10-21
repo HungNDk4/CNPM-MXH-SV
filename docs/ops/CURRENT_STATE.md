@@ -1,7 +1,9 @@
 # CURRENT STATE — Read this before taking action
 ## 2026-10-22 — DEP-01C isolated cloud source preview
+- **Latest live attempt: BLOCKED.** Existing Render service `srv-dbcg9rbrjlhs73bc8870` / deploy `dep-dbcg9s3rjlhs73bc8b70` supplied by Human A. Dry-run with this service ID exited 1 because `RENDER_API_KEY` is absent; unauthenticated service API returned HTTP 401. Current Free plan/env/logs/public origin not verified. No apply, JWT initialization, redeploy or real HTTPS health check performed.
+- Vercel management read now succeeds: existing Blob store private/available, SIN, 0 objects/bytes, quota not exceeded. This supersedes prior team-403 metadata evidence only; real application Blob operations and TiDB connectivity remain NOT RUN. Namespaced TiDB/Blob inputs absent locally; Render-side presence unknown until authenticated inventory. Full evidence in [DEP-01C runbook](../DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md).
 - Human A requested try **Render Free + TiDB Starter Free + Vercel Blob Private** for the 1–3 month $0 coursework demo. Source branch `feat/dep01c-render-tidb-blob-poc-20261022` from integrated QA head f5c974b adds opt-in React/Express same-origin production serving, verified TiDB TLS, Vercel Private Blob adapter and no-cost Render blueprint. Private Vercel store exists, initial 0 objects; secrets absent from repo.
-- Tests must run at exact PR HEAD; **actual Render service, TiDB database, private Blob cloud writes, HTTPS and persistence are NOT RUN**. No paid service provisioned, no `main` or integration changes. See Issue #32 and docs/DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md.
+- Exact source head fa1014b4 has successful CI run 39654759429; local mocked Render-helper safety tests 4/4 PASS. **Actual TiDB authentication, private Blob application I/O, HTTPS and persistence are NOT RUN**. Existing Render was created by Human A; this session created no provider resource or paid service and changed neither `main` nor integration. See Issue #32 and PR #33.
 
 ## 2026-10-21 E2E-01 — latest GitHub verification (read first)
 

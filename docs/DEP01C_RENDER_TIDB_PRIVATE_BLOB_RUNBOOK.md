@@ -13,6 +13,27 @@
 3. Render environment must contain: `NODE_ENV=production`, `SERVE_CLIENT_DIST=true`, `DB_AUTO_SYNC=false`, `TIDB_CLOUD=true`, `TIDB_ENABLE_SSL=true`, `DOCUMENT_STORAGE_DRIVER=vercel-blob`, `DB_HOST/PORT/NAME/USER/PASSWORD`, independent high-entropy `JWT_ACCESS_SECRET/JWT_REFRESH_SECRET`, `CLIENT_URL=https://<actual-render-subdomain>.onrender.com`, and `BLOB_READ_WRITE_TOKEN` for the private store. Never display/copy tokens in issue/PR or logs. Node built-in CA is sufficient for TiDB Starter by default; `TIDB_CA_PATH` optional.
 4. Existing local MySQL and disk-backed PDF tests use the default filesystem driver. Production switches only with `DOCUMENT_STORAGE_DRIVER=vercel-blob`. SDK `@vercel/blob >=2.3` needed; `server/package.json` and `server/package-lock.json` must agree before Render `npm ci`. The backend fails closed during startup when storage config is incomplete.
 
+## Codex-assisted environment setup for EXISTING Render Web Service
+
+The account owner created Render's Web Service **manually**, so `render.yaml` will NOT automatically update that existing service. To let Codex do the non-secret updates safely, this branch ships `scripts/dep01c-render-env.cjs` with offline CI guards.
+
+**Prerequisite: give the Codex execution environment access to its own existing Render account credential.** Set `RENDER_API_KEY` and `RENDER_SERVICE_ID` (the actual Render dashboard URL has `/web/srv-...`) in a private terminal/secret manager. **Never paste an API key, DB password or Vercel Blob token into chat, a GitHub issue, commits, Actions secrets in a PR from an untrusted branch, or the command-line arguments.** The script intentionally cannot guess credentials or acquire a Render token on its own.
+
+Usage from this checked-out feature branch:
+
+```bash
+node scripts/dep01c-render-env.cjs --dry-run
+node scripts/dep01c-render-env.cjs --apply
+```
+
+The script fetches the Render service, refuses to write unless it is **exactly** the `HungNDk4/CNPM-MXH-SV` Web Service on the `feat/dep01c-render-tidb-blob-poc-20261022` branch and **Free plan**. It updates **individual** non-secret keys (`NODE_ENV`, `SERVE_CLIENT_DIST`, `DB_AUTO_SYNC`, `DOCUMENT_STORAGE_DRIVER`, `TIDB_CLOUD`, `TIDB_ENABLE_SSL`, `DB_SSL_MODE`) without replacing other settings; initializes missing JWT secrets from cryptographic random bytes and derives `CLIENT_URL` if Render returns a valid HTTPS `onrender.com` origin.
+
+If the Codex process has **specifically opt-in** `DEP01_TIDB_DB_HOST`, `DEP01_TIDB_DB_PORT`, `DEP01_TIDB_DB_NAME`, `DEP01_TIDB_DB_USER`, `DEP01_TIDB_DB_PASSWORD` and `DEP01_PRIVATE_BLOB_TOKEN` available privately, the script can set those missing service values without printing them. **Never use arbitrary local `DB_PASSWORD` or a development database.** Preexisting values are retained, including JWTs and cloud credentials. Output contains **names only**; no secret values. It does not deploy automatically and does not modify billing, branch or service plan. Missing credentials are reported by key name and block full activation.
+
+**Next:** After Codex confirms `--apply` succeeded with no missing required keys, authorize a Render **Save and deploy** / API deploy of the existing Free Web Service, inspect the **real** backend startup logs and run the external HTTPS script. If TiDB or private Blob store is not configured yet, Codex must report `BLOCKED` and **not** fabricate credentials or deploy an incomplete application.
+
+Official Render API proof: https://api-docs.render.com/reference/update-env-var (single-key PUT; the bulk endpoint replaces/deletes omitted keys and MUST NOT be used). 
+
 ## Exact external Render proof: not yet executed
 
 **Necessary third-party prerequisite:** no connected Render or TiDB admin tool is available to this ChatGPT session, and the connected browser cannot access a Render dashboard without originating browser context. Render service/account details and TiDB database credentials were not provided. **We cannot honestly report a real `*.onrender.com` deployment at this point.** No host URL has been returned by Render for this project.

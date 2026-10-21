@@ -1,5 +1,6 @@
 'use strict';
-const path = require('node:path');
+const fs = require('node:fs');
+const fsp = require('node:fs/promises');
 const crypto = require('node:crypto');
 const { sequelize, Post, DocumentFile } = require('../models');
 const { createError } = require('../middlewares/error.middleware');
@@ -80,4 +81,53 @@ async function uploadDocument(req, res, next) {
   }
 }
 
-module.exports = { uploadDocument };
+// Auth middleware already verifies JWT signature, expiry and active DB user.
+// Recheck Post state on every request; private files are never served via static URLs.
+async function downloadDocument(req, res, next) {
+  let fileHandle;
+  try {
+    const postId = String(req.params.postId || '');
+    if (!/^[1-9]\d*$/.test(postId)) throw createError('Tài liệu không tồn tại.', 404);
+    const post = await Post.findByPk(Number(postId));
+    if (!post || post.post_type !== 'document' ||
+        post.status !== 'active' || Number(post.price) !== 0) {
+      throw createError('Tài liệu không tồn tại.', 404);
+    }
+    const entry = await DocumentFile.findOne({ where: { post_id: post.id } });
+    if (!entry) throw createError('Tài liệu không tồn tại.', 404);
+
+    // Follow no untrusted path and reject symlinks even if storage is tampered.
+    fileHandle = await fsp.open(storage.filePath(entry.storage_key),
+      fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0));
+    const stat = await fileHandle.stat();
+    if (!stat.isFile() || stat.size !== entry.size_bytes) {
+      throw createError('Tài liệu không khả dụng.', 404);
+    }
+
+    const filename = String(entry.original_name || 'document.pdf')
+      .replace(/[^a-zA-Z0-9_.-]/g, '_').slice(0, 150);
+    const safeName = filename.toLowerCase().endsWith('.pdf') ? filename : 'document.pdf';
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Length': String(stat.size),
+      'Content-Disposition': 'attachment; filename="' + safeName + '"',
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    const stream = fileHandle.createReadStream({ autoClose: true });
+    fileHandle = null;
+    stream.on('error', err => {
+      if (!res.headersSent) next(err);
+      else res.destroy(err);
+    });
+    stream.pipe(res);
+  } catch (error) {
+    if (fileHandle) await fileHandle.close().catch(() => {});
+    if (error.code === 'ENOENT' || error.code === 'ELOOP') {
+      return next(createError('Tài liệu không khả dụng.', 404));
+    }
+    next(error);
+  }
+}
+
+module.exports = { uploadDocument, downloadDocument };

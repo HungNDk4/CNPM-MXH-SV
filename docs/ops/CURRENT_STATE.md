@@ -1,4 +1,8 @@
 # CURRENT STATE — Read this before taking action
+## 2026-10-21 human scope — DEP-01 website for coursework only
+- Human A selected **short-term 1–3 month demo/report/defense**, not indefinite operation. Prioritize **$0 recurring fees** with no cloud spend, payment card or vendor authorization inferred. Keep private 10 MiB PDF invariants and public HTTPS accessible independently of student laptops. Candidate comparison updated in `docs/DEP01_PUBLIC_HTTPS_READINESS_20261021.md` (PR #31); cloud app remains NOT DEPLOYED.
+- PR #30 at `0771428`: GitHub Actions 39595181401 **7/7 PASS**, Chromium E2E **12/12 PASS**, local backend **5/5 PASS**, local frontend **BLOCKED by Windows ACL**; independent human review/merge pending. This scope decision does not approve PR/merge or cloud provisioning.
+
 ## 2026-10-21 DEP-01 public HTTPS preparation (not a live full app)
 - Source: integration/team-dev-20261020 @ 7bbe302623191d5f28e967424ae529df307a13e7. Independent deploy-readiness docs branch `docs/dep01-public-https-readiness-20261021` includes `docs/DEP01_PUBLIC_HTTPS_READINESS_20261021.md`. Existing Vercel `mini-study-network-dep01` deployment is **health-only**, not React+MySQL+PDF public app. Provider selection, budget/credit approval and actual cloud migration/deployment are **NOT DONE**.
 - QA-03 Draft PR #30 has passing CI but no independent recorded human review at check time; its latest source added Blob-refresh E2E, while dated report remained stale and local DB guard required hardening. Do not merge/deploy on AI signoff alone.

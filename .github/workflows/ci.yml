@@ -87,6 +87,8 @@ jobs:
         run: node --test ../scripts/ubuntu/dep01-render-spa.test.cjs
       - name: DEP-01C TiDB TLS config guards
         run: node --test ../scripts/ubuntu/dep01-tidb-tls.test.cjs
+      - name: DEP-01C Codex Render env API safety tests (offline, no credentials)
+        run: node --test ../scripts/ubuntu/dep01c-render-env.test.cjs
       - name: DEP-01C external Render smoke script syntax only (NO cloud)
         run: node --check ../scripts/dep01c-live-render-smoke.cjs
 

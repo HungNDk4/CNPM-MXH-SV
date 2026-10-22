@@ -4,7 +4,7 @@
 // Creates two unique users, model-only legacy documents and a synthetic static
 // sentinel. Cleans only owned user IDs and the sentinel directory; no DROP/TRUNCATE.
 const test = require('node:test');
-const runBE04 = require('./be04-interactions-regression.cjs');
+const { spawn } = require('node:child_process');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('node:fs');
@@ -248,9 +248,15 @@ test('SEC-01: private PDF/static guard + SafePost + guest permissions', { timeou
       for (const p of r.data.data) hasSafePostShape(p);
     });
 
-    await runBE04({
-      request, step, tokenA, tokenB, idA, idB: b.data.data.user.id,
-      uid, free, hidden, deleted, paid,
+    await step('BE04 isolated process regression (independent rate-limit counter)', async () => {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath, [require('node:path').join(__dirname, 'be04-interactions-regression.cjs')], {
+          env: process.env, stdio: 'inherit',
+        });
+        child.once('error', reject);
+        child.once('close', code => code === 0 ? resolve() :
+          reject(new Error('BE04 isolated security regression exited with status ' + code)));
+      });
     });
 
     console.log('SEC-01 RESULT: ' + steps + '/' + steps + ' checks PASS; fixture cleanup follows');

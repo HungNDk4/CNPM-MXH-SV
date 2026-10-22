@@ -13,7 +13,7 @@
 - Preserves SafePost DTO; no new public fields or database migrations.
 
 ## Regression evidence
-`scripts/ubuntu/be04-interactions-regression.cjs` runs from **existing** `scripts/ubuntu/pdf-security.test.cjs` during the already configured Ubuntu 24.04 + MySQL 8 isolated CI job. No CI workflow edits. Exercises live in-process Express HTTP, two disposable student accounts, direct MySQL state assertions and cleanup by existing user cascade:
+`scripts/ubuntu/be04-interactions-regression.cjs` is spawned as a **separate Node process** from the existing `scripts/ubuntu/pdf-security.test.cjs` during the already configured Ubuntu 24.04 + MySQL 8 isolated CI job. No CI workflow edits. Exercises live in-process Express HTTP, two disposable student accounts, direct MySQL state assertions and cleanup by existing user cascade:
 - Active/free post and document comment + Like happy paths, existing FE-01 Like/Comment envelopes.
 - Guest/non-owner 401/403 and moderation/paid/hidden/deleted 404.
 - IDs, malformed payload, 2,001 chars, missing/mismatched/deleted/nested parent 422.
@@ -24,3 +24,7 @@
 **Implementation and CI verdict:** pending exact new PR GitHub Actions results. No claim of PASS before completion.
 
 **Operational note:** Old `GET /api/posts/:id` excluded `deleted` but exposed hidden non-document detail. Fixed with `status===active` and `price===0`. No generalized post search/profile/payment changes.
+
+## First CI diagnostic (corrective test-harness isolation)
+
+[CI run 39831024684](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39831024684) reached **BE04 five groups PASS** then returned 429 due to Express' existing global rate limit (100 calls per 15 minutes), counting original SEC-01 requests plus new BE-04 assertions. This is a test-harness false-negative and does **not** justify disabling/throttling the production app. Fix: spawn a **fresh local Express process and separate in-memory limiter** for BE04, still using the disposable CI MySQL8. Focused test stays below 100 requests per process, and app.js / workflow untouched. Latest CI must prove this fix; do not mark it PASS early.

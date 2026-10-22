@@ -2,14 +2,14 @@
 
 > **BẮT ĐẦU SESSION MỚI:** đọc [PROJECT_CONTROL.md](PROJECT_CONTROL.md) trước mọi thay đổi. Đây là mục lục trạng thái, worktree, task board và session logs, tránh phụ thuộc lịch sử chat.
 
-**Trạng thái:** Source vẫn là bản đồ án đang REVIEW. **DEP-01C cloud preview đã LIVE, HTTPS `/api/health` PASS và Render kết nối TiDB thành công (2026-10-22)**; các luồng PDF bảo mật/đăng nhập trên *cloud* chưa nghiệm thu. Không coi bản preview là release production-ready.
+**Trạng thái:** Source đồ án đang REVIEW. **DEP-01C trên cloud LIVE: Auth refresh/revocation (AUTH-02) và upload/download 621-byte PDF với đối chiếu SHA256 (PDF-01) đã PASS trên Render+TiDB+Vercel Blob Private (2026-10-22).** Đây chỉ là checkpoint chức năng nhỏ; giới hạn 10 MiB, phân quyền chéo tài khoản, persistence và release security gate chưa nghiệm thu.
 
 ## Xem bản chạy thử trên cloud (DEP-01C)
 - Web React + Express: https://mini-study-network-dep01-demo.onrender.com/
 - API health: https://mini-study-network-dep01-demo.onrender.com/api/health
 - Render Free + TiDB Starter (MySQL Compatible) + Vercel Blob Private; không phụ thuộc laptop phải bật. Free tiers không đảm bảo thời gian hoạt động liên tục.
 - Source đang triển khai: `71499dfd63d21feb019d6144efcadc7ee9232951`, Draft PR [#33](https://github.com/HungNDk4/CNPM-MXH-SV/pull/33), base `integration/team-dev-20261020`; **không phải** `main`.
-- Bằng chứng: [runbook DEP-01C](docs/DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md), [live checkpoint](docs/ops/CURRENT_STATE.md), [GitHub CI 7/7](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39753376890). Chưa có cloud PDF E2E/kiểm thử an ninh và persistence PASS.
+- Bằng chứng live: [AUTH-02/PDF-01 cloud report](docs/testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md), [GitHub Actions thực tế](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39816112003), [runbook DEP-01C](docs/DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md). Chưa có kiểm thử đầy đủ 10MiB/phân quyền hai tài khoản/persistence hay release approval.
 
 ## Mục tiêu
 Sinh viên đăng câu hỏi, thảo luận và chia sẻ tài liệu học tập **miễn phí**. Có phân quyền tài khoản và quản trị. **Đã chốt Option B (17/10/2026):** VNPay Sandbox và tài liệu thu phí là chức năng mở rộng, **không thuộc MVP**. Trước khi demo phải chặn an toàn các API thanh toán/paid-file hiện tồn tại — ẩn nút UI không đủ.

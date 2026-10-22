@@ -1,5 +1,8 @@
 # DEP-01C post-OAuth live acceptance — 2026-10-22
 
+**Newest result (23:42 ICT):** AUTH-02/PDF-01 real cloud PASS. See [full test matrix and cleanup](DEP01C_AUTH02_PDF01_CLOUD_REPORT.md) and [GitHub Actions](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39816112003). Earlier FAILED JWT authentication below is a historical test on the prior deployment, not the current status.
+
+
 ## DEP-01C auth recovery — 2026-10-22 23:22 ICT (current)
 
 **Register PASS (201), Login PASS (200), Logout response PASS (200)** on new Render Free deployment. Render deployment `dep-dbd38o2vcj2c739h61sg` (source `71499dfd63d21feb019d6144efcadc7ee9232951`) is LIVE following a configuration deployment at 16:06 UTC. Human A observed successful browser registration, login and logout. Render request logs corroborate `POST /api/auth/register` 201 at 16:14:38.811Z, `POST /api/auth/logout` 200 at 16:15:12.440Z and `POST /api/auth/login` 200 at 16:22:34.422Z.

@@ -1,5 +1,20 @@
 # Test Plan và Acceptance Gates
 
+## Latest real cloud AUTH-02 → PDF-01 — 2026-10-22 23:42 ICT
+
+| Test group | Status | Live evidence |
+|---|---|---|
+| AUTH-02 registration, JWT login, /me | **PASS** | Real Render/TiDB HTTP 201/200/200, GitHub run 39816112003 |
+| AUTH-02 refresh rotation & replay deny | **PASS** | Refresh 200 with distinct JWT; prior refresh 401 |
+| AUTH-02 logout refresh revocation | **PASS** | Logout 200; revoked token reuse 401 |
+| PDF-01 upload/download small synthetic file | **PASS** | 621B PDF upload 201; signed-in download 200 with exact bytes/SHA256; guest 401 |
+| PDF-01 post soft-delete/access revocation | **PASS** | Soft-delete 200; after-delete download 404 |
+| Physical cleanup | **PENDING** | Private Blob and synthetic account persist; owner cleanup required |
+| PDF 10MiB/+1, spoofing, multi-part, two-user 403, admin, persistence | **NOT RUN** | Cannot claim release readiness from small PDF success |
+
+Details: [real cloud report](testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md). Historical 22:49 JWT failure below was corrected on a subsequent configuration deployment. Overall DEP-01C IN_PROGRESS / DEP-02 BLOCKED.
+
+
 ## DEP-01C — latest authenticated browser retest, 2026-10-22 23:22 ICT
 
 | Check | Result | Evidence / limits |

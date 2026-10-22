@@ -282,3 +282,13 @@ Render deployment `dep-dbd38o2vcj2c739h61sg` (source `71499dfd63d21feb019d6144ef
 Both access and refresh JWT signing run before registration/login success per deployed `auth.controller.js`, so their signing inputs were usable at those requests. No credential values were inspected. Logout 200 alone does NOT prove refresh revocation. Refresh rotation/reuse, real cloud private PDF bytes, 10MiB/+1, SHA256, two-user permissions, hidden/delete and redeploy persistence remain untested.
 
 **Actions:** GitHub docs-only branch and PR #34 updated, no production source push/deploy/environment write. DEP-01C IN_PROGRESS and DEP-02 BLOCKED; pending authenticated Blob/cloud PDF test + persistence, old test-user cleanup.
+
+## SESSION-20261022-DEP01C-AUTH02-PDF01-CLOUD — 23:42 ICT
+
+**Actor:** AI on isolated GitHub Actions runner; authorized by Human A to execute AUTH-02 then PDF-01. Runner [39816112003](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39816112003) **SUCCESS** using test branch `test/dep01c-cloud-auth-pdf-20261022` @ `c4446867e702dca49cfac72d2edfdbad4ca55e5d`, stacked Draft PR #35 onto docs PR #34. Independent exact source and actual HTTPS calls, not mock CI.
+
+**Results:** register 201, authenticated /me 200, login 200, refresh 200 new token, stale refresh 401, logout 200, revoked refresh 401; one synthetic valid PDF 621B upload 201 into configured Private Blob and TiDB, guest download 401, authorized download 200 byte-for-byte + SHA256, post 1 soft-delete 200, subsequent download 404. No leaked Blob URL in upload response. Overall AUTH-02 PASS, PDF-01 PASS for tested 621B fixture.
+
+**Cleanup:** synthetic user `dep01c-live-39816112003-aa9ea81a@example.invalid` and private Blob/document_files/post data await owner physical cleanup. Post status deleted, file not externally downloadable. Earlier two QA accounts still present. See [full cloud acceptance & exact read-only cleanup inventory](../testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md).
+
+**Out-of-scope:** 10MiB/10MiB+1, two-account 403, admin moderation, failures/rollback, redeploy persistence, comprehensive payment API security, and human release approval NOT RUN. Source/Render env untouched; no paid plan, no merge, no extra deploy. DEP-01C IN_PROGRESS, DEP-02 BLOCKED.

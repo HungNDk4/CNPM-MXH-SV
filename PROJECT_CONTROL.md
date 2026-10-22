@@ -3,6 +3,8 @@
 
 > Do not begin from old chat history. Start here, then confirm remote branch/PR HEAD with GitHub.
 >
+> **LATEST 2026-10-22 23:42 ICT:** AUTH-02 refresh/replay/logout revocation and PDF-01 real private upload/download 621B byte/SHA256 tests PASS via [GitHub run 39816112003](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39816112003). Test fixture cleanup pending; 10MiB/cross-user/persistence remain NOT RUN. [Detailed QA](docs/testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md). DEP-02 still blocked. 
+>
 > **NEW live preview checkpoint:** 2026-10-22 Render Free website and public `/api/health` HTTP 200 are verified; Render ↔ TiDB connected; 8/8 tables observed; real private-PDF cloud E2E **not run**. Deployed commit `71499dfd63d21feb019d6144efcadc7ee9232951` (Draft PR #33). Evidence: [DEP-01C runbook](docs/DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md) and [CURRENT_STATE](docs/ops/CURRENT_STATE.md). Live source branch is auto-deployed by Render; documentation-only checkpoint goes via separate stacked PR to avoid automatic redeploy.
 
 ## Quick start (read in order)

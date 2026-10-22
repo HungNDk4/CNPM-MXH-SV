@@ -1,8 +1,19 @@
 # DEP-01C — Render Free + TiDB Cloud Starter + Vercel Blob Private
 
-**Current status (2026-10-22 23:22 ICT): Render LIVE; registration/login/logout PASS from browser and matching Render HTTP logs; authenticated cloud PDF/10MiB acceptance and refresh revocation PENDING.** No release approval.
+**Current status (2026-10-22 23:42 ICT): Render Free LIVE; AUTH-02 JWT refresh/replay/logout revocation PASS; PDF-01 real 621-byte Private Blob upload/download and SHA256 PASS. 10MiB limits, cross-user security, cleanup and persistence NOT RUN.** No release approval.
 
-## DEP-01C auth recovery — 2026-10-22 23:22 ICT (current)
+## 2026-10-22 23:42 ICT — AUTH-02 → PDF-01 actual cloud PASS (LATEST)
+
+**Live functional checkpoint PASS (limited scope).** GitHub Actions [run 39816112003](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39816112003) executed against the **real** Render Free service, TiDB and configured Vercel Blob Private using a newly generated synthetic account. Runner source: [Draft PR #35](https://github.com/HungNDk4/CNPM-MXH-SV/pull/35), commit `c4446867e702dca49cfac72d2edfdbad4ca55e5d`.
+
+- **AUTH-02 PASS:** registration 201, `/api/auth/me` 200, login 200, refresh 200 with a distinct JWT, replay of prior refresh 401, logout 200 and previously logged-out refresh 401.
+- **PDF-01 PASS:** upload one structurally valid synthetic PDF (621 bytes) **201**; returned metadata does not expose a Blob URL; guest download **401**; logged-in download **200** and exact byte/SHA256 match; synthetic post `id=1` soft-deleted **200**, subsequent download **404**.
+- **Limited TiDB evidence:** registration, refresh token persistence/rotation, document post and `document_files` insertion, and soft deletion exercised through real HTTP; direct SQL/FK/rollback/edge compatibility not proven.
+- **Cleanup still required:** the new QA-only user `dep01c-live-39816112003-aa9ea81a@example.invalid` persists in TiDB; post `1` is soft-deleted, its `document_files` metadata and private Blob object persist until owner cleanup. The two earlier failed-auth synthetic accounts also remain. Never treat soft-delete as physical Blob removal.
+- **Pending (NOT RUN):** authenticated **exact 10 MiB and 10MiB+1**, PDF spoof/multiple parts, two-account cross-user mutation **403**, admin hide/delete, Blob persistence after redeploy/restart, private object physical cleanup, quotas and production hardening. Full browser UI-to-PDF flow NOT RUN; this was actual live API E2E.
+- **Ops:** live Render source `71499dfd` unchanged, no environment/credentials/deploy touched by QA runner. Documentation-only updates on PR #34 branch. DEP-01C **IN_PROGRESS**, DEP-02 release **BLOCKED**, Human A/B sign-off pending. See [DEP-01C AUTH-02 / PDF-01 real cloud report](../testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md).
+
+## Historical DEP-01C auth recovery — 2026-10-22 23:22 ICT
 
 **Register PASS (201), Login PASS (200), Logout response PASS (200)** on new Render Free deployment. Render deployment `dep-dbd38o2vcj2c739h61sg` (source `71499dfd63d21feb019d6144efcadc7ee9232951`) is LIVE following a configuration deployment at 16:06 UTC. Human A observed successful browser registration, login and logout. Render request logs corroborate `POST /api/auth/register` 201 at 16:14:38.811Z, `POST /api/auth/logout` 200 at 16:15:12.440Z and `POST /api/auth/login` 200 at 16:22:34.422Z.
 

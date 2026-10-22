@@ -24,6 +24,8 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 | WT-DEP01C | AI isolated code / Human A/B review | feat/dep01c-render-tidb-blob-poc-20261022 | Draft PR #33 → integration/team-dev-20261020 | Historical Codex local checkout verified at fa1014b4; **current local state NOT checked by this GitHub-only session** | REVIEW | Remote deployed HEAD `71499dfd63d21feb019d6144efcadc7ee9232951`; Render Free **LIVE**, website and health HTTP 200 observed, TiDB connected + 8-table user evidence. Cloud Blob/auth/security/persistence E2E pending. No main merge. |
 | WT-DEP01C-DOCS | AI GitHub-only documentation / Human A/B review | docs/dep01c-live-checkpoint-20261022 | Draft stacked PR → feat/dep01c-render-tidb-blob-poc-20261022 | NO (remote-only, local worktree NOT VERIFIED) | REVIEW | 2026-10-22 progress/runbook/board/test/README updates only; based on deployed `71499dfd63d21feb019d6144efcadc7ee9232951`. Avoid triggering auto-deploy from live source. |
 
+| WT-DEP01C-CLOUD-QA | AI GitHub Actions, Human A review | test/dep01c-cloud-auth-pdf-20261022 | Draft PR #35 → docs/dep01c-live-checkpoint-20261022 (PR #34) | NO local worktree; GitHub-only CI remote | REVIEW | Real HTTP acceptance run [39816112003](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39816112003) PASS AUTH-02 + small PDF-01; synthetic user/private Blob cleanup pending. No Render source push. |
+
 ## Fields required when confirming a real local worktree
 - Worktree ID, owner, machine alias (optional), **local path** (relative/sanitized), branch, base/head SHA, current PR, lock/dirty status, timestamp checked.
 - Verify with `git worktree list --porcelain`, `git -C <path> branch --show-current`, `git -C <path> status --short` and `git -C <path> rev-parse HEAD`.

@@ -1,4 +1,11 @@
 # CURRENT STATE — Read this before taking action
+
+## 2026-10-23 — FE-01 social interactions review-ready (feature branch only)
+
+- Dedicated branch `feat/fe01-post-detail-comments-likes-20261023`, [Draft PR #36](https://github.com/HungNDk4/CNPM-MXH-SV/pull/36) targeting integration. Implements Post Detail and one-level Comments/Replies plus post/comment Like UI, reuses current backend. FE01 10/10 Chromium/MySQL 8 PASS and 7/7 CI PASS at source `2062257` [run 39822074901](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39822074901).
+- Human A/B review NOT RUN; real Render Free deployment NOT TRIGGERED. Initial per-user liked status is not provided by existing API. Backend post/comment security hardening and responsive manual QA still open. Task FE-01 REVIEW, not approved/DONE.
+- **Separate cloud workstream:** DEP-01C real Render Auth/PDF-01 results belong to PR #33/#34; no merging or assuming this FE UI is already on that website.
+
 ## 2026-10-21 E2E-01 — latest GitHub verification (read first)
 
 - Integration baseline `integration/team-dev-20261020` confirmed at `7bbe302623191d5f28e967424ae529df307a13e7`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. On integration, PDF security/API/React PRs #20/#21/#23/#24/#25/#26/#27/#29 have been merged; historical older rows/paragraphs below are not current source assertions.

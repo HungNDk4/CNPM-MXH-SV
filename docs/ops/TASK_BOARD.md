@@ -38,7 +38,7 @@ Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend
 | BE-01 | P1 | Public guest GET feed, optional auth | UNASSIGNED | TODO | DS-03 | route currently blocks guest |
 | BE-02 | P1 | Schema consistency + migration plan | UNASSIGNED | TODO | DS-02 | ORM drift |
 | QA-01 | P0 | Auth/privacy tests + verify paid endpoints DENIED in MVP | UNASSIGNED | TODO | DS-03/SEC-01/SEC-03 | CI only syntax/build now; [issue #14](https://github.com/HungNDk4/CNPM-MXH-SV/issues/14) |
-| FE-01 | P1 | Post detail + threaded comments | UNASSIGNED | TODO | DS-03/04 + BE-01 | FE page stub; [issue #15](https://github.com/HungNDk4/CNPM-MXH-SV/issues/15) |
+| FE-01 | P1 | Post Detail + Comments/Replies + Likes React UI and isolated Chromium E2E | AI + Human A/B review | REVIEW | Existing Post/Comment/Like API contracts; G03 source integration | [Draft PR #36](https://github.com/HungNDk4/CNPM-MXH-SV/pull/36) frontend+E2E implemented, code `2062257`, [CI 7/7 SUCCESS](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39822074901), FE01 10/10 browser checks PASS in disposable MySQL 8; actual Render deployment/manual mobile QA NOT RUN; initial viewer liked state API unavailable. |
 | FE-02 | P1 | Like/unlike FE with correct API states | UNASSIGNED | TODO | DS-03/04 | BE route exists |
 | FE-03 | P1 | Search/filter/pagination UI | UNASSIGNED | TODO | BE-01/DS-04 | UI placeholders |
 | FE-04 | P1 | Profile/edit/password screens | UNASSIGNED | TODO | DS-03/04 | FE page stub; [issue #16](https://github.com/HungNDk4/CNPM-MXH-SV/issues/16) |

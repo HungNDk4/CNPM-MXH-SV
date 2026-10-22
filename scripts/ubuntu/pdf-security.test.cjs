@@ -4,6 +4,7 @@
 // Creates two unique users, model-only legacy documents and a synthetic static
 // sentinel. Cleans only owned user IDs and the sentinel directory; no DROP/TRUNCATE.
 const test = require('node:test');
+const runBE04 = require('./be04-interactions-regression.cjs');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('node:fs');
@@ -245,6 +246,11 @@ test('SEC-01: private PDF/static guard + SafePost + guest permissions', { timeou
       assert.ok(!r.data.data.some(p => p.id === paid.id));
       assert.ok(r.data.data.some(p => p.id === free.id));
       for (const p of r.data.data) hasSafePostShape(p);
+    });
+
+    await runBE04({
+      request, step, tokenA, tokenB, idA, idB: b.data.data.user.id,
+      uid, free, hidden, deleted, paid,
     });
 
     console.log('SEC-01 RESULT: ' + steps + '/' + steps + ' checks PASS; fixture cleanup follows');

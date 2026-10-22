@@ -60,9 +60,7 @@ const getPostById = async (req, res, next) => {
       throw createError('Yêu cầu đăng nhập để xem bài viết.', 401);
     }
     // Guests/students/owners cannot view hidden, deleted or paid documents.
-    if (post.status === 'deleted' ||
-        (post.post_type === 'document' &&
-         (post.status !== 'active' || Number(post.price) !== 0))) {
+    if (post.status !== 'active' || Number(post.price) !== 0) {
       throw createError('Bài viết không tồn tại.', 404);
     }
 
@@ -113,9 +111,17 @@ const updatePost = async (req, res, next) => {
     const post = await Post.findByPk(req.params.id);
     if (!post) throw createError('Bài viết không tồn tại.', 404);
     if (post.user_id !== req.user.id && req.user.role !== 'admin') throw createError('Không có quyền sửa bài.', 403);
-    // Owners may not reactivate documents hidden/deleted by moderation.
-    if (post.post_type === 'document' && post.status !== 'active') {
-      throw createError('Không thể sửa tài liệu đã ẩn hoặc xóa.', 403);
+    // Owners must not bypass moderation by editing/restoring hidden/deleted posts.
+    if (post.status !== 'active' && req.user.role !== 'admin') {
+      throw createError('Không thể sửa bài viết đã ẩn hoặc xóa.', 403);
+    }
+    // Status transitions belong to moderation (admin) only; no owner unhide.
+    if (req.body.status !== undefined && req.user.role !== 'admin') {
+      throw createError('Không có quyền thay đổi trạng thái bài viết.', 403);
+    }
+    // Never resurrect soft-deleted rows through the generic edit API.
+    if (post.status === 'deleted' && req.body.status === 'active') {
+      throw createError('Không thể khôi phục bài viết đã xóa.', 403);
     }
 
     const allowed = ['title', 'content', 'subject', 'tags', 'status'];

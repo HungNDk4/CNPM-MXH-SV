@@ -53,7 +53,7 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
       r.url().endsWith('/api/auth/register') && r.request().method() === 'POST');
     await page.getByRole('button', { name: 'Đăng ký ngay' }).click();
     const reg = await registered;
-    assert.equal(reg.status(), 201, await reg.text());
+    assert.equal(reg.status(), 201);
     const auth = (await reg.json()).data;
     ids.push(auth.user.id);
     await page.waitForURL(url => url.pathname === '/');
@@ -63,7 +63,7 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
       method: 'POST', token: auth.accessToken,
       body: { title, content: 'Nội dung thử nghiệm hỏi đáp FE01', post_type: 'question', subject: 'CNPM', tags: ['QA'] },
     });
-    assert.equal(created.status, 201, await created.text());
+    assert.equal(created.status, 201);
     postId = (await created.json()).data.id;
     await page.goto(UI + '/posts/' + postId);
     await page.getByRole('heading', { name: title, exact: true }).waitFor();
@@ -84,7 +84,7 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
       new URL(r.url()).pathname === '/api/comments' && r.request().method() === 'POST');
     await page.getByRole('button', { name: 'Gửi bình luận' }).click();
     const rootResponse = await creating;
-    assert.equal(rootResponse.status(), 201, await rootResponse.text());
+    assert.equal(rootResponse.status(), 201);
     const rootId = (await rootResponse.json()).data.id;
     await page.getByText(rootContent, { exact: true }).waitFor();
     console.log('FE01 PASS create/display root comment');
@@ -96,7 +96,7 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
       new URL(r.url()).pathname === '/api/comments' && r.request().method() === 'POST');
     await page.getByRole('button', { name: 'Gửi trả lời' }).click();
     const replyResponse = await replying;
-    assert.equal(replyResponse.status(), 201, await replyResponse.text());
+    assert.equal(replyResponse.status(), 201);
     const replyId = (await replyResponse.json()).data.id;
     await page.getByText(replyContent, { exact: true }).waitFor();
     console.log('FE01 PASS create/display one-level reply');
@@ -110,7 +110,7 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
     const bReg = await api('/api/auth/register', { method: 'POST', body: {
       full_name: 'FE01 Student B', email: 'fe01-b-' + suffix + '@example.invalid', password,
     } });
-    assert.equal(bReg.status, 201, await bReg.text());
+    assert.equal(bReg.status, 201);
     const bAuth = (await bReg.json()).data;
     ids.push(bAuth.user.id);
     const denied = await api('/api/comments/' + rootId, { method: 'DELETE', token: bAuth.accessToken });

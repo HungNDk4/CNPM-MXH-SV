@@ -111,5 +111,22 @@ test('Ubuntu + MySQL 8: timestamps, register, login, refresh, create/list', { ti
 // Load security tests in the same test runner.
 require('./pdf-security.test.cjs');
 
-// BE-06 feed/search query, visibility and pagination regression (disposable DB).
-require('./be06-feed-search-regression.cjs');
+// BE-06 runs in a separate Node process. SEC-01 closes this process's shared
+// Sequelize connection, so importing another top-level test here is unsafe.
+const { spawn } = require('node:child_process');
+const path = require('node:path');
+test('BE-06 independent MySQL8 feed/search regression process', { timeout: 120_000 }, async () => {
+  const exitCode = await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, ['--test', path.join(__dirname, 'be06-feed-search-regression.cjs')], {
+      cwd: path.join(__dirname, '../../server'),
+      env: process.env,
+      stdio: 'inherit'
+    });
+    child.once('error', reject);
+    child.once('exit', (code, signal) => {
+      if (signal) reject(new Error('BE-06 test process terminated by ' + signal));
+      else resolve(code);
+    });
+  });
+  assert.equal(exitCode, 0, 'BE-06 disposable MySQL regression must pass');
+});

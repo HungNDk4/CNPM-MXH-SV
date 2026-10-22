@@ -1,4 +1,18 @@
 # Test Plan và Acceptance Gates
+
+## DEP-01C — latest authenticated browser retest, 2026-10-22 23:22 ICT
+
+| Check | Result | Evidence / limits |
+|---|---|---|
+| Register | **PASS** | Human A browser; Render HTTP201 16:14:38.811Z. |
+| Login | **PASS** | Human A browser; Render HTTP200 16:22:34.422Z. |
+| Logout response | **PASS (response only)** | Human A browser; Render HTTP200 16:15:12.440Z. Refresh revocation NOT RUN. |
+| Access/refresh JWT signing | **PASS (issuance path)** | Code signs both before 201/200, values not disclosed. Rotation NOT RUN. |
+| Refresh reuse/logout revocation | **NOT RUN** | Must test old refresh token rejected after rotation/logout. |
+| Authenticated PDF + 10MiB / permissions / Blob durability | **NOT RUN** | Pending cloud acceptance. |
+
+Earlier 22:49 ICT HTTP500 evidence belongs to previous deployment; do not treat it as current failure.
+
 **DRAFT**; các testcase chức năng trong bảng bên dưới mặc định **NOT RUN** trên cloud nếu không có bằng chứng riêng. Có kết quả giới hạn của DEP-01C ở mục tiếp theo; ghi status PASS/FAIL/SKIP kèm environment, commit, bằng chứng và thời điểm.
 
 ## DEP-01C — actual Render Free + TiDB Starter preview checkpoint (2026-10-22)

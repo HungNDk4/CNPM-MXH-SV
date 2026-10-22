@@ -1,5 +1,15 @@
 # DEP-01C post-OAuth live acceptance — 2026-10-22
 
+## DEP-01C auth recovery — 2026-10-22 23:22 ICT (current)
+
+**Register PASS (201), Login PASS (200), Logout response PASS (200)** on new Render Free deployment. Render deployment `dep-dbd38o2vcj2c739h61sg` (source `71499dfd63d21feb019d6144efcadc7ee9232951`) is LIVE following a configuration deployment at 16:06 UTC. Human A observed successful browser registration, login and logout. Render request logs corroborate `POST /api/auth/register` 201 at 16:14:38.811Z, `POST /api/auth/logout` 200 at 16:15:12.440Z and `POST /api/auth/login` 200 at 16:22:34.422Z.
+
+Both access and refresh JWT signing run before registration/login success per deployed `auth.controller.js`, so their signing inputs were usable at those requests. No credential values were inspected. Logout 200 alone does NOT prove refresh revocation. Refresh rotation/reuse, real cloud private PDF bytes, 10MiB/+1, SHA256, two-user permissions, hidden/delete and redeploy persistence remain untested.
+
+Prior 22:49 ICT auth HTTP500 remains below as historical evidence. DEP-01C remains IN_PROGRESS; DEP-02 release BLOCKED. Two synthetic users from the old failed attempt still require controlled cleanup.
+
+## Historical 22:49 ICT failing acceptance (superseded by later live deployment)
+
 **Verdict: FAIL for working registration/login; authenticated PDF acceptance BLOCKED.** Render infrastructure remains LIVE. This is actual cloud HTTP evidence, not a source-CI result.
 
 ## Target and evidence window

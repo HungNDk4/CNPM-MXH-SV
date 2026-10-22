@@ -231,6 +231,14 @@ jobs:
         run: |
           node --test client/e2e/e2e01.test.cjs
           node --test client/e2e/fe01.test.cjs
+      - name: Upload responsive Chromium screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fe01-responsive-screenshots
+          path: ${{ runner.temp }}/fe01-responsive/*.png
+          if-no-files-found: warn
+          retention-days: 14
       - name: Show process logs for diagnostics on failure
         if: failure()
         run: |

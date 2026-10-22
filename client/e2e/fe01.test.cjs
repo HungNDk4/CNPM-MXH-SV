@@ -3,6 +3,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
+const fs = require('node:fs/promises');
+const path = require('node:path');
 const { chromium } = require('playwright');
 const serverRequire = require('node:module').createRequire(require.resolve('../../server/package.json'))
 const { Op } = serverRequire('sequelize');
@@ -122,6 +124,64 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
     await page.getByText(replyContent, { exact: true }).waitFor({ state: 'detached' });
     console.log('FE01 PASS owner deletes reply and list refreshes');
 
+    // Responsive / touch-input regression. Browser emulation is NOT physical-device QA.
+    const outputDir = path.join(process.env.RUNNER_TEMP || 'client/e2e', 'fe01-responsive');
+    await fs.mkdir(outputDir, { recursive: true });
+    const widths = [320, 375, 390, 768, 1280];
+    for (const width of widths) {
+      const mobile = width < 1024;
+      const phone = await browser.newContext({
+        storageState: await ctx.storageState(),
+        viewport: { width, height: mobile ? 812 : 900 },
+        isMobile: mobile,
+        hasTouch: mobile,
+        deviceScaleFactor: mobile ? 2 : 1,
+      });
+      try {
+        const view = await phone.newPage();
+        await view.goto(UI + '/posts/' + postId);
+        await view.getByRole('heading', { name: title, exact: true }).waitFor();
+        const dimensions = await view.evaluate(() => ({
+          viewport: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          bodyWidth: document.body.scrollWidth,
+          articleRight: document.querySelector('article')?.getBoundingClientRect().right,
+        }));
+        assert.ok(dimensions.documentWidth <= dimensions.viewport + 1,
+          'Horizontal document overflow at ' + width + ': ' + JSON.stringify(dimensions));
+        assert.ok(dimensions.bodyWidth <= dimensions.viewport + 1,
+          'Horizontal body overflow at ' + width + ': ' + JSON.stringify(dimensions));
+        assert.ok(dimensions.articleRight <= dimensions.viewport + 1,
+          'Article spills outside viewport at ' + width + ': ' + JSON.stringify(dimensions));
+        const taps = [
+          view.getByRole('button', { name: 'Thích hoặc bỏ thích bài viết' }),
+          view.getByRole('button', { name: 'Trả lời bình luận' }),
+          view.getByRole('button', { name: 'Xóa bình luận #' + rootId }),
+          view.getByRole('button', { name: 'Đăng xuất' }),
+        ];
+        for (const tap of taps) {
+          const box = await tap.boundingBox();
+          assert.ok(box && box.height >= 39,
+            'Tap target too short at width ' + width + ': ' + JSON.stringify(box));
+        }
+        await view.screenshot({ path: path.join(outputDir, 'post-detail-' + width + '.png'), fullPage: true });
+        console.log('FE01 RESPONSIVE PASS ' + width + 'px viewport and 40px touch targets');
+        await phone.close();
+      } finally {
+        await phone.close().catch(() => {});
+      }
+    }
+    // Guest mobile navigation must fit at 320px.
+    await guest.setViewportSize({ width: 320, height: 740 });
+    await guest.goto(UI + '/posts/' + postId);
+    await guest.getByRole('heading', { name: 'Đăng nhập để xem bài viết' }).waitFor();
+    const guestWidths = await guest.evaluate(() => ({
+      viewport: window.innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    assert.ok(guestWidths.scrollWidth <= guestWidths.viewport + 1,
+      'Guest navbar overflows at 320px: ' + JSON.stringify(guestWidths));
+    console.log('FE01 RESPONSIVE PASS guest 320px navbar/login gate');
     await guest.goto(UI + '/posts/' + postId);
     await guest.getByRole('heading', { name: 'Đăng nhập để xem bài viết' }).waitFor();
     assert.equal(await guest.getByText(rootContent, { exact: true }).count(), 0);

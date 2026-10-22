@@ -40,7 +40,7 @@ function LikeButton({ targetType, targetId }) {
   const item = targetType === 'post' ? 'bài viết' : 'bình luận'
   return (
     <div className="flex items-center flex-wrap gap-2 text-sm">
-      <button type="button" className={'btn-secondary px-3 py-2 text-sm ' + (liked ? 'text-pink-300' : '')}
+      <button type="button" className={'btn-secondary min-h-10 px-3 py-2 text-sm ' + (liked ? 'text-pink-300' : '')}
         aria-label={'Thích hoặc bỏ thích ' + item} aria-pressed={liked === null ? 'mixed' : liked}
         title={liked === null ? 'Chưa có dữ liệu về trạng thái thích ban đầu của tài khoản' : undefined}
         onClick={() => toggle.mutate()} disabled={toggle.isPending}>
@@ -87,7 +87,7 @@ function CommentItem({ comment, user, depth, create, remove }) {
             <span className="text-xs text-slate-500 ml-2">{stamp(comment.created_at)}</span>
           </div>
           {canRemove && (
-            <button type="button" className="text-xs text-red-300 hover:text-red-200 disabled:opacity-50"
+            <button type="button" className="text-xs text-red-300 hover:text-red-200 disabled:opacity-50 min-h-10 px-3 rounded-lg focus-visible:ring-2 focus-visible:ring-red-400"
               aria-label={'Xóa bình luận #' + comment.id} onClick={deleteItem}
               disabled={remove.isPending}>Xóa</button>
           )}
@@ -96,7 +96,7 @@ function CommentItem({ comment, user, depth, create, remove }) {
         <div className="flex gap-3 items-center flex-wrap">
           <LikeButton targetType="comment" targetId={comment.id} />
           {depth === 0 && (
-            <button type="button" className="text-xs text-primary-300 hover:text-primary-200"
+            <button type="button" className="text-xs text-primary-300 hover:text-primary-200 min-h-10 px-3 rounded-lg focus-visible:ring-2 focus-visible:ring-primary-400"
               aria-label="Trả lời bình luận" onClick={() => setReplyOpen(value => !value)}>
               {replyOpen ? 'Hủy trả lời' : '↩ Trả lời'}
             </button>

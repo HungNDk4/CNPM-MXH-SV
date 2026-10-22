@@ -116,8 +116,9 @@ require('./pdf-security.test.cjs');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 test('BE-06 independent MySQL8 feed/search regression process', { timeout: 120_000 }, async () => {
+  // A direct node entrypoint avoids node:test recursive-run skip in CI.
   const exitCode = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ['--test', path.join(__dirname, 'be06-feed-search-regression.cjs')], {
+    const child = spawn(process.execPath, [path.join(__dirname, 'be06-feed-search-regression.cjs')], {
       cwd: path.join(__dirname, '../../server'),
       env: process.env,
       stdio: 'inherit'

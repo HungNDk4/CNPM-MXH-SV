@@ -21,7 +21,8 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 
 | WT-E2E01 | AI (QA-03; Human A review) | test/e2e01-fullstack-20261021 | Draft PR #30 → integration/team-dev-20261020 | Canonical remote verified; separate local scratch audit verified | REVIEW | Browser/full-stack test on disposable CI MySQL 8; 12 checkpoints PASS at 31a5467, local teammate worktree unverified, no cloud. |
 
-| WT-DEP01C | AI isolated code / Human A/B review | feat/dep01c-render-tidb-blob-poc-20261022 | Draft PR #33 → integration/team-dev-20261020 | YES: work/CNPM-MXH-SV, branch/HEAD/clean base verified at fa1014b4 | REVIEW | Existing Render service ID supplied; dry-run BLOCKED on missing API key, no apply/deploy. Blob metadata private/available/empty; real TiDB/Blob/HTTPS NOT RUN. No main merge. |
+| WT-DEP01C | AI isolated code / Human A/B review | feat/dep01c-render-tidb-blob-poc-20261022 | Draft PR #33 → integration/team-dev-20261020 | Historical Codex local checkout verified at fa1014b4; **current local state NOT checked by this GitHub-only session** | REVIEW | Remote deployed HEAD `71499dfd63d21feb019d6144efcadc7ee9232951`; Render Free **LIVE**, website and health HTTP 200 observed, TiDB connected + 8-table user evidence. Cloud Blob/auth/security/persistence E2E pending. No main merge. |
+| WT-DEP01C-DOCS | AI GitHub-only documentation / Human A/B review | docs/dep01c-live-checkpoint-20261022 | Draft stacked PR → feat/dep01c-render-tidb-blob-poc-20261022 | NO (remote-only, local worktree NOT VERIFIED) | REVIEW | 2026-10-22 progress/runbook/board/test/README updates only; based on deployed `71499dfd63d21feb019d6144efcadc7ee9232951`. Avoid triggering auto-deploy from live source. |
 
 ## Fields required when confirming a real local worktree
 - Worktree ID, owner, machine alias (optional), **local path** (relative/sanitized), branch, base/head SHA, current PR, lock/dirty status, timestamp checked.

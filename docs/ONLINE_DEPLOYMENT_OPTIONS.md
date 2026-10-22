@@ -1,5 +1,5 @@
 # Online Deployment Feasibility — Mini Study Network
-**As of:** 2026-10-18 · **Human requirement ADR-015 CONFIRMED:** public HTTPS link accessible to instructor at arbitrary times, independent of team's laptops. **Technology/provider NOT SELECTED.** Minimize student infrastructure cost; no spend/card/account authorized.
+**Original feasibility options (2026-10-18), historical analysis.** **CURRENT 2026-10-22:** Human A selected and created **Render Free + TiDB Cloud Starter MySQL-compatible + Vercel Blob Private**. Actual public Render preview and API health are **PASS on one observed visit**, TiDB connected; PDF cloud E2E/storage durability/release QA pending. See [DEP-01C runbook](DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md). The candidate table below is historical and is **not** the currently deployed architecture.
 
 ## What “online anytime” means
 A link should resolve and allow the lecturer to browse the site without waking a student's computer. Persistent users/posts/PDFs must survive app redeploys and restarts. Free tiers do not guarantee 100% uptime or unlimited quotas. Document incidents, quota ceilings and recovery rather than promise a contractual SLA.

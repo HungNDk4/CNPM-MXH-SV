@@ -1,5 +1,20 @@
 # Test Plan và Acceptance Gates
-**DRAFT**, chưa chạy; mọi testcase mặc định **NOT RUN**. Ghi status PASS/FAIL/SKIP kèm environment, commit, bằng chứng, thời gian thực hiện.
+**DRAFT**; các testcase chức năng trong bảng bên dưới mặc định **NOT RUN** trên cloud nếu không có bằng chứng riêng. Có kết quả giới hạn của DEP-01C ở mục tiếp theo; ghi status PASS/FAIL/SKIP kèm environment, commit, bằng chứng và thời điểm.
+
+## DEP-01C — actual Render Free + TiDB Starter preview checkpoint (2026-10-22)
+
+| Gate | Result | Evidence / limits |
+|---|---|---|
+| DEP-LIVE-01: React SPA root | **PASS (single visit)** | Human A browser loaded site; Render `GET /` 200 + compiled assets 200 at 09:26Z. |
+| DEP-LIVE-02: HTTPS API health | **PASS (single visit)** | Human A JSON `success:true`, timestamp `2026-10-22T09:26:36.401Z`; Render matching `GET /api/health 200` at 09:26:36.406Z. |
+| DEP-LIVE-03: Express ↔ TiDB connectivity | **PASS (startup authentication)** | Render `MySQL connected successfully` 09:24:17Z; does not prove ORM CRUD/transactions. |
+| DEP-LIVE-04: TiDB schema tables | **PASS (table presence only)** | Human A `SHOW TABLES` lists 8 required tables, including document_files; column/index/FK compatibility not fully verified. |
+| DEP-LIVE-05: deployed source CI | **PASS (7/7, offline/CI runners)** | `71499dfd63d21feb019d6144efcadc7ee9232951`, run [39753376890](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39753376890); isolated MySQL 8/Chromium not actual TiDB or cloud Blob. |
+| DEP-LIVE-06: real private PDF byte operations | **NOT RUN** | Test synthetic authenticated PDF put/get/delete, exact equality, 10MiB limit, invalid uploads, cross-user auth, hidden/deleted direct denial, no leaked storage URL. |
+| DEP-LIVE-07: cloud social/auth/paid API checks | **NOT RUN** | Two synthetic accounts register/login/refresh/posts; guest/owner/admin and hard-deny paid endpoints. A single GET feed 200 does not prove complete contract. |
+| DEP-LIVE-08: persistence & reliability | **NOT RUN** | Controlled redeploy and sleep/resume, durable TiDB rows/Blob bytes, quota alerts, cold-start/off-network. |
+
+**Gate verdict: INFRASTRUCTURE PREVIEW VERIFIED; full DEP-01C release sign-off PENDING.** Real endpoint: https://mini-study-network-dep01-demo.onrender.com . Evidence detail: [DEP-01C runbook](DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md). Never downgrade security checks merely because health is 200.
 
 | ID | Luồng kiểm tra | Kỳ vọng |
 |---|---|---|

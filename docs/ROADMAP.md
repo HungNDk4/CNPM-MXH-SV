@@ -1,6 +1,12 @@
 # Roadmap / Work Breakdown — Mini Study Network
 **DRAFT; chưa phân công, chưa cam kết thời hạn. Option B confirmed by Human A 2026-10-17: free MVP, VNPay deferred. Master plan: [ops/MASTER_PLAN.md](ops/MASTER_PLAN.md).** Thực hiện bằng issue → branch → PR → review.
 
+## Cloud preview checkpoint — 2026-10-22 (DEP-01C)
+
+- **Now working:** Render Free serves React SPA + Express over HTTPS; `/api/health` 200 verified in user browser and Render logs, deployed commit `71499dfd63d21feb019d6144efcadc7ee9232951` (CI 7/7). TiDB Starter Singapore 8 tables visible and Sequelize startup authentication succeeded.
+- **Not a release:** private Vercel Blob storage is configured at startup only. No real cloud PDF upload/download/security/redeploy persistence proof; auth, paid-route lockdown and moderator controls must pass cloud QA. Draft PR #33 and [operational runbook](DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md).
+- **Next delivery slice:** execute bounded cloud E2E (two test accounts, valid/boundary PDF, guest 401, cross-user 403, hidden/deleted deny, paid API deny), then persist through controlled redeploy. Keep source work on preview PR stack, do not merge `main` without reviews.
+
 ## P0 — Chặn các lỗi cốt lõi trước feature demo
 - [ ] ISSUE: Không lộ `file_url` trả phí từ GET posts/search/detail và static uploads.
 - [ ] ISSUE **MVP**: khóa backend payment/paid-file flows (bao gồm API trực tiếp và callbacks) với negative tests; triển khai idempotency VNPay đầy đủ chỉ khi mở lại feature.

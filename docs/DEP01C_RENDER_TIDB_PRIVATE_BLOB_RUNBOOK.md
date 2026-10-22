@@ -1,8 +1,23 @@
 # DEP-01C — Render Free + TiDB Cloud Starter + Vercel Blob Private
 
-**Status:** SOURCE PREVIEW / REMOTE CLOUD E2E NOT RUN. Do not call the existing Vercel health-only PoC the complete website. This task implements the *code path* for an isolated 1–3 month coursework demo with a $0 recurring fee target, not permission to buy credits or use real user data.
+**Current status (2026-10-22): Render Free FULL-STACK PREVIEW LIVE; PUBLIC HTTPS HEALTH PASS; TiDB RUNTIME CONNECTED; PRIVATE PDF CLOUD E2E NOT RUN.** Draft PR #33 is not an approved production release. $0 monthly recurring-fee target; no authorization for paid tiers, actual student data, or credit-card charges.
 
-## Latest operational attempt — 2026-10-22
+## DEP-01C — LIVE infrastructure checkpoint (2026-10-22, 16:26 ICT)
+
+**Verified on the real Render Free preview, not a production release approval.** This section supersedes the historical "offline/no hosted website" statements below for this **feature branch only**.
+
+- **Actual application URL:** https://mini-study-network-dep01-demo.onrender.com/ ; Human A opened the website successfully. Render app logs show `GET /` **200** at 09:26:09Z, plus compiled CSS/JS **200**.
+- **Health check PASS:** Human A copied `{"success":true,"message":"API is running 🚀","timestamp":"2026-10-22T09:26:36.401Z"}` from public `/api/health`. The independently inspected Render request log shows **`GET /api/health 200` at 09:26:36.406Z**, corroborating that observation.
+- **Real provider deploy:** `srv-dbcg9rbrjlhs73bc8870`, deployment `dep-dbctc429lscs73f209t0` status **live**, source `71499dfd63d21feb019d6144efcadc7ee9232951`, Free plan, region Singapore. Render logs: `Build successful`, `MySQL connected successfully`, `Server running`, `Your service is live`.
+- **TiDB Starter:** MySQL Compatible, Singapore, $0 spending limit selected; Human A ran `SHOW TABLES` and demonstrated **8/8** expected tables in `mini_study_network` (including `document_files`). This proves schema presence, **not** full FK/JSON/transactions/schema-vs-ORM compatibility testing. Runtime `Sequelize.authenticate()` succeeded from Render; independent TLS packet/certificate handshake was not inspected.
+- **Vercel Blob Private:** existing private store; Render now passes startup credential validation, but Blob put/get/delete, PDF bytes, durability and access rules on real cloud are **NOT TESTED**.
+- **CI:** exact deployed source SHA GitHub Actions run [39753376890](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39753376890) **7/7 jobs succeeded**, including disposable MySQL 8/Chromium E2E. This is **not** actual cloud PDF E2E.
+- **Open checks:** register/login/refresh, guest feed content beyond observed HTTP 200, 10MiB boundary, private PDF byte streaming, cross-user authorization, hidden/deleted revocation, paid-endpoint lockdown, TiDB write transactions, redeploy persistence, quota/recovery and off-network repeated monitoring. DEP-01C overall **IN_PROGRESS / partial infrastructure PASS**, **not G5/G6 or public release sign-off**.
+- **Operational risk:** Render currently reports `autoDeploy=yes` (despite `render.yaml` requesting off). Do not push documentation to its live source branch merely to update status; use a stacked docs-only review branch to prevent an unintended redeploy. No billing, secret, schema, service or application mutations in this checkpoint.
+
+**Next:** an isolated cloud acceptance run with test-only accounts and a disposable PDF, strict denial/byte-equality/size/cleanup tests, then a controlled persistence test and Human A/B review. Do not expose secret values in logs/PRs or claim uninterrupted 24/7 Free-tier uptime.
+
+## Historical initial Render API-key blocker — 2026-10-22 (superseded by OAuth and live service)
 
 **BLOCKED on Render API authentication.** Human A supplied the existing service `srv-dbcg9rbrjlhs73bc8870`, deploy `dep-dbcg9s3rjlhs73bc8b70`. Reuse this service; do not provision another one. The service's current Free plan, runtime state, public origin and live environment have **not** been independently verified.
 

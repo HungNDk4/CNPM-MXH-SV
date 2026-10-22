@@ -1,7 +1,9 @@
 # PROJECT CONTROL — Mini Study Network
-**Read-first index for every new human/AI session.** Last documentation update: 2026-10-17. Status: DRAFT until reviewed by both team members.
+**Read-first index for every new human/AI session.** Last documentation checkpoint: 2026-10-22. Business/PR reviews remain DRAFT until both team members approve.
 
 > Do not begin from old chat history. Start here, then confirm remote branch/PR HEAD with GitHub.
+>
+> **NEW live preview checkpoint:** 2026-10-22 Render Free website and public `/api/health` HTTP 200 are verified; Render ↔ TiDB connected; 8/8 tables observed; real private-PDF cloud E2E **not run**. Deployed commit `71499dfd63d21feb019d6144efcadc7ee9232951` (Draft PR #33). Evidence: [DEP-01C runbook](docs/DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md) and [CURRENT_STATE](docs/ops/CURRENT_STATE.md). Live source branch is auto-deployed by Render; documentation-only checkpoint goes via separate stacked PR to avoid automatic redeploy.
 
 ## Quick start (read in order)
 1. [docs/ops/CURRENT_STATE.md](docs/ops/CURRENT_STATE.md) — what is true now; immediate next steps; blockers.

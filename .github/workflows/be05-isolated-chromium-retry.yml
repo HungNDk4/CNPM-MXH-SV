@@ -1,0 +1,102 @@
+name: BE05 isolated browser retry (preinstalled Chromium)
+on:
+  push:
+    branches:
+      - test/be05-preinstalled-chromium-20261023
+permissions:
+  contents: read
+jobs:
+  e2e-be05:
+    name: E2E01 Chromium / MySQL8 disposable retry
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: e2e01_ci_only
+          MYSQL_DATABASE: mini_study_network
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -pe2e01_ci_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: test
+      DB_AUTO_SYNC: 'false'
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: mini_study_network
+      DB_USER: root
+      DB_PASSWORD: e2e01_ci_only
+      JWT_ACCESS_SECRET: e2e01_only_access_secret_not_for_production_20261021
+      JWT_REFRESH_SECRET: e2e01_only_refresh_secret_not_for_production_20261021
+      CLIENT_URL: http://127.0.0.1:5173
+      DOCUMENT_PRIVATE_DIR: /tmp/e2e01-private
+      PORT: 5000
+      E2E_DISPOSABLE_DB: 'true'
+      E2E_UI_URL: http://127.0.0.1:5173
+      E2E_API_URL: http://127.0.0.1:5000
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install locked project dependencies and runner (NO browser download)
+        run: |
+          npm --prefix server ci
+          npm --prefix client ci
+          npm --prefix client install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+      - name: Import original MySQL schema and document migration
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const mysql=require('./server/node_modules/mysql2/promise');
+          (async()=>{
+            const db=await mysql.createConnection({host:'mysql',user:'root',password:process.env.DB_PASSWORD,multipleStatements:true});
+            try {
+              await db.query(fs.readFileSync('database/schema.sql','utf8'));
+              await db.query(fs.readFileSync('database/migrations/20261021_document_files.sql','utf8'));
+              console.log('Imported disposable MySQL 8 schema and document migration');
+            } finally { await db.end(); }
+          })().catch(e=>{console.error(e.message);process.exitCode=1;});
+          NODE
+      - name: Bridge disposable container MySQL to localhost for E2E safety guard
+        run: |
+          node -e "const net=require('node:net');const server=net.createServer(s=>{const d=net.connect(3306,'mysql');s.pipe(d);d.pipe(s);d.on('error',()=>s.destroy());s.on('error',()=>d.destroy());});server.listen(3306,'127.0.0.1')" > "$RUNNER_TEMP/be05-mysql-bridge.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/be05-mysql-bridge.pid"
+          sleep 2
+      - name: Start localhost Express and Vite for existing E2E01
+        run: |
+          mkdir -p "$DOCUMENT_PRIVATE_DIR"
+          node server/src/index.js > "$RUNNER_TEMP/be05-backend.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/be05-backend.pid"
+          npm --prefix client run dev -- --host 127.0.0.1 --strictPort > "$RUNNER_TEMP/be05-vite.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/be05-vite.pid"
+          node <<'NODE'
+          async function up() {
+            for(let n=0;n<60;n++){
+              try {
+                const [a,b]=await Promise.all([
+                  fetch('http://127.0.0.1:5000/api/health'),
+                  fetch('http://127.0.0.1:5173/')
+                ]);
+                if(a.ok && b.ok) return;
+              } catch {}
+              await new Promise(resolve=>setTimeout(resolve,1000));
+            }
+            throw Error('Local E2E HTTP endpoints not ready');
+          }
+          up().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - name: Run original real Chromium E2E01, unchanged source
+        run: node --test client/e2e/e2e01.test.cjs
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          tail -n 100 "$RUNNER_TEMP/be05-backend.log" || true
+          tail -n 100 "$RUNNER_TEMP/be05-vite.log" || true
+      - name: Cleanup synthetic HTTP services and private fixture directory
+        if: always()
+        run: |
+          for name in backend vite mysql-bridge; do
+            test ! -f "$RUNNER_TEMP/be05-$name.pid" || kill "$(cat "$RUNNER_TEMP/be05-$name.pid")" || true
+          done
+          rm -rf -- "$DOCUMENT_PRIVATE_DIR"

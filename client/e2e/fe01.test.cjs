@@ -4,7 +4,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
 const { chromium } = require('playwright');
-const { Op } = require('sequelize');
+const serverRequire = require('node:module').createRequire(require.resolve('../../server/package.json'))
+const { Op } = serverRequire('sequelize');
 const { User, Post, Comment, Like, sequelize } = require('../../server/src/models');
 
 const UI = process.env.E2E_UI_URL || 'http://127.0.0.1:5173';

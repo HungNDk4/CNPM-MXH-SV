@@ -31,7 +31,7 @@ export default function MainLayout() {
           </Link>
 
           {/* Search bar */}
-          <div className="hidden md:flex items-center flex-1 max-w-sm mx-8">
+          <div className="hidden lg:flex items-center flex-1 max-w-sm mx-8">
             <input
               type="text"
               placeholder="Tìm kiếm bài viết, tài liệu..."

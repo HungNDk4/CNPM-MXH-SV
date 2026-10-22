@@ -141,6 +141,9 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
         const view = await phone.newPage();
         await view.goto(UI + '/posts/' + postId);
         await view.getByRole('heading', { name: title, exact: true }).waitFor();
+        const searchVisible = await view.getByPlaceholder('Tìm kiếm bài viết, tài liệu...').isVisible();
+        assert.equal(searchVisible, width >= 1024,
+          'Search placeholder should only appear on a roomy desktop navigation bar');
         const dimensions = await view.evaluate(() => ({
           viewport: window.innerWidth,
           documentWidth: document.documentElement.scrollWidth,

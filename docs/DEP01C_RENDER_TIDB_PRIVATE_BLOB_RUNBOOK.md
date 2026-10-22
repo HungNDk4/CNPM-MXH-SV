@@ -11,7 +11,7 @@
 - **Limited TiDB evidence:** registration, refresh token persistence/rotation, document post and `document_files` insertion, and soft deletion exercised through real HTTP; direct SQL/FK/rollback/edge compatibility not proven.
 - **Cleanup still required:** the new QA-only user `dep01c-live-39816112003-aa9ea81a@example.invalid` persists in TiDB; post `1` is soft-deleted, its `document_files` metadata and private Blob object persist until owner cleanup. The two earlier failed-auth synthetic accounts also remain. Never treat soft-delete as physical Blob removal.
 - **Pending (NOT RUN):** authenticated **exact 10 MiB and 10MiB+1**, PDF spoof/multiple parts, two-account cross-user mutation **403**, admin hide/delete, Blob persistence after redeploy/restart, private object physical cleanup, quotas and production hardening. Full browser UI-to-PDF flow NOT RUN; this was actual live API E2E.
-- **Ops:** live Render source `71499dfd` unchanged, no environment/credentials/deploy touched by QA runner. Documentation-only updates on PR #34 branch. DEP-01C **IN_PROGRESS**, DEP-02 release **BLOCKED**, Human A/B sign-off pending. See [DEP-01C AUTH-02 / PDF-01 real cloud report](../testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md).
+- **Ops:** live Render source `71499dfd` unchanged, no environment/credentials/deploy touched by QA runner. Documentation-only updates on PR #34 branch. DEP-01C **IN_PROGRESS**, DEP-02 release **BLOCKED**, Human A/B sign-off pending. See [DEP-01C AUTH-02 / PDF-01 real cloud report](testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md).
 
 ## Historical DEP-01C auth recovery — 2026-10-22 23:22 ICT
 

@@ -164,7 +164,7 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
           assert.ok(box && box.height >= 39,
             'Tap target too short at width ' + width + ': ' + JSON.stringify(box));
         }
-        await view.screenshot({ path: path.join(outputDir, 'post-detail-' + width + '.png'), fullPage: true });
+        await view.screenshot({ path: path.join(outputDir, 'post-detail-' + width + '.png'), fullPage: true, animations: 'disabled' });
         console.log('FE01 RESPONSIVE PASS ' + width + 'px viewport and 40px touch targets');
         await phone.close();
       } finally {

@@ -1,5 +1,11 @@
 # CURRENT STATE — Read this before taking action
 
+## FE-01 source review + responsive emulation — 2026-10-23
+
+- Frontend review fixes at `ae206608`: compact mobile navbar, accessible action labels, larger Reply/Delete touch targets. Chromium test run [39824367930](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39824367930) **7/7 SUCCESS**; 320/375/390/768/1280 px responsive/no-overflow/touch checks PASS and screenshot artifact archived. Screenshot timing adjusted to disable fade-in during capture on next commit.
+- **Physical-device PASS not claimed:** no physical Android/iPhone/tablet attached; manual device visual/input QA pending. Backend active-post/comment/like visibility/security concern tracked separately in [Issue #37](https://github.com/HungNDk4/CNPM-MXH-SV/issues/37) before public deployment.
+- Keep PR #36 **DRAFT/REVIEW** until physical-device QA and Human A/B acceptance; no merge or Render deploy occurred.
+
 ## 2026-10-23 — FE-01 social interactions review-ready (feature branch only)
 
 - Dedicated branch `feat/fe01-post-detail-comments-likes-20261023`, [Draft PR #36](https://github.com/HungNDk4/CNPM-MXH-SV/pull/36) targeting integration. Implements Post Detail and one-level Comments/Replies plus post/comment Like UI, reuses current backend. FE01 10/10 Chromium/MySQL 8 PASS and 7/7 CI PASS at source `2062257` [run 39822074901](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39822074901).

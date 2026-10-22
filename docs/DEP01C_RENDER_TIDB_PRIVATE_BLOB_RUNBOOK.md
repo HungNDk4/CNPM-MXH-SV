@@ -1,6 +1,10 @@
 # DEP-01C — Render Free + TiDB Cloud Starter + Vercel Blob Private
 
-**Current status (2026-10-22): Render Free FULL-STACK PREVIEW LIVE; PUBLIC HTTPS HEALTH PASS; TiDB RUNTIME CONNECTED; PRIVATE PDF CLOUD E2E NOT RUN.** Draft PR #33 is not an approved production release. $0 monthly recurring-fee target; no authorization for paid tiers, actual student data, or credit-card charges.
+**Current status (2026-10-22 22:49 ICT): Render LIVE; registration/login FAIL at JWT access signing; authenticated cloud PDF/10MiB acceptance BLOCKED.** No release approval.
+
+## Post-OAuth live acceptance — 2026-10-22 22:49 ICT
+
+Real registration and correct-password login returned HTTP500 `secretOrPrivateKey must have a value`; Render logs point to `JWT_ACCESS_SECRET` signing. Fresh MCP scoped reads still403; authenticated CLI metadata fallback PASS (Private store, 0 objects; Blob token key exists without value disclosure). Health, limited TiDB user insert/read/uniqueness and independent denial checks PASS. Authenticated PDF/10MiB/bytes/permissions blocked; persistence NOT RUN. No credentials/env/deploy changes. Two synthetic users remain for owner cleanup. See [full post-OAuth report and exact next checkpoint](testing/DEP01C_POST_OAUTH_REPORT.md).
 
 ## DEP-01C — LIVE infrastructure checkpoint (2026-10-22, 16:26 ICT)
 

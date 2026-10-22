@@ -35,3 +35,8 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 - AI with only GitHub connector may record REMOTE BRANCH VERIFIED; must set local path to NO/UNKNOWN.
 
 E2E-01 local audit note: scratch/e2e01-local-audit-20261021 at f4e4096 is a clean, unpublished local checkpoint under work/CNPM-MXH-SV. It does not mirror canonical remote test/e2e01-fullstack-20261021 and was not merged/pushed. Native MySQL backend tests passed locally; frontend build/browser remained ACL-blocked. See canonical integration report section 6. No new member-owned worktree was created.
+
+## 2026-10-22 post-OAuth checkout verification
+- Existing Windows source checkout inspected, clean at local `b97b5314b3e959e0f397da84d509e1b2c7737501` on the named feature branch; this is **older than remote/deployed `71499dfd`**. No checkout reset, branch move, source edit or local commit performed.
+- This session updated existing remote-only docs branch `docs/dep01c-live-checkpoint-20261022` / PR #34 through GitHub tools with a fast-forward lease on `a1cd5660`. No new Git worktree created. Remote docs and source are distinct; do not infer local checkout contains latest docs.
+- Post-OAuth live result: auth FAIL, dependent PDF acceptance BLOCKED. [Evidence](../testing/DEP01C_POST_OAUTH_REPORT.md). No Render deploy triggered.

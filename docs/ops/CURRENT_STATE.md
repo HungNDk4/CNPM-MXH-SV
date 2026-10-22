@@ -1,4 +1,11 @@
 # CURRENT STATE — Read this before taking action
+
+## DEP-01C post-OAuth acceptance — 2026-10-22 22:49 ICT
+
+**Live auth FAIL; authenticated PDF acceptance BLOCKED.** Fresh-session Vercel MCP still returns scoped 403; existing WSL CLI successfully verifies the intended project, Private/SIN store (0 objects/bytes) and BLOB_READ_WRITE_TOKEN key metadata without exposing values. Render remains Free/LIVE on `71499dfd`; direct WSL HTTPS health, guest homepage and limited TiDB user write/read/uniqueness PASS. Both synthetic registrations and correct-password login return **500 `secretOrPrivateKey must have a value`**; Render stack identifies access JWT signing with `JWT_ACCESS_SECRET`. The running process lacks an effective access signing value; dashboard key state is unverified. Two synthetic user rows need exact-email cleanup.
+
+Guest/forged-token 401, private static 404 and tested paid paths 404 PASS. 10MiB/+1, authenticated Blob bytes/SHA256, cross-user 403, revocation and document transactions BLOCKED; restart/redeploy persistence NOT RUN. No secrets changed, deployments triggered or paid resources created. **Next:** privately verify both JWT key names/nonempty effective values; correct only what is missing through the existing service configuration path, then rerun auth before PDF acceptance. Detailed evidence and cleanup inventory: [post-OAuth live report](../testing/DEP01C_POST_OAUTH_REPORT.md).
+
 ## DEP-01C — LIVE infrastructure checkpoint (2026-10-22, 16:26 ICT)
 
 **Verified on the real Render Free preview, not a production release approval.** This section supersedes the historical "offline/no hosted website" statements below for this **feature branch only**.

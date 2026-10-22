@@ -113,3 +113,7 @@ Human A confirmed Option A on 2026-10-18. These test cases are defined but **hav
 | T-PUBLISH-06 | Ordinary Student tries to hide/delete another student's PDF | Backend rejects unauthorized modification (403); original post state unchanged |
 
 **G5 gate:** real test evidence required, CI build/syntax/document checks do not establish PASS.
+
+## DEP-01C post-OAuth live acceptance — 2026-10-22 22:49 ICT
+
+Latest actual-cloud outcomes supersede earlier NOT RUN rows only for checks explicitly executed. **Registration A/B and correct-password login FAIL HTTP500** at access JWT signing; direct HTTPS health, guest metadata, TiDB user write/read/uniqueness and guest/forged-token/private-path/paid-path denial PASS within the tested scope. **10MiB inclusive/+1, real Blob bytes/SHA256, cross-user 403, hidden/deleted revocation and document transactions BLOCKED** by failed auth. Direct SQL/schema compatibility and restart/redeploy persistence NOT RUN. Browser guest page rendering observed; full browser auth/PDF flow NOT RUN. Full matrix, exact provider/source and fixtures: [post-OAuth report](testing/DEP01C_POST_OAUTH_REPORT.md). Overall release remains BLOCKED.

@@ -39,3 +39,10 @@ Re-evaluate at each gate. Do not implement real-money operations or expose sensi
 | R-DEP20 | P1 | Deployed `npm ci` reported audit vulnerabilities (backend 5, frontend 11), which did **not** cause startup failure | Review `npm audit` advisories for runtime exposure, fix targeted dependencies with regression tests; **do not blindly run `npm audit fix --force`**. | AI + Human B review |
 
 **Proof boundary:** 2026-10-22 Render confirmed LIVE, GET `/api/health` 200 and Sequelize auth success; Human A verified 8 tables. Security/product release gates remain pending. This table documents risks without reclassifying untested protections as PASS.
+
+## Observed auth blocker — 2026-10-22 post-OAuth
+
+| Risk | Severity | Evidence | Next checkpoint |
+| --- | --- | --- | --- |
+| R-DEP18 | P0 release gate | Actual register/login HTTP500: access JWT signing has no effective JWT_ACCESS_SECRET value. Startup health remains200. | Securely verify exact names/nonempty effective access+refresh keys; preserve working credentials, correct only necessary config, then auth-first cloud rerun. |
+| R-DEP19 | P1 test reconciliation | Failed registration persisted two synthetic users before token issuance; no account cleanup endpoint. | Owner reconcile exact two emails in [report](../testing/DEP01C_POST_OAUTH_REPORT.md). No PDF/post/Blob fixtures created. |

@@ -21,10 +21,18 @@
 - Existing likes on moderated posts remain retained internally but are hidden from read/write endpoints.
 - Render/TiDB/Vercel Blob, browser-on-physical-device and public deployment **NOT RUN**; no secrets or production credentials used.
 
-**Implementation and CI verdict:** pending exact new PR GitHub Actions results. No claim of PASS before completion.
+**Implementation and CI verdict (2026-10-23):** [GitHub Actions #39832123033](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39832123033) **7/7 jobs SUCCESS** on source commit `41de3566528b84ec66c7ea682cdf1629905141ba`. Real disposable Ubuntu MySQL8 BE-04 **7/7 test groups PASS**, SEC-01 **17/17 PASS**, Auth/Ownership **15/15 PASS**, baseline Chromium E2E PDF PASS. This does not represent real Render/TiDB cloud testing or review approval.
 
 **Operational note:** Old `GET /api/posts/:id` excluded `deleted` but exposed hidden non-document detail. Fixed with `status===active` and `price===0`. No generalized post search/profile/payment changes.
 
 ## First CI diagnostic (corrective test-harness isolation)
 
 [CI run 39831024684](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39831024684) reached **BE04 five groups PASS** then returned 429 due to Express' existing global rate limit (100 calls per 15 minutes), counting original SEC-01 requests plus new BE-04 assertions. This is a test-harness false-negative and does **not** justify disabling/throttling the production app. Fix: spawn a **fresh local Express process and separate in-memory limiter** for BE04, still using the disposable CI MySQL8. Focused test stays below 100 requests per process, and app.js / workflow untouched. Latest CI must prove this fix; do not mark it PASS early.
+
+## Final regression and non-overlap checkpoint
+
+1. [First CI 39831024684](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39831024684): rate-limit 429 after five BE04 groups due to sharing SEC01 limiter in same Node process; application rate-limit unchanged.
+2. [Second CI 39831694116](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39831694116): BE04 7/7 PASS, but baseline Chromium PDF E2E caught owner `PUT /api/posts/:id {status:'hidden'}` denied by overstrict BE04 guard (403 instead of previously supported 200).
+3. **Corrected code `41de356` [third CI 39832123033](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39832123033): 7/7 SUCCESS.** Active post owners may one-way change their status to `hidden` or `deleted`, but cannot update or reactivate an already hidden/deleted post. Existing PDF E2E 12 cases completed; new BE04 safety checks remain green.
+
+**Scope/overlap audit:** PR #33 contains deploy/PDF/CI config, PR #36 contains frontend/CI config; this BE04 PR only modifies `server/src/routes/comment.routes.js`, `server/src/routes/like.routes.js`, `server/src/controllers/post.controller.js`, new `server/src/utils/interaction-target.js`, `scripts/ubuntu/pdf-security.test.cjs`, new BE04 test helper and this scoped report. No `client/**`, `.github/workflows/**`, `server/src/app.js`, migration, or infra changes. Draft PR #38 targets integration; it has not been merged or deployed. Note that FE01 Chromium-specific tests in PR #36 are on a separate unmerged branch and therefore were **not** executed by PR #38's E2E job; FE01 API request/response envelopes remain unchanged, but cross-PR combined QA must run after integration.

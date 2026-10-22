@@ -110,3 +110,6 @@ test('Ubuntu + MySQL 8: timestamps, register, login, refresh, create/list', { ti
 
 // Load security tests in the same test runner.
 require('./pdf-security.test.cjs');
+
+// BE-06 feed/search query, visibility and pagination regression (disposable DB).
+require('./be06-feed-search-regression.cjs');

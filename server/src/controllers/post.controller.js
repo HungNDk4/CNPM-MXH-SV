@@ -6,40 +6,84 @@ const { toSafePost } = require('../utils/post.dto');
 /**
  * GET /api/posts?page=1&limit=10&type=document&subject=cnpm&search=react
  */
+// BE-06: bounded and validated query parsing; malformed input is a 422, never a DB error.
+const positiveIntQuery = (value, label, fallback, maximum) => {
+  if (value === undefined) return fallback;
+  if (typeof value !== 'string' || !/^[1-9][0-9]*$/.test(value)) {
+    throw createError(label + ' phải là số nguyên dương.', 422);
+  }
+  const n = Number(value);
+  if (!Number.isSafeInteger(n) || n > maximum) {
+    throw createError(label + ' vượt quá giới hạn.', 422);
+  }
+  return n;
+};
+
+const textQuery = (value, label, maximum) => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || !value.trim() || value.trim().length > maximum) {
+    throw createError(label + ' không hợp lệ.', 422);
+  }
+  return value.trim();
+};
+
+const priceQuery = (value, label) => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || !/^(?:0|[1-9][0-9]{0,7})(?:\.[0-9]{1,2})?$/.test(value)) {
+    throw createError(label + ' phải là giá không âm, tối đa 2 chữ số thập phân.', 422);
+  }
+  return Number(value);
+};
+
+// MySQL/TiDB LIKE wildcards in user text must be matched literally.
+const escapeLike = (value) => value.replace(/[\\%_]/g, '\\$&');
+
 const getPosts = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, type, subject, search, minPrice, maxPrice } = req.query;
-    if (!req.user && type !== 'document') throw createError('Yêu cầu đăng nhập để xem bài viết.', 401);
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const { type } = req.query;
+    // Keep ADR-002/011: only free document metadata is public; other feeds require login.
+    if (!req.user && type !== 'document') {
+      throw createError('Yêu cầu đăng nhập để xem bài viết.', 401);
+    }
+    if (type !== undefined && (typeof type !== 'string' ||
+        !['question', 'discussion', 'document'].includes(type))) {
+      throw createError('Loại bài viết không hợp lệ.', 422);
+    }
 
-    // No paid/legacy documents appear in feed, even with price filters.
-    const where = {
-      status: 'active',
-      [Op.or]: [{ post_type: { [Op.ne]: 'document' } }, { price: 0 }],
-    };
-    if (type)    where.post_type = type;
-    if (subject) where.subject = { [Op.like]: `%${subject}%` };
-    if (search)  where.title   = { [Op.like]: `%${search}%` };
-    if (minPrice !== undefined) where.price = { ...where.price, [Op.gte]: parseFloat(minPrice) };
-    if (maxPrice !== undefined) where.price = { ...where.price, [Op.lte]: parseFloat(maxPrice) };
+    const page = positiveIntQuery(req.query.page, 'page', 1, 10000);
+    const limit = positiveIntQuery(req.query.limit, 'limit', 10, 50);
+    const subject = textQuery(req.query.subject, 'subject', 200);
+    const search = textQuery(req.query.search, 'search', 100);
+    const minPrice = priceQuery(req.query.minPrice, 'minPrice');
+    const maxPrice = priceQuery(req.query.maxPrice, 'maxPrice');
+    if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+      throw createError('minPrice không được lớn hơn maxPrice.', 422);
+    }
+
+    // Free-first: no paid legacy posts (of any type), suppressed posts or file paths.
+    const where = { status: 'active', price: 0 };
+    if (type) where.post_type = type;
+    if (subject !== undefined) where.subject = { [Op.like]: '%' + escapeLike(subject) + '%' };
+    if (search !== undefined) where.title = { [Op.like]: '%' + escapeLike(search) + '%' };
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      const bounds = {};
+      if (minPrice !== undefined) bounds[Op.gte] = minPrice;
+      if (maxPrice !== undefined) bounds[Op.lte] = maxPrice;
+      where[Op.and] = [{ price: bounds }];
+    }
 
     const { count, rows } = await Post.findAndCountAll({
       where,
       include: [{ model: User, as: 'author', attributes: ['id', 'full_name', 'avatar_url', 'university'] }],
-      order:   [['created_at', 'DESC']],
-      limit:   parseInt(limit),
-      offset,
+      order: [['created_at', 'DESC'], ['id', 'DESC']],
+      limit,
+      offset: (page - 1) * limit,
     });
 
     res.json({
       success: true,
       data: rows.map(toSafePost),
-      pagination: {
-        total: count,
-        page:  parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(count / parseInt(limit)),
-      },
+      pagination: { total: count, page, limit, totalPages: Math.ceil(count / limit) },
     });
   } catch (error) {
     next(error);

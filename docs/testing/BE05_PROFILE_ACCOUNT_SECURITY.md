@@ -17,3 +17,7 @@
 A standalone backend Node/Express HTTP regression runs against **disposable MySQL8** from the already existing Ubuntu CI job via the existing QA-01 script. It asserts exact safe DTO shape, owner/self-only edits, active/inactive public visibility, validation and no unintended writes, wrong/same/weak password rejection, two-user isolation and old-refresh revocation with password change. Rate limiter remains enabled; suite runs in a fresh process and tests only synthetic users.
 
 **Status:** implementation staged; CI verdict to be added after actual run. No Render/TiDB provider writes, merge or deployment. 
+
+## CI test fixtures and cleanup
+
+Test file `scripts/ubuntu/be05-profile-security.test.cjs` uses only GitHub Actions' disposable MySQL 8 on 127.0.0.1. It registers two synthetic users, never prints JWT/passwords, checks DTO shapes, role/wallet escalation and validation, cross-user isolation and password lifecycle. It runs as a separate Node process from existing QA-01 to avoid the shared 100-request limiter. Fixture users are deleted by exact newly generated IDs; foreign-key cascades remove their refresh tokens. `scripts/ubuntu/auth-ownership.test.cjs` is edited only to spawn this suite after legacy QA-01 assertions. CI verdict pending exact HEAD run.

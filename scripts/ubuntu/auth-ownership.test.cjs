@@ -7,6 +7,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const http = require('node:http');
+const { spawn } = require('node:child_process');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
@@ -232,6 +233,17 @@ test('QA-01 two students: auth, token lifecycle and post ownership', { timeout: 
     assert.equal(guest.status, 401, 'Known current behavior: guest feed rejects unauthenticated users');
     console.log('KNOWN GAP: Guest GET /api/posts returns 401 (ADR-002 OPEN; NOT an approval).');
     console.log('QA-01 RESULT: ' + passed + '/15 checks PASS; DB fixture cleanup follows');
+    // BE05 uses a fresh server process so the global rate-limit test budget
+    // remains separate. CI MySQL is disposable, and the child cleans only
+    // its own synthetic users. No shared workflow edits.
+    await new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, [
+        path.join(__dirname, 'be05-profile-security.test.cjs'),
+      ], { env: process.env, stdio: 'inherit' });
+      child.once('error', reject);
+      child.once('close', code => code === 0 ? resolve() :
+        reject(new Error('BE05 profile security test failed with exit code ' + code)));
+    });
   } finally {
     try {
       if (fixtureIds.length) {

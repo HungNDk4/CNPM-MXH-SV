@@ -1,8 +1,46 @@
 # DEP-01C — Render Free + TiDB Cloud Starter + Vercel Blob Private
 
-**Status:** SOURCE PREVIEW / REMOTE CLOUD E2E NOT RUN. Do not call the existing Vercel health-only PoC the complete website. This task implements the *code path* for an isolated 1–3 month coursework demo with a $0 recurring fee target, not permission to buy credits or use real user data.
+**Current status (2026-10-22 23:42 ICT): Render Free LIVE; AUTH-02 JWT refresh/replay/logout revocation PASS; PDF-01 real 621-byte Private Blob upload/download and SHA256 PASS. 10MiB limits, cross-user security, cleanup and persistence NOT RUN.** No release approval.
 
-## Latest operational attempt — 2026-10-22
+## 2026-10-22 23:42 ICT — AUTH-02 → PDF-01 actual cloud PASS (LATEST)
+
+**Live functional checkpoint PASS (limited scope).** GitHub Actions [run 39816112003](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39816112003) executed against the **real** Render Free service, TiDB and configured Vercel Blob Private using a newly generated synthetic account. Runner source: [Draft PR #35](https://github.com/HungNDk4/CNPM-MXH-SV/pull/35), commit `c4446867e702dca49cfac72d2edfdbad4ca55e5d`.
+
+- **AUTH-02 PASS:** registration 201, `/api/auth/me` 200, login 200, refresh 200 with a distinct JWT, replay of prior refresh 401, logout 200 and previously logged-out refresh 401.
+- **PDF-01 PASS:** upload one structurally valid synthetic PDF (621 bytes) **201**; returned metadata does not expose a Blob URL; guest download **401**; logged-in download **200** and exact byte/SHA256 match; synthetic post `id=1` soft-deleted **200**, subsequent download **404**.
+- **Limited TiDB evidence:** registration, refresh token persistence/rotation, document post and `document_files` insertion, and soft deletion exercised through real HTTP; direct SQL/FK/rollback/edge compatibility not proven.
+- **Cleanup still required:** the new QA-only user `dep01c-live-39816112003-aa9ea81a@example.invalid` persists in TiDB; post `1` is soft-deleted, its `document_files` metadata and private Blob object persist until owner cleanup. The two earlier failed-auth synthetic accounts also remain. Never treat soft-delete as physical Blob removal.
+- **Pending (NOT RUN):** authenticated **exact 10 MiB and 10MiB+1**, PDF spoof/multiple parts, two-account cross-user mutation **403**, admin hide/delete, Blob persistence after redeploy/restart, private object physical cleanup, quotas and production hardening. Full browser UI-to-PDF flow NOT RUN; this was actual live API E2E.
+- **Ops:** live Render source `71499dfd` unchanged, no environment/credentials/deploy touched by QA runner. Documentation-only updates on PR #34 branch. DEP-01C **IN_PROGRESS**, DEP-02 release **BLOCKED**, Human A/B sign-off pending. See [DEP-01C AUTH-02 / PDF-01 real cloud report](testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md).
+
+## Historical DEP-01C auth recovery — 2026-10-22 23:22 ICT
+
+**Register PASS (201), Login PASS (200), Logout response PASS (200)** on new Render Free deployment. Render deployment `dep-dbd38o2vcj2c739h61sg` (source `71499dfd63d21feb019d6144efcadc7ee9232951`) is LIVE following a configuration deployment at 16:06 UTC. Human A observed successful browser registration, login and logout. Render request logs corroborate `POST /api/auth/register` 201 at 16:14:38.811Z, `POST /api/auth/logout` 200 at 16:15:12.440Z and `POST /api/auth/login` 200 at 16:22:34.422Z.
+
+Both access and refresh JWT signing run before registration/login success per deployed `auth.controller.js`, so their signing inputs were usable at those requests. No credential values were inspected. Logout 200 alone does NOT prove refresh revocation. Refresh rotation/reuse, real cloud private PDF bytes, 10MiB/+1, SHA256, two-user permissions, hidden/delete and redeploy persistence remain untested.
+
+Prior 22:49 ICT auth HTTP500 remains below as historical evidence. DEP-01C remains IN_PROGRESS; DEP-02 release BLOCKED. Two synthetic users from the old failed attempt still require controlled cleanup.
+
+## Historical post-OAuth live acceptance — 2026-10-22 22:49 ICT (auth FAIL before config deployment)
+
+Real registration and correct-password login returned HTTP500 `secretOrPrivateKey must have a value`; Render logs point to `JWT_ACCESS_SECRET` signing. Fresh MCP scoped reads still403; authenticated CLI metadata fallback PASS (Private store, 0 objects; Blob token key exists without value disclosure). Health, limited TiDB user insert/read/uniqueness and independent denial checks PASS. Authenticated PDF/10MiB/bytes/permissions blocked; persistence NOT RUN. No credentials/env/deploy changes. Two synthetic users remain for owner cleanup. See [full post-OAuth report and exact next checkpoint](testing/DEP01C_POST_OAUTH_REPORT.md).
+
+## DEP-01C — LIVE infrastructure checkpoint (2026-10-22, 16:26 ICT)
+
+**Verified on the real Render Free preview, not a production release approval.** This section supersedes the historical "offline/no hosted website" statements below for this **feature branch only**.
+
+- **Actual application URL:** https://mini-study-network-dep01-demo.onrender.com/ ; Human A opened the website successfully. Render app logs show `GET /` **200** at 09:26:09Z, plus compiled CSS/JS **200**.
+- **Health check PASS:** Human A copied `{"success":true,"message":"API is running 🚀","timestamp":"2026-10-22T09:26:36.401Z"}` from public `/api/health`. The independently inspected Render request log shows **`GET /api/health 200` at 09:26:36.406Z**, corroborating that observation.
+- **Real provider deploy:** `srv-dbcg9rbrjlhs73bc8870`, deployment `dep-dbctc429lscs73f209t0` status **live**, source `71499dfd63d21feb019d6144efcadc7ee9232951`, Free plan, region Singapore. Render logs: `Build successful`, `MySQL connected successfully`, `Server running`, `Your service is live`.
+- **TiDB Starter:** MySQL Compatible, Singapore, $0 spending limit selected; Human A ran `SHOW TABLES` and demonstrated **8/8** expected tables in `mini_study_network` (including `document_files`). This proves schema presence, **not** full FK/JSON/transactions/schema-vs-ORM compatibility testing. Runtime `Sequelize.authenticate()` succeeded from Render; independent TLS packet/certificate handshake was not inspected.
+- **Vercel Blob Private:** existing private store; Render now passes startup credential validation, but Blob put/get/delete, PDF bytes, durability and access rules on real cloud are **NOT TESTED**.
+- **CI:** exact deployed source SHA GitHub Actions run [39753376890](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39753376890) **7/7 jobs succeeded**, including disposable MySQL 8/Chromium E2E. This is **not** actual cloud PDF E2E.
+- **Open checks:** register/login/refresh, guest feed content beyond observed HTTP 200, 10MiB boundary, private PDF byte streaming, cross-user authorization, hidden/deleted revocation, paid-endpoint lockdown, TiDB write transactions, redeploy persistence, quota/recovery and off-network repeated monitoring. DEP-01C overall **IN_PROGRESS / partial infrastructure PASS**, **not G5/G6 or public release sign-off**.
+- **Operational risk:** Render currently reports `autoDeploy=yes` (despite `render.yaml` requesting off). Do not push documentation to its live source branch merely to update status; use a stacked docs-only review branch to prevent an unintended redeploy. No billing, secret, schema, service or application mutations in this checkpoint.
+
+**Next:** an isolated cloud acceptance run with test-only accounts and a disposable PDF, strict denial/byte-equality/size/cleanup tests, then a controlled persistence test and Human A/B review. Do not expose secret values in logs/PRs or claim uninterrupted 24/7 Free-tier uptime.
+
+## Historical initial Render API-key blocker — 2026-10-22 (superseded by OAuth and live service)
 
 **BLOCKED on Render API authentication.** Human A supplied the existing service `srv-dbcg9rbrjlhs73bc8870`, deploy `dep-dbcg9s3rjlhs73bc8b70`. Reuse this service; do not provision another one. The service's current Free plan, runtime state, public origin and live environment have **not** been independently verified.
 

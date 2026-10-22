@@ -27,3 +27,22 @@ Re-evaluate at each gate. Do not implement real-money operations or expose sensi
 | R-13 | P0 | Vercel Function 4.5 MB payload rejects approved 10 MiB PDF | Client direct private Blob upload; verify bytes/MIME/owner before active, test 10 MiB and 10 MiB+1 | Unassigned |
 | R-14 | P1 | TiDB MySQL protocol compatibility is not identical to existing MySQL 8/Sequelize 6 migrations | Disposable TiDB PoC: FK, ENUM, JSON, indexes, auth CRUD, transactions | Unassigned |
 | R-15 | P1 | Free quota exhaustion, plan changes or unintended billing interrupt demo | Verified quota/spending limits, snapshots/backup, approval before any paid tier | Human A + Human B |
+
+## DEP-01C live cloud follow-up — 2026-10-22 (risks still open)
+
+| Risk ID | Priority | Current observable risk | Evidence / required mitigation | Owner |
+|---|---|---|---|---|
+| R-DEP16 | P0 release gate | Website/health up, but production-like Blob bytes and private PDF permissions untested | Run real 10MiB and 10MiB+1 PDF, guest/cross-user/hidden/deleted checks, verify no public token/storage URL leak. | AI + Human A/B review |
+| R-DEP17 | P1 | Render Free `autoDeploy=yes`; doc commits to live source branch can restart service | Docs checkpoint on separate stacked branch; control deploys, record commit/status, persistence after redeploy. | Human A + AI |
+| R-DEP18 | P1 | Startup TiDB authentication does not prove end-to-end ORM schema/transaction consistency or backup/restore | Synthetic CRUD/FK/index/rollback; review backup/export and DB usage budget. | AI + Human A/B review |
+| R-DEP19 | P1 | Free tier idle/cold start, network limits, and actual uptime unknown | Test after idle/off-network and plan a demo fallback; do not advertise an uptime SLA. | Human A + Human B |
+| R-DEP20 | P1 | Deployed `npm ci` reported audit vulnerabilities (backend 5, frontend 11), which did **not** cause startup failure | Review `npm audit` advisories for runtime exposure, fix targeted dependencies with regression tests; **do not blindly run `npm audit fix --force`**. | AI + Human B review |
+
+**Proof boundary:** 2026-10-22 Render confirmed LIVE, GET `/api/health` 200 and Sequelize auth success; Human A verified 8 tables. Security/product release gates remain pending. This table documents risks without reclassifying untested protections as PASS.
+
+## Observed auth blocker — 2026-10-22 post-OAuth
+
+| Risk | Severity | Evidence | Next checkpoint |
+| --- | --- | --- | --- |
+| R-DEP18 | P0 release gate | Actual register/login HTTP500: access JWT signing has no effective JWT_ACCESS_SECRET value. Startup health remains200. | Securely verify exact names/nonempty effective access+refresh keys; preserve working credentials, correct only necessary config, then auth-first cloud rerun. |
+| R-DEP19 | P1 test reconciliation | Failed registration persisted two synthetic users before token issuance; no account cleanup endpoint. | Owner reconcile exact two emails in [report](../testing/DEP01C_POST_OAUTH_REPORT.md). No PDF/post/Blob fixtures created. |

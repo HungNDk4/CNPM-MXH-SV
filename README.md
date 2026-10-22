@@ -2,7 +2,14 @@
 
 > **BẮT ĐẦU SESSION MỚI:** đọc [PROJECT_CONTROL.md](PROJECT_CONTROL.md) trước mọi thay đổi. Đây là mục lục trạng thái, worktree, task board và session logs, tránh phụ thuộc lịch sử chat.
 
-**Trạng thái:** Đang phát triển (đồ án Công nghệ phần mềm). Repository đã có mã nguồn frontend/backend và schema; **chưa có bằng chứng kiểm thử end-to-end**. Không coi API thanh toán hoặc quyền tải tài liệu là production-ready.
+**Trạng thái:** Source đồ án đang REVIEW. **DEP-01C trên cloud LIVE: Auth refresh/revocation (AUTH-02) và upload/download 621-byte PDF với đối chiếu SHA256 (PDF-01) đã PASS trên Render+TiDB+Vercel Blob Private (2026-10-22).** Đây chỉ là checkpoint chức năng nhỏ; giới hạn 10 MiB, phân quyền chéo tài khoản, persistence và release security gate chưa nghiệm thu.
+
+## Xem bản chạy thử trên cloud (DEP-01C)
+- Web React + Express: https://mini-study-network-dep01-demo.onrender.com/
+- API health: https://mini-study-network-dep01-demo.onrender.com/api/health
+- Render Free + TiDB Starter (MySQL Compatible) + Vercel Blob Private; không phụ thuộc laptop phải bật. Free tiers không đảm bảo thời gian hoạt động liên tục.
+- Source đang triển khai: `71499dfd63d21feb019d6144efcadc7ee9232951`, Draft PR [#33](https://github.com/HungNDk4/CNPM-MXH-SV/pull/33), base `integration/team-dev-20261020`; **không phải** `main`.
+- Bằng chứng live: [AUTH-02/PDF-01 cloud report](docs/testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md), [GitHub Actions thực tế](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39816112003), [runbook DEP-01C](docs/DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md). Chưa có kiểm thử đầy đủ 10MiB/phân quyền hai tài khoản/persistence hay release approval.
 
 ## Mục tiêu
 Sinh viên đăng câu hỏi, thảo luận và chia sẻ tài liệu học tập **miễn phí**. Có phân quyền tài khoản và quản trị. **Đã chốt Option B (17/10/2026):** VNPay Sandbox và tài liệu thu phí là chức năng mở rộng, **không thuộc MVP**. Trước khi demo phải chặn an toàn các API thanh toán/paid-file hiện tồn tại — ẩn nút UI không đủ.
@@ -55,11 +62,11 @@ Hướng dẫn và lưu ý: [docs/DEV_SETUP.md](docs/DEV_SETUP.md).
 - VNPay callback còn nguy cơ ghi nhận lại giao dịch/cộng ví lặp; chưa nghiệm thu.
 - Hai trang `PostDetailPage` và `ProfilePage` vẫn là placeholder; nhiều UI chưa nối API.
 - Script schema có admin seed dùng hash **placeholder**, không phải tài khoản admin có thể đăng nhập.
-- CI đầu tiên chỉ kiểm tra cú pháp JS backend và build frontend; **chưa có test DB, unit/e2e hoặc kiểm thử Sandbox**.
+- CI trên preview branch hiện có MySQL 8 + Chromium E2E và GitHub Actions 7/7 PASS tại source deployed SHA; **chưa đồng nghĩa TiDB/Vercel Blob cloud E2E hay VNPay Sandbox PASS**.
 
 ## Ubuntu 24.04 LTS — Development environment
 - **Complete instructions:** [docs/UBUNTU_SETUP.md](docs/UBUNTU_SETUP.md).
 - After installing Node.js 24 (nvm), MySQL 8 and Git: `bash scripts/ubuntu/doctor.sh` then `bash scripts/ubuntu/setup.sh`.
 - Configure the generated **local-only** `server/.env`, create dedicated MySQL user/database, import `database/schema.sql`, and run backend/client in two Ubuntu terminals.
 - The Ubuntu MySQL integration GitHub Actions job uses an **ephemeral MySQL 8 container** with no real data; no local Ubuntu laptop has yet been configured remotely.
-- **Never expose** the current Express app publicly: legacy payment routes, raw `/uploads` and PDF permissions still require P0 fixes.
+- **Deployment note:** the reviewed preview branch is already public on Render. Maintain security regression gates (auth/PDF/paid paths) before promoting it to a course release; do not redeploy stale `main` or enable paid features.

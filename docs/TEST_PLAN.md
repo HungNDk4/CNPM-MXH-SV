@@ -1,5 +1,49 @@
 # Test Plan và Acceptance Gates
-**DRAFT**, chưa chạy; mọi testcase mặc định **NOT RUN**. Ghi status PASS/FAIL/SKIP kèm environment, commit, bằng chứng, thời gian thực hiện.
+
+## Latest real cloud AUTH-02 → PDF-01 — 2026-10-22 23:42 ICT
+
+| Test group | Status | Live evidence |
+|---|---|---|
+| AUTH-02 registration, JWT login, /me | **PASS** | Real Render/TiDB HTTP 201/200/200, GitHub run 39816112003 |
+| AUTH-02 refresh rotation & replay deny | **PASS** | Refresh 200 with distinct JWT; prior refresh 401 |
+| AUTH-02 logout refresh revocation | **PASS** | Logout 200; revoked token reuse 401 |
+| PDF-01 upload/download small synthetic file | **PASS** | 621B PDF upload 201; signed-in download 200 with exact bytes/SHA256; guest 401 |
+| PDF-01 post soft-delete/access revocation | **PASS** | Soft-delete 200; after-delete download 404 |
+| Physical cleanup | **PENDING** | Private Blob and synthetic account persist; owner cleanup required |
+| PDF 10MiB/+1, spoofing, multi-part, two-user 403, admin, persistence | **NOT RUN** | Cannot claim release readiness from small PDF success |
+
+Details: [real cloud report](testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md). Historical 22:49 JWT failure below was corrected on a subsequent configuration deployment. Overall DEP-01C IN_PROGRESS / DEP-02 BLOCKED.
+
+
+## DEP-01C — latest authenticated browser retest, 2026-10-22 23:22 ICT
+
+| Check | Result | Evidence / limits |
+|---|---|---|
+| Register | **PASS** | Human A browser; Render HTTP201 16:14:38.811Z. |
+| Login | **PASS** | Human A browser; Render HTTP200 16:22:34.422Z. |
+| Logout response | **PASS (response only)** | Human A browser; Render HTTP200 16:15:12.440Z. Refresh revocation NOT RUN. |
+| Access/refresh JWT signing | **PASS (issuance path)** | Code signs both before 201/200, values not disclosed. Rotation NOT RUN. |
+| Refresh reuse/logout revocation | **NOT RUN** | Must test old refresh token rejected after rotation/logout. |
+| Authenticated PDF + 10MiB / permissions / Blob durability | **NOT RUN** | Pending cloud acceptance. |
+
+Earlier 22:49 ICT HTTP500 evidence belongs to previous deployment; do not treat it as current failure.
+
+**DRAFT**; các testcase chức năng trong bảng bên dưới mặc định **NOT RUN** trên cloud nếu không có bằng chứng riêng. Có kết quả giới hạn của DEP-01C ở mục tiếp theo; ghi status PASS/FAIL/SKIP kèm environment, commit, bằng chứng và thời điểm.
+
+## DEP-01C — actual Render Free + TiDB Starter preview checkpoint (2026-10-22)
+
+| Gate | Result | Evidence / limits |
+|---|---|---|
+| DEP-LIVE-01: React SPA root | **PASS (single visit)** | Human A browser loaded site; Render `GET /` 200 + compiled assets 200 at 09:26Z. |
+| DEP-LIVE-02: HTTPS API health | **PASS (single visit)** | Human A JSON `success:true`, timestamp `2026-10-22T09:26:36.401Z`; Render matching `GET /api/health 200` at 09:26:36.406Z. |
+| DEP-LIVE-03: Express ↔ TiDB connectivity | **PASS (startup authentication)** | Render `MySQL connected successfully` 09:24:17Z; does not prove ORM CRUD/transactions. |
+| DEP-LIVE-04: TiDB schema tables | **PASS (table presence only)** | Human A `SHOW TABLES` lists 8 required tables, including document_files; column/index/FK compatibility not fully verified. |
+| DEP-LIVE-05: deployed source CI | **PASS (7/7, offline/CI runners)** | `71499dfd63d21feb019d6144efcadc7ee9232951`, run [39753376890](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39753376890); isolated MySQL 8/Chromium not actual TiDB or cloud Blob. |
+| DEP-LIVE-06: real private PDF byte operations | **NOT RUN** | Test synthetic authenticated PDF put/get/delete, exact equality, 10MiB limit, invalid uploads, cross-user auth, hidden/deleted direct denial, no leaked storage URL. |
+| DEP-LIVE-07: cloud social/auth/paid API checks | **NOT RUN** | Two synthetic accounts register/login/refresh/posts; guest/owner/admin and hard-deny paid endpoints. A single GET feed 200 does not prove complete contract. |
+| DEP-LIVE-08: persistence & reliability | **NOT RUN** | Controlled redeploy and sleep/resume, durable TiDB rows/Blob bytes, quota alerts, cold-start/off-network. |
+
+**Gate verdict: INFRASTRUCTURE PREVIEW VERIFIED; full DEP-01C release sign-off PENDING.** Real endpoint: https://mini-study-network-dep01-demo.onrender.com . Evidence detail: [DEP-01C runbook](DEP01C_RENDER_TIDB_PRIVATE_BLOB_RUNBOOK.md). Never downgrade security checks merely because health is 200.
 
 | ID | Luồng kiểm tra | Kỳ vọng |
 |---|---|---|
@@ -98,3 +142,7 @@ Human A confirmed Option A on 2026-10-18. These test cases are defined but **hav
 | T-PUBLISH-06 | Ordinary Student tries to hide/delete another student's PDF | Backend rejects unauthorized modification (403); original post state unchanged |
 
 **G5 gate:** real test evidence required, CI build/syntax/document checks do not establish PASS.
+
+## DEP-01C post-OAuth live acceptance — 2026-10-22 22:49 ICT
+
+Latest actual-cloud outcomes supersede earlier NOT RUN rows only for checks explicitly executed. **Registration A/B and correct-password login FAIL HTTP500** at access JWT signing; direct HTTPS health, guest metadata, TiDB user write/read/uniqueness and guest/forged-token/private-path/paid-path denial PASS within the tested scope. **10MiB inclusive/+1, real Blob bytes/SHA256, cross-user 403, hidden/deleted revocation and document transactions BLOCKED** by failed auth. Direct SQL/schema compatibility and restart/redeploy persistence NOT RUN. Browser guest page rendering observed; full browser auth/PDF flow NOT RUN. Full matrix, exact provider/source and fixtures: [post-OAuth report](testing/DEP01C_POST_OAUTH_REPORT.md). Overall release remains BLOCKED.

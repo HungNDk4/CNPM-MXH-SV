@@ -255,3 +255,40 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Vercel:** real management API metadata read succeeded for store_nrzupcGOuJobNPJs: private, available, sin1, 0 bytes/objects, quota not exceeded. Prior team-scope 403 no longer describes this read. No application Blob/TiDB I/O performed; no token exported.
 **Tests/actions:** local helper mocked safety regression 4/4 PASS; dry-run preflight BLOCKED. Apply, JWT generation, redeploy, actual Deploy Logs, HTTPS health, TiDB TLS/SQL, private Blob byte tests and cloud E2E NOT RUN. No cloud env/data/billing, schema or application source changed. Runbook/current-state/board/registry updated with evidence and known local checkout.
 **Unblock:** provide Render API auth privately to the actual Codex process, reuse known service ID; then rerun dry-run, verify repo/branch/Free plan, inventory existing secrets, apply only authorized per-key changes, verify TiDB/Blob and deploy only with required config complete. No secret in chat/source/logs and no repeated human approval for routine actions. Overall DEP-01C live result BLOCKED.
+
+## SESSION-20261022-DEP01C-LIVE-HEALTH-DB — real Render / user browser verification
+**Actor:** Human A verified browser and `/api/health`; AI independently queried connected Render deployment and sanitized app/request logs. **Scope:** progress/build documentation and operational handoff only, no app logic or cloud configuration changes.
+
+**Exact deployed source:** `71499dfd63d21feb019d6144efcadc7ee9232951` on `feat/dep01c-render-tidb-blob-poc-20261022`, Render Free service `srv-dbcg9rbrjlhs73bc8870`, deploy `dep-dbctc429lscs73f209t0` **live** at 09:24:18Z. React Vite production build PASS. Server log `MySQL connected successfully` then `Server running`. Exact-source GitHub Actions run [39753376890](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39753376890) **7/7 SUCCESS** (including isolated MySQL8 + Chromium E2E; different environment from TiDB+Blob).
+
+**Public/browser:** Human A confirmed website renders and shared HTTPS `/api/health` JSON success, timestamp `2026-10-22T09:26:36.401Z`; Render logged `GET /api/health 200` at `09:26:36.406Z`. Render also logged `GET /` 200, compiled JS/CSS 200, `GET /api/posts?limit=20&type=document` 200 on this one visit. These observations prove individual requests, not content completeness or uptime.
+
+**TiDB:** user established Starter MySQL Compatible Singapore ($0 limit) and showed 8/8 table names from `SHOW TABLES`. Sequelize auth successful from Render. FK/ENUM/JSON/transaction/role/API data mutation on actual TiDB **not yet validated**.
+
+**Security / storage:** Vercel Blob Private adapter startup configuration passed; **no authenticated Blob put/get/delete, PDF byte-equality, 10MiB/10MiB+1, hidden/delete, cross-user or restart persistence testing** on this cloud deployment. No production release approval. Render `autoDeploy=yes`; doc-only updates isolated to `docs/dep01c-live-checkpoint-20261022` stacked on PR #33 branch to prevent redeploy. No main/integration merge, no JWT rotation, no user data mutation or paid service.
+
+**Next:** run cloud E2E with synthetic two-user test accounts and safe PDF fixture, log exact API response/status, verify paid-path denies, moderate/hide/delete, confirm durable bytes through a controlled redeploy; review P0 security and quotas before accepting DEP-02/G5/G6.
+
+## 2026-10-22 22:49 ICT — DEP-01C post-OAuth recovery and actual live acceptance
+**Scope:** Issue #32, source PR #33, existing docs PR #34. Read mandatory controls, GitHub issue/handoff, exact refs and CI; Human A confirmed Render My Workspace. Remote/deployed source `71499dfd`, docs parent `a1cd5660`, main `0993a421`. Existing local source checkout clean at `b97b5314`, not current remote; left untouched.
+**Observed:** native Vercel MCP project/store still 403; WSL CLI authenticated explicit scope/project/private store PASS; decrypt=false environment metadata confirms Blob key, values omitted. Render Free LIVE unchanged. Actual HTTP health/SPA/guest feed PASS; TiDB user records persisted. Register A/B and correct-password login FAIL HTTP500 at access JWT signing. Guest/forged JWT 401, private-path and tested paid-route 404 PASS. In-app guest homepage rendered; no browser auth/PDF completion.
+**Boundaries:** authenticated PDF/10MiB/+1/SHA256/cross-user/revocation/document transactions BLOCKED. Direct SQL/FK/rollback/TLS handshake, restart/redeploy persistence NOT RUN. Two exact synthetic emails need owner cleanup; no PDF/post created. No secret/env/source/schema/billing/deploy/main change. Updated docs on PR #34 only. Full outcomes, Render stack, fixture inventory and next checkpoint: [post-OAuth report](../testing/DEP01C_POST_OAUTH_REPORT.md).
+**Next:** secure owner-side inventory of effective JWT_ACCESS_SECRET/JWT_REFRESH_SECRET, correct only missing configuration, then configuration deploy on existing Free service and auth-first acceptance rerun. Do not blind-overwrite unknown credentials or claim full cloud PASS from health. DEP-01C IN_PROGRESS; DEP-02 BLOCKED.
+
+## SESSION-20261022-DEP01C-AUTH-RECOVERY — 23:22 ICT
+
+Render deployment `dep-dbd38o2vcj2c739h61sg` (source `71499dfd63d21feb019d6144efcadc7ee9232951`) is LIVE following a configuration deployment at 16:06 UTC. Human A observed successful browser registration, login and logout. Render request logs corroborate `POST /api/auth/register` 201 at 16:14:38.811Z, `POST /api/auth/logout` 200 at 16:15:12.440Z and `POST /api/auth/login` 200 at 16:22:34.422Z.
+
+Both access and refresh JWT signing run before registration/login success per deployed `auth.controller.js`, so their signing inputs were usable at those requests. No credential values were inspected. Logout 200 alone does NOT prove refresh revocation. Refresh rotation/reuse, real cloud private PDF bytes, 10MiB/+1, SHA256, two-user permissions, hidden/delete and redeploy persistence remain untested.
+
+**Actions:** GitHub docs-only branch and PR #34 updated, no production source push/deploy/environment write. DEP-01C IN_PROGRESS and DEP-02 BLOCKED; pending authenticated Blob/cloud PDF test + persistence, old test-user cleanup.
+
+## SESSION-20261022-DEP01C-AUTH02-PDF01-CLOUD — 23:42 ICT
+
+**Actor:** AI on isolated GitHub Actions runner; authorized by Human A to execute AUTH-02 then PDF-01. Runner [39816112003](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39816112003) **SUCCESS** using test branch `test/dep01c-cloud-auth-pdf-20261022` @ `c4446867e702dca49cfac72d2edfdbad4ca55e5d`, stacked Draft PR #35 onto docs PR #34. Independent exact source and actual HTTPS calls, not mock CI.
+
+**Results:** register 201, authenticated /me 200, login 200, refresh 200 new token, stale refresh 401, logout 200, revoked refresh 401; one synthetic valid PDF 621B upload 201 into configured Private Blob and TiDB, guest download 401, authorized download 200 byte-for-byte + SHA256, post 1 soft-delete 200, subsequent download 404. No leaked Blob URL in upload response. Overall AUTH-02 PASS, PDF-01 PASS for tested 621B fixture.
+
+**Cleanup:** synthetic user `dep01c-live-39816112003-aa9ea81a@example.invalid` and private Blob/document_files/post data await owner physical cleanup. Post status deleted, file not externally downloadable. Earlier two QA accounts still present. See [full cloud acceptance & exact read-only cleanup inventory](../testing/DEP01C_AUTH02_PDF01_CLOUD_REPORT.md).
+
+**Out-of-scope:** 10MiB/10MiB+1, two-account 403, admin moderation, failures/rollback, redeploy persistence, comprehensive payment API security, and human release approval NOT RUN. Source/Render env untouched; no paid plan, no merge, no extra deploy. DEP-01C IN_PROGRESS, DEP-02 BLOCKED.

@@ -11,3 +11,7 @@ Likes: post and comment counts from likeAPI.count, toggle from likeAPI.toggle wi
 Remaining backend risks: comment endpoint does not deeply validate parent/post/status and like endpoint does not validate target visibility. These are separate security hardening tasks, not claimed fixed here. Browser test and build evidence to follow.
 
 Do not merge into main or auto-deployed Render branch without Human A/B review.
+
+## Browser E2E regression coverage
+
+The isolated MySQL 8 + Chromium GitHub Actions job now runs FE-01 after the existing PDF regression. The FE-01 browser runner checks registration, real Post Detail, Like/Unlike count, comments, one-level replies, comment Like, Student B unauthorized delete (403), Student A reply delete, guest login-gate and missing-post 404. It rejects production/cloud DBs and removes its own fixture records. Actual job verdict must be captured from CI after this commit; source additions alone are NOT a PASS.

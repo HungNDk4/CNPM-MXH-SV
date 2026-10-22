@@ -55,13 +55,14 @@ const getPostById = async (req, res, next) => {
       include: [{ model: User, as: 'author', attributes: ['id', 'full_name', 'avatar_url'] }],
     });
     if (!post) throw createError('Bài viết không tồn tại.', 404);
-    // ADR-002 is still open for general guest posts.
-    if (!req.user && post.post_type !== 'document') {
-      throw createError('Yêu cầu đăng nhập để xem bài viết.', 401);
-    }
-    // Guests/students/owners cannot view hidden, deleted or paid documents.
+    // Suppressed/paid posts must return the same 404 for guests and members.
+    // Check visibility before the member-only question/discussion login gate.
     if (post.status !== 'active' || Number(post.price) !== 0) {
       throw createError('Bài viết không tồn tại.', 404);
+    }
+    // ADR-002 still keeps general social posts member-only.
+    if (!req.user && post.post_type !== 'document') {
+      throw createError('Yêu cầu đăng nhập để xem bài viết.', 401);
     }
 
     // Tăng view count

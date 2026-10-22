@@ -116,8 +116,10 @@ const updatePost = async (req, res, next) => {
     if (post.status !== 'active' && req.user.role !== 'admin') {
       throw createError('Không thể sửa bài viết đã ẩn hoặc xóa.', 403);
     }
-    // Status transitions belong to moderation (admin) only; no owner unhide.
-    if (req.body.status !== undefined && req.user.role !== 'admin') {
+    // Preserve the existing owner action that hides/deletes an active post.
+    // Only admins may restore a hidden post; no owner can bypass moderation.
+    if (req.body.status !== undefined && req.user.role !== 'admin' &&
+        !['hidden', 'deleted'].includes(req.body.status)) {
       throw createError('Không có quyền thay đổi trạng thái bài viết.', 403);
     }
     // Never resurrect soft-deleted rows through the generic edit API.

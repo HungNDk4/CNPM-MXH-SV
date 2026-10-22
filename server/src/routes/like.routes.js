@@ -1,33 +1,31 @@
 const router = require('express').Router();
-const { authenticate } = require('../middlewares/auth.middleware');
+const { authenticate, optionalAuthenticate } = require('../middlewares/auth.middleware');
 const { Like } = require('../models');
-const { createError } = require('../middlewares/error.middleware');
+const { readableLikeTarget } = require('../utils/interaction-target');
 
-// POST /api/likes - Toggle like
+// POST /api/likes — toggle only existing active/free visible targets.
 router.post('/', authenticate, async (req, res, next) => {
   try {
     const { target_type, target_id } = req.body;
-    if (!['post', 'comment'].includes(target_type)) throw createError('target_type không hợp lệ.', 400);
-
+    const targetId = await readableLikeTarget(target_type, target_id, req.user);
     const existing = await Like.findOne({
-      where: { user_id: req.user.id, target_type, target_id },
+      where: { user_id: req.user.id, target_type, target_id: targetId },
     });
-
     if (existing) {
       await existing.destroy();
       return res.json({ success: true, liked: false, message: 'Đã bỏ thích.' });
     }
-
-    await Like.create({ user_id: req.user.id, target_type, target_id });
+    await Like.create({ user_id: req.user.id, target_type, target_id: targetId });
     res.json({ success: true, liked: true, message: 'Đã thích.' });
   } catch (error) { next(error); }
 });
 
-// GET /api/likes/count?target_type=post&target_id=1
-router.get('/count', async (req, res, next) => {
+// GET /api/likes/count — counts cannot reveal suppressed posts/comments.
+router.get('/count', optionalAuthenticate, async (req, res, next) => {
   try {
     const { target_type, target_id } = req.query;
-    const count = await Like.count({ where: { target_type, target_id } });
+    const targetId = await readableLikeTarget(target_type, target_id, req.user);
+    const count = await Like.count({ where: { target_type, target_id: targetId } });
     res.json({ success: true, data: { count } });
   } catch (error) { next(error); }
 });

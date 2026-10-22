@@ -1,0 +1,22 @@
+name: DEP-01C real cloud AUTH-02 PDF-01 (single scoped PR)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [docs/dep01c-live-checkpoint-20261022]
+
+permissions:
+  contents: read
+
+jobs:
+  cloud-auth-pdf:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'test/dep01c-cloud-auth-pdf-20261022'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Verify reviewed branch and real HTTPS AUTH-02, then PDF-01
+        run: node scripts/dep01c-cloud-auth-pdf-acceptance.cjs

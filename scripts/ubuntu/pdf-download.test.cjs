@@ -3,6 +3,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
+const { spawn } = require('node:child_process');
+const path = require('node:path');
 const http = require('node:http');
 const fs = require('node:fs/promises');
 process.env.NODE_ENV = 'test';
@@ -93,6 +95,17 @@ test('DOC-04 authenticated attachment download + visibility', {timeout:90000}, a
       await Post.update({status:'deleted',price:0},{where:{id:postId}});
       assert.equal((await send(url,{headers:{Authorization:'Bearer '+a}})).status,404);
       assert.equal((await send('/api/posts/'+postId)).status,404);
+    });
+    // BE-09 uses a separate process/Sequelize connection and rate-limit budget.
+    await step('BE09 Post create/edit security regression (isolated MySQL8)', async () => {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath, [path.join(__dirname, 'be09-post-validation-regression.cjs')], {
+          env: process.env, stdio: 'inherit',
+        });
+        child.once('error', reject);
+        child.once('close', code => code === 0 ? resolve() :
+          reject(new Error('BE09 Post validation regression exited with status ' + code)));
+      });
     });
     console.log('DOC-04 RESULT: '+steps+'/'+steps+' PASS; cleanup follows');
   }finally{

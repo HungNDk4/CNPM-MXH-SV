@@ -2,6 +2,8 @@ const { Post, User } = require('../models');
 const { createError } = require('../middlewares/error.middleware');
 const { Op } = require('sequelize');
 const { toSafePost } = require('../utils/post.dto');
+const { positiveId } = require('../utils/interaction-target');
+const { validateCreatePost, validateEditPost } = require('../utils/post-input');
 
 /**
  * GET /api/posts?page=1&limit=10&type=document&subject=cnpm&search=react
@@ -123,29 +125,12 @@ const getPostById = async (req, res, next) => {
  */
 const createPost = async (req, res, next) => {
   try {
-    const { title, content, post_type, price, subject, tags } = req.body;
-    // Legacy JSON file_url/paid-document creation is not the approved PDF
-    // upload workflow. Fail closed until a separate private upload API exists.
-    if (post_type === 'document' ||
-        Object.hasOwn(req.body, 'file_url') ||
-        Object.hasOwn(req.body, 'file_name') ||
-        (price !== undefined && Number(price) !== 0)) {
-      throw createError('Chức năng đăng tài liệu qua URL hoặc bài trả phí không được hỗ trợ.', 422);
-    }
-
-    const post = await Post.create({
-      user_id: req.user.id, title, content, post_type,
-      price: 0, subject, tags,
-    });
-
+    const values = validateCreatePost(req.body);
+    const post = await Post.create({ ...values, user_id: req.user.id });
     res.status(201).json({
-      success: true,
-      message: 'Đăng bài thành công.',
-      data: toSafePost(post),
+      success: true, message: 'Đăng bài thành công.', data: toSafePost(post),
     });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
 /**
@@ -153,33 +138,32 @@ const createPost = async (req, res, next) => {
  */
 const updatePost = async (req, res, next) => {
   try {
-    const post = await Post.findByPk(req.params.id);
+    const id = positiveId(req.params.id);
+    const post = await Post.findByPk(id);
     if (!post) throw createError('Bài viết không tồn tại.', 404);
-    if (post.user_id !== req.user.id && req.user.role !== 'admin') throw createError('Không có quyền sửa bài.', 403);
-    // Owners must not bypass moderation by editing/restoring hidden/deleted posts.
-    if (post.status !== 'active' && req.user.role !== 'admin') {
+    const admin = req.user.role === 'admin';
+    if (!admin && post.user_id !== req.user.id) {
+      throw createError('Không có quyền sửa bài.', 403);
+    }
+    if (!admin && post.status !== 'active') {
       throw createError('Không thể sửa bài viết đã ẩn hoặc xóa.', 403);
     }
-    // Preserve the existing owner action that hides/deletes an active post.
-    // Only admins may restore a hidden post; no owner can bypass moderation.
-    if (req.body.status !== undefined && req.user.role !== 'admin' &&
-        !['hidden', 'deleted'].includes(req.body.status)) {
-      throw createError('Không có quyền thay đổi trạng thái bài viết.', 403);
-    }
-    // Never resurrect soft-deleted rows through the generic edit API.
-    if (post.status === 'deleted' && req.body.status === 'active') {
+    // BE-10 owns the separate restore-policy decision. Preserve the older
+    // Admin behavior; never restore a deleted row to active here.
+    const changes = validateEditPost(req.body, req.user.role);
+    if (post.status === 'deleted' && changes.status === 'active') {
       throw createError('Không thể khôi phục bài viết đã xóa.', 403);
     }
 
-    const allowed = ['title', 'content', 'subject', 'tags', 'status'];
-    const updates = {};
-    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
-
-    await post.update(updates);
-    res.json({ success: true, message: 'Cập nhật thành công.', data: toSafePost(post) });
-  } catch (error) {
-    next(error);
-  }
+    // Compare-and-set protects against concurrent moderation suppressing a post
+    // after the owner read it but before the write.
+    const where = { id, status: post.status };
+    if (!admin) where.user_id = req.user.id;
+    const [affected] = await Post.update(changes, { where });
+    if (affected !== 1) throw createError('Trạng thái bài viết đã thay đổi.', 409);
+    const updated = await Post.findByPk(id);
+    res.json({ success: true, message: 'Cập nhật thành công.', data: toSafePost(updated) });
+  } catch (error) { next(error); }
 };
 
 /**
@@ -187,15 +171,15 @@ const updatePost = async (req, res, next) => {
  */
 const deletePost = async (req, res, next) => {
   try {
-    const post = await Post.findByPk(req.params.id);
+    const id = positiveId(req.params.id);
+    const post = await Post.findByPk(id);
     if (!post) throw createError('Bài viết không tồn tại.', 404);
-    if (post.user_id !== req.user.id && req.user.role !== 'admin') throw createError('Không có quyền xóa.', 403);
-
-    await post.update({ status: 'deleted' }); // Soft delete
+    if (post.user_id !== req.user.id && req.user.role !== 'admin') {
+      throw createError('Không có quyền xóa.', 403);
+    }
+    await Post.update({ status: 'deleted' }, { where: { id } });
     res.json({ success: true, message: 'Xóa bài viết thành công.' });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
 module.exports = { getPosts, getPostById, createPost, updatePost, deletePost };

@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { authenticate, optionalAuthenticate } = require('../middlewares/auth.middleware');
-const { Comment } = require('../models');
+const { Comment, sequelize } = require('../models');
+const { createInteractionNotification } = require('../services/notification.service');
 const { createError } = require('../middlewares/error.middleware');
 const { positiveId, readablePost } = require('../utils/interaction-target');
 
@@ -43,9 +44,20 @@ router.post('/', authenticate, async (req, res, next) => {
         throw createError('Bình luận cha không hợp lệ hoặc không thuộc bài viết.', 422);
       }
     }
-    const comment = await Comment.create({
-      post_id: postId, user_id: req.user.id,
-      content: req.body.content.trim(), parent_id: parentId,
+    const post = await readablePost(postId, req.user);
+    const recipientId = parentId === null ? post.user_id :
+      (await Comment.findByPk(parentId)).user_id;
+    const comment = await sequelize.transaction(async transaction => {
+      const created = await Comment.create({
+        post_id: postId, user_id: req.user.id,
+        content: req.body.content.trim(), parent_id: parentId,
+      }, { transaction });
+      await createInteractionNotification({
+        recipientId, actorId: req.user.id,
+        eventType: parentId === null ? 'comment' : 'reply',
+        postId, commentId: created.id, transaction,
+      });
+      return created;
     });
     res.status(201).json({ success: true, data: comment });
   } catch (error) { next(error); }

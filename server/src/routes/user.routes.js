@@ -6,6 +6,7 @@ const { User, RefreshToken, sequelize } = require('../models');
 const { authenticate } = require('../middlewares/auth.middleware');
 const { createError } = require('../middlewares/error.middleware');
 const { addFollow, removeFollow, listFollows, followStats } = require('../controllers/follow.controller');
+const { listNotifications, unreadCount, readNotification, readAll } = require('../controllers/notification.controller');
 
 // Keep the public profile and profile-update response on the same safe DTO.
 const PUBLIC_FIELDS = ['id', 'full_name', 'avatar_url', 'bio', 'university', 'major', 'created_at'];
@@ -73,6 +74,12 @@ async function publicProfile(id) {
     attributes: PUBLIC_FIELDS,
   });
 }
+
+// EXT-04: scoped to the authenticated account; no app.js route changes.
+router.get('/me/notifications', authenticate, listNotifications);
+router.get('/me/notifications/unread-count', authenticate, unreadCount);
+router.patch('/me/notifications/read-all', authenticate, readAll);
+router.patch('/me/notifications/:id/read', authenticate, readNotification);
 
 // EXT-02: social graph is authenticated, existing profile contract unchanged.
 router.post('/:id/follow', authenticate, addFollow);

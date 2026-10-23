@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const { User, RefreshToken, sequelize } = require('../models');
 const { authenticate } = require('../middlewares/auth.middleware');
 const { createError } = require('../middlewares/error.middleware');
+const { addFollow, removeFollow, listFollows, followStats } = require('../controllers/follow.controller');
 
 // Keep the public profile and profile-update response on the same safe DTO.
 const PUBLIC_FIELDS = ['id', 'full_name', 'avatar_url', 'bio', 'university', 'major', 'created_at'];
@@ -72,6 +73,13 @@ async function publicProfile(id) {
     attributes: PUBLIC_FIELDS,
   });
 }
+
+// EXT-02: social graph is authenticated, existing profile contract unchanged.
+router.post('/:id/follow', authenticate, addFollow);
+router.delete('/:id/follow', authenticate, removeFollow);
+router.get('/:id/followers', authenticate, (req,res,next) => listFollows(req,res,next,'followers'));
+router.get('/:id/following', authenticate, (req,res,next) => listFollows(req,res,next,'following'));
+router.get('/:id/follow-stats', authenticate, followStats);
 
 // GET /api/users/:id — active public projection only; never expose account data.
 router.get('/:id', async (req, res, next) => {

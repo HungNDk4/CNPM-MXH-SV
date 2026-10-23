@@ -177,6 +177,17 @@ test('DOC-04 authenticated attachment download + visibility', {timeout:90000}, a
           reject(new Error('EXT03 admin audit regression exited with status ' + code)));
       });
     });
+    await step('EXT04 Notifications MySQL8 HTTP regression (isolated)', async () => {
+      await new Promise((resolve,reject)=>{
+        const child=spawn(process.execPath,
+          [path.join(__dirname,'ext04-notifications-regression.cjs')],{
+            env:process.env,stdio:'inherit',
+          });
+        child.once('error',reject);
+        child.once('close',code=>code===0?resolve():
+          reject(new Error('EXT04 regression exited with status '+code)));
+      });
+    });
     console.log('DOC-04 RESULT: '+steps+'/'+steps+' PASS; cleanup follows');
   }finally{
     if(ids.length)await User.destroy({where:{id:ids}}).catch(()=>{});

@@ -166,6 +166,17 @@ test('DOC-04 authenticated attachment download + visibility', {timeout:90000}, a
           reject(new Error('EXT02 follow regression exited with code ' + code)));
       });
     });
+    // EXT-03: isolated MySQL8 HTTP test process with synthetic Admin fixture.
+    await step('EXT03 atomic Admin moderation audit regression', async () => {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath, [
+          path.join(__dirname, 'ext03-admin-audit-regression.cjs')
+        ], { env: process.env, stdio: 'inherit' });
+        child.once('error', reject);
+        child.once('close', code => code === 0 ? resolve() :
+          reject(new Error('EXT03 admin audit regression exited with status ' + code)));
+      });
+    });
     console.log('DOC-04 RESULT: '+steps+'/'+steps+' PASS; cleanup follows');
   }finally{
     if(ids.length)await User.destroy({where:{id:ids}}).catch(()=>{});

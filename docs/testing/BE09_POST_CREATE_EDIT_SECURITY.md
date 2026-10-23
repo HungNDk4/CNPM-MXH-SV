@@ -14,3 +14,4 @@
 New `scripts/ubuntu/be09-post-validation-regression.cjs` uses synthetic student A, student B and a database-promoted synthetic Admin with disposable MySQL8; **8 HTTP groups** cover guest denial; successful question/discussion and normalization; malicious create rejected with zero row increase; legitimate partial edits; unknown/invalid fields denied without DB mutation; ownership and bad ID; hidden owner isolation; Admin input validation. It runs through existing **DOC-04** test hook in a separate Node process, not via overlapping BE-06 MySQL test hook or shared CI workflow.
 
 **Verification:** CI not yet executed on exact BE-09 HEAD; require actual BE09 8/8 log and all existing 7 jobs PASS before declaring REVIEW READY. No Render/TiDB/Blob writes or merge/deploy.
+\n**Transport boundary:** Express JSON parser rejects a top-level JSON `null` with HTTP 400 before BE-09's semantic 422 validation; covered as a separate negative assertion.\n

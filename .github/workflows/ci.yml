@@ -81,6 +81,16 @@ jobs:
         run: node ../scripts/dep01-readiness.mjs
       - name: Audit contract tests
         run: node --test ../scripts/dep01-readiness.test.mjs
+      - name: DEP-01C private Blob adapter (offline stub, no token/cloud)
+        run: node --test ../scripts/ubuntu/dep01-blob-adapter.test.cjs
+      - name: DEP-01C production same-origin SPA and private route precedence
+        run: node --test ../scripts/ubuntu/dep01-render-spa.test.cjs
+      - name: DEP-01C TiDB TLS config guards
+        run: node --test ../scripts/ubuntu/dep01-tidb-tls.test.cjs
+      - name: DEP-01C Codex Render env API safety tests (offline, no credentials)
+        run: node --test ../scripts/ubuntu/dep01c-render-env.test.cjs
+      - name: DEP-01C external Render smoke script syntax only (NO cloud)
+        run: node --check ../scripts/dep01c-live-render-smoke.cjs
 
   dep01-isolated-cloud-scaffold:
     name: DEP-01 isolated cloud scaffold tests (NOT Vercel deployment)

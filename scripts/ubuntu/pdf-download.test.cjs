@@ -143,6 +143,18 @@ test('DOC-04 authenticated attachment download + visibility', {timeout:90000}, a
           reject(new Error('Backend final regression exited with status ' + code)));
       });
     });
+    // EXT-01 runs in a separate process/DB fixture/rate-limit budget.
+    await step('EXT01 Bookmark MySQL8 HTTP regression (isolated)', async () => {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath,
+          [path.join(__dirname, 'ext01-bookmarks-regression.cjs')], {
+            env: process.env, stdio: 'inherit',
+          });
+        child.once('error', reject);
+        child.once('close', code => code === 0 ? resolve() :
+          reject(new Error('EXT01 bookmarks regression exited with status ' + code)));
+      });
+    });
     console.log('DOC-04 RESULT: '+steps+'/'+steps+' PASS; cleanup follows');
   }finally{
     if(ids.length)await User.destroy({where:{id:ids}}).catch(()=>{});

@@ -70,11 +70,12 @@ function validateCreatePost(payload) {
   }
   return { ...data, post_type: type, price: 0 };
 }
-function validateEditPost(payload, role) {
+function validateEditPost(payload) {
   const data = validateFields(payload, EDIT_FIELDS);
   if (Object.hasOwn(payload, 'status')) {
-    if (payload.status !== 'hidden' && payload.status !== 'deleted' &&
-        !(role === 'admin' && payload.status === 'active')) {
+    // No role may restore a hidden/deleted Post through the generic edit API.
+    // ADR-013 has no approved "unhide" transition (Admin included).
+    if (payload.status !== 'hidden' && payload.status !== 'deleted') {
       reject('Trạng thái bài viết không hợp lệ.');
     }
     data.status = payload.status;

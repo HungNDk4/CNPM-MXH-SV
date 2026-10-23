@@ -107,6 +107,17 @@ test('DOC-04 authenticated attachment download + visibility', {timeout:90000}, a
           reject(new Error('BE09 Post validation regression exited with status ' + code)));
       });
     });
+    // BE-10 uses a fresh Node process, isolated DB fixtures and rate-limit budget.
+    await step('BE10 moderation state lock regression (isolated MySQL8)', async () => {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath, [path.join(__dirname, 'be10-moderation-state-regression.cjs')], {
+          env: process.env, stdio: 'inherit',
+        });
+        child.once('error', reject);
+        child.once('close', code => code === 0 ? resolve() :
+          reject(new Error('BE10 moderation state regression exited with status ' + code)));
+      });
+    });
     console.log('DOC-04 RESULT: '+steps+'/'+steps+' PASS; cleanup follows');
   }finally{
     if(ids.length)await User.destroy({where:{id:ids}}).catch(()=>{});

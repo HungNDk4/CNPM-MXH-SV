@@ -21,7 +21,7 @@
 | Payment / paid PDFs / VNPay | Not mounted / deferred | Legacy `orderAPI` & placeholder `/payment/result` exist | API 404/security tests, not a paid feature | **OUT OF SCOPE** |
 | Public cloud full-stack acceptance | Separate DEP-01C draft PR #33 | Separate Render/TiDB/Blob PoC | GitHub CI uses **local ephemeral MySQL8 and private disk**, not provider infrastructure | **NOT ACCEPTED HERE** |
 
-**Important:** FE-01 [Draft PR #36](https://github.com/HungNDk4/CNPM-MXH-SV/pull/36), head `37b5c2c50f844e437cdb70ba2967e477febad530`, has its own [CI #39825835720](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39825835720) 7/7 SUCCESS and 10 FE01 scenarios. But it is **unmerged**, built from an older integration base, and GitHub currently reports **mergeable=false**. Those checks **cannot** be counted as E2E proof for FE-01+EXT04 on the latest shared commit. Rebase/resolve PR conflict and run combined E2E later under FE owner's separate approval.
+**Important:** FE-01 [Draft PR #36](https://github.com/HungNDk4/CNPM-MXH-SV/pull/36), head `37b5c2c50f844e437cdb70ba2967e477febad530`, has its own [CI #39825835720](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39825835720) 7/7 SUCCESS and 10 FE01 scenarios. But it is **unmerged** and built from an older integration base. GitHub PR mergeability may change as branches evolve; recheck head/base and conflicts at review time. Those checks **cannot** be counted as E2E proof for FE-01+EXT04 on the latest shared commit. Review/rebase FE-01 as needed and run combined E2E later under FE owner's separate approval.
 
 ## 2. Exact integrated GitHub Actions evidence
 

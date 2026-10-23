@@ -242,3 +242,13 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Local execution:** fresh portable MySQL 8.4.13, loopback 33077, separate e2e01_ DB/user, generated private test secrets, existing schema + PDF migration (8 tables), no schema sync or existing data edits. Backend 5 runner tests PASS (QA-01 15/15, DOC-03 9/9); offline 9/9. Native esbuild profile-ancestor ACL blocks local frontend build/browser assertions before Vite config loads; WSL E_ACCESSDENIED. These are not local frontend PASS.
 **Cleanup:** users=1 schema admin seed; posts/refresh_tokens/document_files=0; private test directory empty; exact temporary MySQL process verified and stopped. No DROP/TRUNCATE, .env, cloud, payments, main changes or teammate UI edits.
 **Overlap/local state:** concurrent canonical PR appeared while local prototype was in progress. Kept unpublished clean local f4e4096 on scratch/e2e01-local-audit-20261021 rather than overwrite remote; canonical branch remains remote-verified. Fast-forward lease prevented overwriting a concurrently advanced remote head. No force push/history rewrite. Final exact-head CI and review status are recorded in PR #30 conversation. Overall local full-stack PARTIAL, CI integration PASS.
+
+## SESSION-20261023-FE01-POST-COMMENT-LIKES — UI implementation & Chromium QA
+
+**Authorized request:** Human A chose FE-01 Post Detail + Comments & Replies + Likes. **Branch:** `feat/fe01-post-detail-comments-likes-20261023` from integration `f5c974b3`; **Draft PR #36** to `integration/team-dev-20261020`, unmerged.
+
+**Implementation:** Replaced placeholder `client/src/pages/posts/PostDetailPage.jsx` with responsive detail/guest/loading/404/unavailable state, nested root/reply comments, owner/admin delete control, post/comment Like/Unlike count and toast feedback. No backend, schema, API wrapper, credentials or Render source change.
+
+**Test execution:** E2E Chromium + Vite + Express + disposable MySQL 8 PASS for 10 FE01 checks. Existing E2E01 12 checks PASS. [Actions 39822074901](https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39822074901) **7/7 jobs SUCCESS** on source commit `2062257`. Two earlier CI failures were test harness-only (client Sequelize resolution, body double-consumption) and corrected.
+
+**Open:** UI has no way to know initial viewer-liked flag (server provides only count); backend comment target validation/security for hidden posts, mobile visual review, human acceptance and cloud deployment remain outstanding. FE-01 status REVIEW, not DONE. No local human worktree verified.

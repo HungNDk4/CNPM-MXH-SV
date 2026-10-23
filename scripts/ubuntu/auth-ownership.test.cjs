@@ -244,6 +244,15 @@ test('QA-01 two students: auth, token lifecycle and post ownership', { timeout: 
       child.once('close', code => code === 0 ? resolve() :
         reject(new Error('BE05 profile security test failed with exit code ' + code)));
     });
+    // BE-07 uses its own process, DB connection and rate-limit counter.
+    await new Promise((resolve, reject) => {
+      const child = spawn(process.execPath,
+        [path.join(__dirname, 'be07-refresh-session-regression.cjs')],
+        { env: process.env, stdio: 'inherit' });
+      child.once('error', reject);
+      child.once('close', code => code === 0 ? resolve() :
+        reject(new Error('BE07 refresh-session regression failed with exit code ' + code)));
+    });
   } finally {
     try {
       if (fixtureIds.length) {

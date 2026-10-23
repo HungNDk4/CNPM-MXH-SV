@@ -171,8 +171,12 @@ const refreshAccessToken = async (req, res, next) => {
  */
 const logout = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
-    if (refreshToken) {
+    // Preserve idempotent empty logout. Reject unsafe values before token SQL.
+    const refreshToken = req.body?.refreshToken;
+    if (refreshToken !== undefined && refreshToken !== null && refreshToken !== '') {
+      if (typeof refreshToken !== 'string' || refreshToken.length > 512) {
+        throw createError('Refresh token không hợp lệ.', 400);
+      }
       await RefreshToken.update({ revoked: true }, { where: { token: refreshToken } });
     }
     res.json({ success: true, message: 'Đăng xuất thành công.' });

@@ -118,6 +118,19 @@ test('DOC-04 authenticated attachment download + visibility', {timeout:90000}, a
           reject(new Error('BE10 moderation state regression exited with status ' + code)));
       });
     });
+    // QA-04 verifies disabled legacy paid APIs and approved PDF safety
+    // in an isolated child with a fresh rate limiter and DB fixtures.
+    await step('QA04 free-first MVP backend safety gates (isolated MySQL8)', async () => {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath,
+          [path.join(__dirname, 'qa04-mvp-backend-safety-regression.cjs')], {
+            env: process.env, stdio: 'inherit',
+          });
+        child.once('error', reject);
+        child.once('close', code => code === 0 ? resolve() :
+          reject(new Error('QA04 MVP safety regression exited with status ' + code)));
+      });
+    });
     console.log('DOC-04 RESULT: '+steps+'/'+steps+' PASS; cleanup follows');
   }finally{
     if(ids.length)await User.destroy({where:{id:ids}}).catch(()=>{});

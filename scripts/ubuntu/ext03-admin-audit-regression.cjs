@@ -165,23 +165,30 @@ test('EXT-03: Admin audit events match only committed moderation transitions', {
     });
 
     await step('Read API filters and paginates strict safe audit DTOs', async () => {
+      // Existing BE-08/BE-10 CI tests also run Admin moderation on the same
+      // disposable MySQL DB. Audit records intentionally survive deletion
+      // of their synthetic users; a global list is not a clean fixture table.
       const all = expect(await audit(), 200);
-      assert.equal(all.pagination.total, 4);
-      assert.equal(all.data.length, 4);
+      assert.ok(all.pagination.total >= 4);
+      assert.ok(all.data.length >= 1 && all.data.length <= 10);
       const one = expect(await audit(admin.token, '?page=1&limit=1'), 200);
       const two = expect(await audit(admin.token, '?page=2&limit=1'), 200);
-      assert.equal(one.pagination.totalPages, 4);
+      assert.equal(one.pagination.totalPages, all.pagination.total);
       assert.notEqual(one.data[0].id, two.data[0].id);
-      const missing = expect(await audit(admin.token, '?page=5&limit=1'), 200);
+      const missing = expect(await audit(admin.token, '?page=10000&limit=1'), 200);
       assert.deepEqual(missing.data, []);
       const filtered = expect(await audit(admin.token, '?post_id=' + docId), 200);
       assert.equal(filtered.pagination.total, 2);
       assert.ok(filtered.data.every(x => x.post_id === docId));
+      const otherPost = expect(await audit(admin.token, '?post_id=' + questionId), 200);
+      assert.equal(otherPost.pagination.total, 1);
+      const rollbackPost = expect(await audit(admin.token, '?post_id=' + rollbackId), 200);
+      assert.equal(rollbackPost.pagination.total, 1);
       for (const row of all.data) {
         assert.deepEqual(Object.keys(row).sort(),
           ['id','actor_admin_id','post_id','previous_status','new_status','created_at'].sort());
-        assert.equal(row.actor_admin_id, admin.id);
       }
+      assert.ok(filtered.data.every(row => row.actor_admin_id === admin.id));
       for (const secret of ['file_url', 'storage_key', 'email', 'password_hash', 'wallet_balance']) {
         assert.ok(!JSON.stringify(all).includes('"' + secret + '"'));
       }

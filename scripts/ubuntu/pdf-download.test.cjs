@@ -155,6 +155,17 @@ test('DOC-04 authenticated attachment download + visibility', {timeout:90000}, a
           reject(new Error('EXT01 bookmarks regression exited with status ' + code)));
       });
     });
+    // EXT-02 uses independent Node/MySQL8 fixture and rate limiter budget.
+    await step('EXT02 Follow HTTP MySQL8 regression', async () => {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath, [path.join(__dirname, 'ext02-follow-regression.cjs')], {
+          env: process.env, stdio: 'inherit',
+        });
+        child.once('error', reject);
+        child.once('close', code => code === 0 ? resolve() :
+          reject(new Error('EXT02 follow regression exited with code ' + code)));
+      });
+    });
     console.log('DOC-04 RESULT: '+steps+'/'+steps+' PASS; cleanup follows');
   }finally{
     if(ids.length)await User.destroy({where:{id:ids}}).catch(()=>{});

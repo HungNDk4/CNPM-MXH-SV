@@ -131,6 +131,18 @@ test('DOC-04 authenticated attachment download + visibility', {timeout:90000}, a
           reject(new Error('QA04 MVP safety regression exited with status ' + code)));
       });
     });
+    // One last isolated contract/input-boundary regression before FE handoff.
+    await step('Backend final contract boundary regression (isolated MySQL8)', async () => {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath,
+          [path.join(__dirname, 'backend-final-contract-regression.cjs')], {
+            env: process.env, stdio: 'inherit',
+          });
+        child.once('error', reject);
+        child.once('close', code => code === 0 ? resolve() :
+          reject(new Error('Backend final regression exited with status ' + code)));
+      });
+    });
     console.log('DOC-04 RESULT: '+steps+'/'+steps+' PASS; cleanup follows');
   }finally{
     if(ids.length)await User.destroy({where:{id:ids}}).catch(()=>{});

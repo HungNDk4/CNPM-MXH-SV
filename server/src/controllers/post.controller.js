@@ -97,7 +97,9 @@ const getPosts = async (req, res, next) => {
  */
 const getPostById = async (req, res, next) => {
   try {
-    const post = await Post.findByPk(req.params.id, {
+    // Validate path ID before a public database query (422, never raw ORM error).
+    const id = positiveId(req.params.id);
+    const post = await Post.findByPk(id, {
       include: [{ model: User, as: 'author', attributes: ['id', 'full_name', 'avatar_url'] }],
     });
     if (!post) throw createError('Bài viết không tồn tại.', 404);

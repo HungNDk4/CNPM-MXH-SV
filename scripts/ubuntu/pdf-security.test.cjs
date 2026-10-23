@@ -259,6 +259,17 @@ test('SEC-01: private PDF/static guard + SafePost + guest permissions', { timeou
       });
     });
 
+    await step('BE08 isolated moderation regression', async () => {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath, [path.join(__dirname, 'be08-admin-moderation-regression.cjs')], {
+          env: process.env, stdio: 'inherit',
+        });
+        child.once('error', reject);
+        child.once('close', code => code === 0 ? resolve() :
+          reject(new Error('BE08 MySQL moderation regression exited ' + code)));
+      });
+    });
+
     console.log('SEC-01 RESULT: ' + steps + '/' + steps + ' checks PASS; fixture cleanup follows');
   } finally {
     try {

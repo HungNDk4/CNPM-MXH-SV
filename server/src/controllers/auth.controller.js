@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
 const { randomUUID } = require('node:crypto');
-const { User, RefreshToken } = require('../models');
+const { User, RefreshToken, sequelize } = require('../models');
 const { createError } = require('../middlewares/error.middleware');
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -99,12 +99,13 @@ const login = async (req, res, next) => {
  */
 const refreshAccessToken = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
-    if (!refreshToken) throw createError('Thiếu refresh token.', 400);
-
-    const stored = await RefreshToken.findOne({ where: { token: refreshToken, revoked: false } });
-    if (!stored || new Date() > stored.expires_at) {
-      throw createError('Refresh token không hợp lệ hoặc đã hết hạn.', 401);
+    const refreshToken = req.body?.refreshToken;
+    if (refreshToken === undefined || refreshToken === null || refreshToken === '') {
+      throw createError('Thiếu refresh token.', 400);
+    }
+    // Never pass arrays/objects/oversized strings to Sequelize or jwt.verify.
+    if (typeof refreshToken !== 'string' || refreshToken.length > 512) {
+      throw createError('Refresh token không hợp lệ.', 400);
     }
 
     let decoded;
@@ -113,19 +114,53 @@ const refreshAccessToken = async (req, res, next) => {
     } catch {
       throw createError('Refresh token không hợp lệ.', 401);
     }
+    if (!decoded || typeof decoded !== 'object' ||
+        !Number.isSafeInteger(decoded.id) || decoded.id <= 0 ||
+        typeof decoded.jti !== 'string' || !decoded.jti) {
+      throw createError('Refresh token không hợp lệ.', 401);
+    }
 
-    const user = await User.findByPk(decoded.id);
-    if (!user) throw createError('Người dùng không tồn tại.', 401);
+    let issued;
+    // Take the account lock before checking token status. This serializes
+    // concurrent refresh requests and password-change revocation for the
+    // same user. Commit revocation and new token together or roll back both.
+    await sequelize.transaction(async transaction => {
+      const user = await User.findByPk(decoded.id, {
+        transaction, lock: transaction.LOCK.UPDATE,
+      });
+      if (!user || !user.is_active) {
+        throw createError('Tài khoản không tồn tại hoặc đã bị khóa.', 401);
+      }
+      const stored = await RefreshToken.findOne({
+        where: { token: refreshToken },
+        transaction, lock: transaction.LOCK.UPDATE,
+      });
+      if (!stored || stored.revoked || stored.user_id !== user.id ||
+          !Number.isFinite(new Date(stored.expires_at).getTime()) ||
+          new Date(stored.expires_at).getTime() <= Date.now()) {
+        throw createError('Refresh token không hợp lệ hoặc đã hết hạn.', 401);
+      }
 
-    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+      const [updated] = await RefreshToken.update({ revoked: true }, {
+        where: { id: stored.id, user_id: user.id, revoked: false },
+        transaction,
+      });
+      if (updated !== 1) {
+        throw createError('Refresh token đã được sử dụng.', 401);
+      }
 
-    // Rotate refresh token
-    await stored.update({ revoked: true });
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-    await RefreshToken.create({ user_id: user.id, token: newRefreshToken, expires_at: expiresAt });
+      const tokens = generateTokens(user);
+      // Retain the existing DB cap of seven days, and never outlive JWT exp.
+      const payload = jwt.decode(tokens.refreshToken);
+      const jwtExpiry = payload.exp * 1000;
+      const expiresAt = new Date(Math.min(jwtExpiry, Date.now() + 7 * 24 * 60 * 60 * 1000));
+      await RefreshToken.create({
+        user_id: user.id, token: tokens.refreshToken, expires_at: expiresAt,
+      }, { transaction });
+      issued = tokens;
+    });
 
-    res.json({ success: true, data: { accessToken, refreshToken: newRefreshToken } });
+    res.json({ success: true, data: issued });
   } catch (error) {
     next(error);
   }
@@ -136,8 +171,12 @@ const refreshAccessToken = async (req, res, next) => {
  */
 const logout = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
-    if (refreshToken) {
+    // Preserve idempotent empty logout. Reject unsafe values before token SQL.
+    const refreshToken = req.body?.refreshToken;
+    if (refreshToken !== undefined && refreshToken !== null && refreshToken !== '') {
+      if (typeof refreshToken !== 'string' || refreshToken.length > 512) {
+        throw createError('Refresh token không hợp lệ.', 400);
+      }
       await RefreshToken.update({ revoked: true }, { where: { token: refreshToken } });
     }
     res.json({ success: true, message: 'Đăng xuất thành công.' });

@@ -44,3 +44,6 @@ Thumbs.db
 # Uploads (lưu ngoài git)
 server/uploads/*
 !server/uploads/.gitkeep
+
+# Private PDF objects (never commit document bytes)
+server/private-documents/

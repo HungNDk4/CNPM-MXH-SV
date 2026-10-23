@@ -1,15 +1,20 @@
 const router = require('express').Router();
-const { authenticate } = require('../middlewares/auth.middleware');
-const { Comment } = require('../models');
+const { authenticate, optionalAuthenticate } = require('../middlewares/auth.middleware');
+const { Comment, sequelize } = require('../models');
+const { createInteractionNotification } = require('../services/notification.service');
 const { createError } = require('../middlewares/error.middleware');
+const { positiveId, readablePost } = require('../utils/interaction-target');
 
-// GET /api/comments?post_id=1
-router.get('/', async (req, res, next) => {
+const MAX_COMMENT_LENGTH = 2000;
+
+// GET /api/comments?post_id=1 — never enumerate suppressed posts through comments.
+router.get('/', optionalAuthenticate, async (req, res, next) => {
   try {
-    const { post_id } = req.query;
-    if (!post_id) throw createError('Cần truyền post_id.', 400);
+    if (req.query.post_id === undefined) throw createError('Cần truyền post_id.', 400);
+    const postId = positiveId(req.query.post_id);
+    await readablePost(postId, req.user);
     const comments = await Comment.findAll({
-      where: { post_id, status: 'active', parent_id: null },
+      where: { post_id: postId, status: 'active', parent_id: null },
       include: [
         { association: 'author', attributes: ['id', 'full_name', 'avatar_url'] },
         { association: 'replies', where: { status: 'active' }, required: false,
@@ -21,21 +26,52 @@ router.get('/', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-// POST /api/comments
+// POST /api/comments — parent must belong to same active/free post and be root.
 router.post('/', authenticate, async (req, res, next) => {
   try {
-    const { post_id, content, parent_id } = req.body;
-    const comment = await Comment.create({ post_id, user_id: req.user.id, content, parent_id: parent_id || null });
+    const postId = positiveId(req.body.post_id);
+    await readablePost(postId, req.user);
+    if (typeof req.body.content !== 'string' || !req.body.content.trim() ||
+        req.body.content.trim().length > MAX_COMMENT_LENGTH) {
+      throw createError('Nội dung bình luận phải có từ 1 đến 2000 ký tự.', 422);
+    }
+    let parentId = null;
+    if (req.body.parent_id !== undefined && req.body.parent_id !== null) {
+      parentId = positiveId(req.body.parent_id);
+      const parent = await Comment.findByPk(parentId);
+      if (!parent || parent.status !== 'active' || parent.post_id !== postId ||
+          parent.parent_id !== null) {
+        throw createError('Bình luận cha không hợp lệ hoặc không thuộc bài viết.', 422);
+      }
+    }
+    const post = await readablePost(postId, req.user);
+    const recipientId = parentId === null ? post.user_id :
+      (await Comment.findByPk(parentId)).user_id;
+    const comment = await sequelize.transaction(async transaction => {
+      const created = await Comment.create({
+        post_id: postId, user_id: req.user.id,
+        content: req.body.content.trim(), parent_id: parentId,
+      }, { transaction });
+      await createInteractionNotification({
+        recipientId, actorId: req.user.id,
+        eventType: parentId === null ? 'comment' : 'reply',
+        postId, commentId: created.id, transaction,
+      });
+      return created;
+    });
     res.status(201).json({ success: true, data: comment });
   } catch (error) { next(error); }
 });
 
-// DELETE /api/comments/:id
+// DELETE /api/comments/:id — require active visible parent post and ownership.
 router.delete('/:id', authenticate, async (req, res, next) => {
   try {
-    const comment = await Comment.findByPk(req.params.id);
-    if (!comment) throw createError('Comment không tồn tại.', 404);
-    if (comment.user_id !== req.user.id && req.user.role !== 'admin') throw createError('Không có quyền.', 403);
+    const comment = await Comment.findByPk(positiveId(req.params.id));
+    if (!comment || comment.status !== 'active') throw createError('Comment không tồn tại.', 404);
+    await readablePost(comment.post_id, req.user);
+    if (comment.user_id !== req.user.id && req.user.role !== 'admin') {
+      throw createError('Không có quyền.', 403);
+    }
     await comment.update({ status: 'deleted' });
     res.json({ success: true, message: 'Xóa comment thành công.' });
   } catch (error) { next(error); }

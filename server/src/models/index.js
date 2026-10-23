@@ -6,6 +6,7 @@ const DocumentFile  = require('./DocumentFile');
 const Bookmark      = require('./Bookmark');
 const Follow        = require('./Follow');
 const ModerationAuditLog = require('./ModerationAuditLog');
+const Notification  = require('./Notification');
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
@@ -20,6 +21,12 @@ User.hasMany(Follow, { foreignKey: 'follower_id', as: 'outgoingFollows' });
 User.hasMany(Follow, { foreignKey: 'following_id', as: 'incomingFollows' });
 Follow.belongsTo(User, { foreignKey: 'follower_id', as: 'follower' });
 Follow.belongsTo(User, { foreignKey: 'following_id', as: 'following' });
+
+// EXT-04 notifications: one recipient, one actor, optional visible content.
+Notification.belongsTo(User, { foreignKey: 'actor_id', as: 'actor' });
+Notification.belongsTo(User, { foreignKey: 'recipient_id', as: 'recipient' });
+Notification.belongsTo(Post, { foreignKey: 'post_id', as: 'targetPost' });
+Notification.belongsTo(Comment, { foreignKey: 'comment_id', as: 'targetComment' });
 
 // ── Like model (inline nhỏ gọn) ──────────────────────────────────
 const Like = sequelize.define('Like', {
@@ -88,4 +95,4 @@ DocumentAccess.belongsTo(Order, { foreignKey: 'order_id' });
 User.hasMany(RefreshToken, { foreignKey: 'user_id' });
 RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 
-module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile, Bookmark, Follow, ModerationAuditLog };
+module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile, Bookmark, Follow, ModerationAuditLog, Notification };

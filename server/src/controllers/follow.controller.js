@@ -1,5 +1,6 @@
 'use strict';
-const { User, Follow } = require('../models');
+const { User, Follow, sequelize } = require('../models');
+const { createInteractionNotification } = require('../services/notification.service');
 const { positiveId } = require('../utils/interaction-target');
 const { createError } = require('../middlewares/error.middleware');
 const PUBLIC = ['id', 'full_name', 'avatar_url', 'university'];
@@ -23,9 +24,15 @@ async function addFollow(req, res, next) {
     const id = positiveId(req.params.id);
     if (id === req.user.id) throw createError('Không thể theo dõi chính mình.', 422);
     await requireActive(id);
-    await Follow.findOrCreate({
-      where: { follower_id: req.user.id, following_id: id },
-      defaults: { follower_id: req.user.id, following_id: id },
+    await sequelize.transaction(async transaction => {
+      const [, created] = await Follow.findOrCreate({
+        where: { follower_id: req.user.id, following_id: id },
+        defaults: { follower_id: req.user.id, following_id: id },
+        transaction,
+      });
+      if (created) await createInteractionNotification({
+        recipientId: id, actorId: req.user.id, eventType: 'follow', transaction,
+      });
     });
     res.json({ success: true, data: { user_id: id, following: true } });
   } catch (error) { next(error); }

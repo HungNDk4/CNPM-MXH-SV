@@ -145,15 +145,13 @@ const updatePost = async (req, res, next) => {
     if (!admin && post.user_id !== req.user.id) {
       throw createError('Không có quyền sửa bài.', 403);
     }
-    if (!admin && post.status !== 'active') {
+    // BE-10 fail-closed: ADR-013 authorizes hide/delete only, not restore
+    // or edits of suppressed content, even by Admin. The BE-08 endpoint is
+    // the supported post-publication moderation path.
+    if (post.status !== 'active') {
       throw createError('Không thể sửa bài viết đã ẩn hoặc xóa.', 403);
     }
-    // BE-10 owns the separate restore-policy decision. Preserve the older
-    // Admin behavior; never restore a deleted row to active here.
-    const changes = validateEditPost(req.body, req.user.role);
-    if (post.status === 'deleted' && changes.status === 'active') {
-      throw createError('Không thể khôi phục bài viết đã xóa.', 403);
-    }
+    const changes = validateEditPost(req.body);
 
     // Compare-and-set protects against concurrent moderation suppressing a post
     // after the owner read it but before the write.

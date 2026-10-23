@@ -5,6 +5,7 @@ const Order         = require('./Order');
 const DocumentFile  = require('./DocumentFile');
 const Bookmark      = require('./Bookmark');
 const Follow        = require('./Follow');
+const ModerationAuditLog = require('./ModerationAuditLog');
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
@@ -87,4 +88,4 @@ DocumentAccess.belongsTo(Order, { foreignKey: 'order_id' });
 User.hasMany(RefreshToken, { foreignKey: 'user_id' });
 RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 
-module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile, Bookmark, Follow };
+module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile, Bookmark, Follow, ModerationAuditLog };

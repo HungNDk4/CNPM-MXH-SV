@@ -94,7 +94,7 @@ test('BE-09: secure social Post create/edit ownership and field validation', { t
     await check('Invalid/malicious create bodies denied without database changes', async () => {
       const before = await Post.count({ where: { user_id: a.id } });
       const cases = [
-        {}, [], null, { title: ' ' }, { title: 3 },
+        {}, [], { title: ' ' }, { title: 3 },
         { title: 'x'.repeat(301) }, { title: 'x', post_type: 'document' },
         { title: 'x', post_type: 'other' }, { title: 'x', price: 1 },
         { title: 'x', price: -5 }, { title: 'x', price: true },
@@ -109,6 +109,9 @@ test('BE-09: secure social Post create/edit ownership and field validation', { t
         { title: 'x', tags: ['t'.repeat(41)] },
       ];
       for (const payload of cases) status(await create(payload), 422);
+      // express.json(strict=true) rejects the syntactically-valid scalar JSON
+      // literal null at the parser boundary with 400, before route validation.
+      status(await create(null), 400);
       assert.equal(await Post.count({ where: { user_id: a.id } }), before);
     });
 
@@ -129,7 +132,7 @@ test('BE-09: secure social Post create/edit ownership and field validation', { t
     await check('Update cannot inject privileged fields or invalid values, no partial write', async () => {
       const original = await Post.findByPk(postId);
       const cases = [
-        {}, [], null, { title: '' }, { title: 'x'.repeat(301) },
+        {}, [], { title: '' }, { title: 'x'.repeat(301) },
         { title: 'x', content: 'c'.repeat(10001) },
         { title: 'x', subject: [] }, { title: 'x', tags: {} },
         { title: 'x', tags: ['x'.repeat(41)] },
@@ -141,6 +144,7 @@ test('BE-09: secure social Post create/edit ownership and field validation', { t
         { title: 'x', status: 'active' }, { title: 'x', status: 'invalid' },
       ];
       for (const payload of cases) status(await edit(postId, payload), 422);
+      status(await edit(postId, null), 400);
       const latest = await Post.findByPk(postId);
       assert.equal(latest.title, original.title);
       assert.equal(latest.user_id, a.id);

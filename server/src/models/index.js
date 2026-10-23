@@ -3,8 +3,15 @@ const Post          = require('./Post');
 const Comment       = require('./Comment');
 const Order         = require('./Order');
 const DocumentFile  = require('./DocumentFile');
+const Bookmark      = require('./Bookmark');
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+
+// EXT-01: each bookmark belongs to exactly one account and post.
+User.hasMany(Bookmark, { foreignKey: 'user_id', as: 'bookmarks' });
+Bookmark.belongsTo(User, { foreignKey: 'user_id', as: 'owner' });
+Post.hasMany(Bookmark, { foreignKey: 'post_id', as: 'bookmarks' });
+Bookmark.belongsTo(Post, { foreignKey: 'post_id', as: 'post' });
 
 // ── Like model (inline nhỏ gọn) ──────────────────────────────────
 const Like = sequelize.define('Like', {
@@ -73,4 +80,4 @@ DocumentAccess.belongsTo(Order, { foreignKey: 'order_id' });
 User.hasMany(RefreshToken, { foreignKey: 'user_id' });
 RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 
-module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile };
+module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile, Bookmark };

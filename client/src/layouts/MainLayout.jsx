@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { Outlet, Link, useNavigate } from 'react-router-dom'
+import { Outlet, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/authStore'
 import { authAPI, notificationAPI } from '@/services/api'
 import toast from 'react-hot-toast'
+
 
 const EVENT_LABELS = {
   comment: '💬 Đã bình luận về bài viết của bạn',
@@ -140,6 +141,22 @@ function NotificationDropdown() {
 export default function MainLayout() {
   const { isAuthenticated, user, logout, refreshToken } = useAuthStore()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
+
+  useEffect(() => {
+    setSearchQuery(searchParams.get('search') || '')
+  }, [searchParams])
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    const trimmed = searchQuery.trim()
+    if (trimmed) {
+      navigate(`/?search=${encodeURIComponent(trimmed)}`)
+    } else {
+      navigate('/')
+    }
+  }
 
   const handleLogout = async () => {
     try {
@@ -164,14 +181,36 @@ export default function MainLayout() {
             <span className="font-bold text-gradient text-sm sm:hidden">MSN</span>
           </Link>
 
-          {/* Search bar */}
-          <div className="hidden lg:flex items-center flex-1 max-w-sm mx-8">
+          {/* Global Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="hidden sm:flex items-center flex-1 max-w-sm mx-4 sm:mx-8 relative" role="search">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
+              🔍
+            </span>
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm bài viết, tài liệu..."
-              className="input py-2 text-sm"
+              className="input pl-9 pr-8 py-2 text-sm w-full"
+              maxLength={100}
+              aria-label="Tìm kiếm bài viết, tài liệu"
             />
-          </div>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('')
+                  if (searchParams.get('search')) {
+                    navigate('/')
+                  }
+                }}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 text-sm"
+                aria-label="Xóa từ khóa"
+              >
+                ✕
+              </button>
+            )}
+          </form>
 
           {/* Nav actions */}
           <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { postAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
 import { useAuthStore } from '@/stores/authStore'
@@ -17,9 +17,9 @@ const POPULAR_TAGS = ['CNPM', 'Java', 'React', 'Giải tích', 'CSDL', 'OOP', 'P
 export default function HomePage() {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated)
   const [filter, setFilter] = useState('all')
-  const [searchInput, setSearchInput] = useState('')
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [selectedSubject, setSelectedSubject] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const searchKeyword = searchParams.get('search') || ''
+  const selectedSubject = searchParams.get('subject') || ''
   const [page, setPage] = useState(1)
 
   // ADR-002: Guest only allowed document metadata
@@ -48,24 +48,33 @@ export default function HomePage() {
     setPage(1)
   }
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault()
-    setSearchKeyword(searchInput.trim())
-    setPage(1)
-  }
-
-  const clearSearch = () => {
-    setSearchInput('')
-    setSearchKeyword('')
-    setPage(1)
-  }
-
   const handleTagClick = (tag) => {
+    const next = new URLSearchParams(searchParams)
     if (selectedSubject === tag) {
-      setSelectedSubject('')
+      next.delete('subject')
     } else {
-      setSelectedSubject(tag)
+      next.set('subject', tag)
     }
+    setSearchParams(next)
+    setPage(1)
+  }
+
+  const removeSearchFilter = () => {
+    const next = new URLSearchParams(searchParams)
+    next.delete('search')
+    setSearchParams(next)
+    setPage(1)
+  }
+
+  const removeSubjectFilter = () => {
+    const next = new URLSearchParams(searchParams)
+    next.delete('subject')
+    setSearchParams(next)
+    setPage(1)
+  }
+
+  const clearAllFilters = () => {
+    setSearchParams({})
     setPage(1)
   }
 
@@ -87,59 +96,44 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Search Bar (FE-03) */}
-        <form onSubmit={handleSearchSubmit} className="flex gap-2" role="search" aria-label="Tìm kiếm bài viết">
-          <div className="relative flex-1">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
-              🔍
-            </span>
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Tìm kiếm theo tiêu đề bài viết..."
-              maxLength={100}
-              className="input pl-9 pr-8 text-sm"
-              aria-label="Từ khóa tìm kiếm"
-            />
-            {searchInput && (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 text-sm"
-                aria-label="Xóa từ khóa"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          <button type="submit" className="btn-primary text-sm shrink-0 px-4">
-            Tìm
-          </button>
-        </form>
-
-        {/* Active Filters Display */}
+        {/* Active Filters Display (from Navbar search & Sidebar tags) */}
         {(searchKeyword || selectedSubject) && (
-          <div className="flex items-center gap-2 flex-wrap text-xs text-slate-400 bg-surface border border-surface-border p-2.5 rounded-xl">
-            <span>Đang lọc theo:</span>
-            {searchKeyword && (
-              <span className="badge-type bg-primary-900/40 border-primary-700/60 text-primary-200 flex items-center gap-1">
-                Từ khóa: "{searchKeyword}"
-                <button type="button" onClick={clearSearch} className="hover:text-red-400 font-bold ml-1">✕</button>
-              </span>
-            )}
-            {selectedSubject && (
-              <span className="badge-type bg-accent-900/40 border-accent-700/60 text-accent-200 flex items-center gap-1">
-                Môn: {selectedSubject}
-                <button type="button" onClick={() => { setSelectedSubject(''); setPage(1); }} className="hover:text-red-400 font-bold ml-1">✕</button>
-              </span>
-            )}
+          <div className="flex items-center justify-between bg-surface-card border border-surface-border px-3.5 py-2.5 rounded-xl text-xs sm:text-sm">
+            <div className="flex items-center gap-2 flex-wrap text-slate-300">
+              <span className="text-slate-400">Đang lọc theo:</span>
+              {searchKeyword && (
+                <span className="badge-type bg-primary-900/40 border-primary-700/60 text-primary-200 flex items-center gap-1.5">
+                  🔍 "{searchKeyword}"
+                  <button
+                    type="button"
+                    onClick={removeSearchFilter}
+                    className="hover:text-red-400 font-bold ml-1 cursor-pointer"
+                    aria-label="Xóa từ khóa tìm kiếm"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              {selectedSubject && (
+                <span className="badge-type bg-accent-900/40 border-accent-700/60 text-accent-200 flex items-center gap-1.5">
+                  📚 Môn: {selectedSubject}
+                  <button
+                    type="button"
+                    onClick={removeSubjectFilter}
+                    className="hover:text-red-400 font-bold ml-1 cursor-pointer"
+                    aria-label="Xóa bộ lọc môn học"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+            </div>
             <button
               type="button"
-              onClick={() => { clearSearch(); setSelectedSubject(''); }}
-              className="text-xs text-primary-400 hover:underline ml-auto"
+              onClick={clearAllFilters}
+              className="text-xs text-primary-400 hover:text-primary-300 hover:underline shrink-0 ml-2 cursor-pointer"
             >
-              Xóa tất cả bộ lọc
+              Xóa tất cả
             </button>
           </div>
         )}

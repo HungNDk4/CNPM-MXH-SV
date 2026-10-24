@@ -48,8 +48,19 @@ export default function MainLayout() {
                   <span className="hidden sm:inline">+ Đăng bài</span>
                 </Link>
                 <Link to={`/profile/${user?.id}`} aria-label="Trang cá nhân" className="flex items-center justify-center min-w-10 min-h-10 hover:opacity-80 transition-opacity">
-                  <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center text-white text-sm font-semibold">
-                    {user?.full_name?.[0]?.toUpperCase() || 'U'}
+                  <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center text-white text-sm font-semibold overflow-hidden">
+                    {user?.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.full_name || 'Avatar'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    ) : (
+                      user?.full_name?.[0]?.toUpperCase() || 'U'
+                    )}
                   </div>
                 </Link>
                 <button type="button" onClick={handleLogout} aria-label="Đăng xuất" className="min-w-10 min-h-10 px-1 sm:px-2 text-slate-400 hover:text-slate-200 text-sm transition-colors">

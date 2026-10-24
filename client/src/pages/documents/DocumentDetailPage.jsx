@@ -69,10 +69,24 @@ export default function DocumentDetailPage() {
           <span className="badge-free">✅ Miễn phí</span>
         </div>
         <h1 className="text-2xl font-bold text-slate-100 break-words">{post.title}</h1>
-        <p className="text-sm text-slate-400">
-          Người chia sẻ: {post.author?.full_name || 'Sinh viên'}
-          {post.created_at ? ' · ' + new Date(post.created_at).toLocaleDateString('vi-VN') : ''}
-        </p>
+        <div className="flex items-center gap-3 py-1">
+          <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center text-white text-xs font-semibold shrink-0 overflow-hidden shadow" aria-hidden="true">
+            {post.author?.avatar_url ? (
+              <img
+                src={post.author.avatar_url}
+                alt={post.author.full_name || 'Tác giả'}
+                className="w-full h-full object-cover"
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
+            ) : (
+              post.author?.full_name?.[0]?.toUpperCase() || 'S'
+            )}
+          </div>
+          <p className="text-sm text-slate-400">
+            Người chia sẻ: <span className="text-slate-200 font-medium">{post.author?.full_name || 'Sinh viên'}</span>
+            {post.created_at ? ' · ' + new Date(post.created_at).toLocaleDateString('vi-VN') : ''}
+          </p>
+        </div>
         {post.subject && <p className="text-sm text-slate-300">📚 Môn học: {post.subject}</p>}
         {post.content && <p className="text-slate-300 whitespace-pre-wrap break-words">{post.content}</p>}
         {Array.isArray(post.tags) && post.tags.length > 0 && (

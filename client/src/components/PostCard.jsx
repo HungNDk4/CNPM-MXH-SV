@@ -9,8 +9,17 @@ export default function PostCard({ post }) {
     <article className="card-hover group animate-fade-in">
       <div className="flex items-start gap-3">
         {/* Avatar */}
-        <div className="w-9 h-9 rounded-full bg-gradient-brand flex items-center justify-center text-white text-sm font-semibold shrink-0">
-          {post.author?.full_name?.[0]?.toUpperCase() || 'U'}
+        <div className="w-9 h-9 rounded-full bg-gradient-brand flex items-center justify-center text-white text-sm font-semibold shrink-0 overflow-hidden shadow">
+          {post.author?.avatar_url ? (
+            <img
+              src={post.author.avatar_url}
+              alt={post.author.full_name || 'Tác giả'}
+              className="w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+            />
+          ) : (
+            post.author?.full_name?.[0]?.toUpperCase() || 'U'
+          )}
         </div>
 
         <div className="flex-1 min-w-0">

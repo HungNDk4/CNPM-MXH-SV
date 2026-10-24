@@ -77,14 +77,28 @@ function CommentItem({ comment, user, depth, create, remove }) {
     <li className={depth ? 'ml-2 sm:ml-6 border-l-2 border-primary-800 pl-3 sm:pl-5' : ''}>
       <div className="rounded-xl bg-surface border border-surface-border p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            {comment.author?.id ? (
-              <Link className="font-semibold text-sm text-primary-300 hover:text-primary-200 break-words"
-                to={'/profile/' + comment.author.id}>
-                {comment.author.full_name || 'Sinh viên'}
-              </Link>
-            ) : <span className="font-semibold text-sm">Sinh viên</span>}
-            <span className="text-xs text-slate-500 ml-2">{stamp(comment.created_at)}</span>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-gradient-brand flex items-center justify-center text-white text-xs font-semibold shrink-0 overflow-hidden shadow" aria-hidden="true">
+              {comment.author?.avatar_url ? (
+                <img
+                  src={comment.author.avatar_url}
+                  alt={comment.author.full_name || 'Sinh viên'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+              ) : (
+                comment.author?.full_name?.[0]?.toUpperCase() || 'S'
+              )}
+            </div>
+            <div className="min-w-0">
+              {comment.author?.id ? (
+                <Link className="font-semibold text-sm text-primary-300 hover:text-primary-200 break-words"
+                  to={'/profile/' + comment.author.id}>
+                  {comment.author.full_name || 'Sinh viên'}
+                </Link>
+              ) : <span className="font-semibold text-sm">Sinh viên</span>}
+              <span className="text-xs text-slate-500 ml-2">{stamp(comment.created_at)}</span>
+            </div>
           </div>
           {canRemove && (
             <button type="button" className="text-xs text-red-300 hover:text-red-200 disabled:opacity-50 min-h-10 px-3 rounded-lg focus-visible:ring-2 focus-visible:ring-red-400"
@@ -261,8 +275,17 @@ export default function PostDetailPage() {
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold leading-tight break-words">{post.title}</h1>
         <div className="flex items-center gap-3 py-4 border-y border-surface-border">
-          <span className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white shrink-0" aria-hidden="true">
-            {post.author?.full_name?.[0]?.toUpperCase() || 'S'}
+          <span className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white shrink-0 overflow-hidden shadow" aria-hidden="true">
+            {post.author?.avatar_url ? (
+              <img
+                src={post.author.avatar_url}
+                alt={post.author.full_name || 'Tác giả'}
+                className="w-full h-full object-cover"
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
+            ) : (
+              post.author?.full_name?.[0]?.toUpperCase() || 'S'
+            )}
           </span>
           <div className="min-w-0">
             {post.author?.id ?

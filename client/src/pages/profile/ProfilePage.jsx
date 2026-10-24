@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { userAPI } from '@/services/api'
+import { userAPI, followAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
+
 
 const formatDate = (isoString) => {
   if (!isoString) return ''
@@ -13,6 +14,97 @@ const formatDate = (isoString) => {
     month: '2-digit',
     year: 'numeric',
   })
+}
+
+function FollowUsersModal({ type, userId, onClose }) {
+  const [page, setPage] = useState(1)
+  const isFollowers = type === 'followers'
+  const title = isFollowers ? 'Người theo dõi' : 'Đang theo dõi'
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['follow-list', type, userId, page],
+    queryFn: async () => {
+      const fn = isFollowers ? followAPI.getFollowers : followAPI.getFollowing
+      return (await fn(userId, { page, limit: 10 })).data
+    },
+    enabled: Boolean(userId),
+  })
+
+  const users = data?.data || []
+  const pagination = data?.pagination
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true">
+      <div className="bg-surface border border-surface-border rounded-2xl w-full max-w-md p-5 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-surface-border">
+          <h3 className="font-bold text-lg text-slate-100 flex items-center gap-2">
+            <span>{isFollowers ? '👥' : '👤'}</span> {title}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-200 text-lg w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-card"
+            aria-label="Đóng"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
+          {isLoading ? (
+            <p className="text-center text-slate-400 py-6 text-sm">Đang tải danh sách...</p>
+          ) : isError ? (
+            <p className="text-center text-red-400 py-6 text-sm">Không thể tải danh sách.</p>
+          ) : users.length === 0 ? (
+            <p className="text-center text-slate-400 py-6 text-sm">Chưa có ai trong danh sách.</p>
+          ) : (
+            users.map((u) => (
+              <Link
+                key={u.id}
+                to={`/profile/${u.id}`}
+                onClick={onClose}
+                className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-card transition-colors group"
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white font-semibold shrink-0 overflow-hidden shadow">
+                  {u.avatar_url ? (
+                    <img src={u.avatar_url} alt={u.full_name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                  ) : (
+                    u.full_name?.[0]?.toUpperCase() || 'U'
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-slate-200 group-hover:text-primary-300 text-sm truncate">{u.full_name}</p>
+                  {u.university && <p className="text-xs text-slate-400 truncate">🎓 {u.university}</p>}
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between pt-3 border-t border-surface-border text-xs text-slate-400">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="btn-secondary py-1 px-3 text-xs disabled:opacity-40"
+            >
+              Trước
+            </button>
+            <span>Trang {page} / {pagination.totalPages}</span>
+            <button
+              type="button"
+              disabled={page >= pagination.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="btn-secondary py-1 px-3 text-xs disabled:opacity-40"
+            >
+              Sau
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default function ProfilePage() {
@@ -25,6 +117,7 @@ export default function ProfilePage() {
   const isOwner = Number(currentUser?.id) === Number(id)
 
   const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'edit' | 'security'
+  const [followModalType, setFollowModalType] = useState(null) // 'followers' | 'following' | null
 
   // Query profile
   const { data: profile, isLoading, isError, error } = useQuery({
@@ -33,6 +126,32 @@ export default function ProfilePage() {
     enabled: validId,
     retry: false,
   })
+
+  // EXT-02: Query follow stats
+  const { data: followStats } = useQuery({
+    queryKey: ['follow-stats', id],
+    queryFn: async () => (await followAPI.getFollowStats(id)).data.data,
+    enabled: validId && Boolean(currentUser),
+  })
+
+  // EXT-02: Mutation Follow / Unfollow
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      if (followStats?.is_following) {
+        return (await followAPI.unfollow(id)).data
+      } else {
+        return (await followAPI.follow(id)).data
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['follow-stats', id] })
+      toast.success(followStats?.is_following ? 'Đã bỏ theo dõi.' : 'Đã theo dõi người dùng!')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Thao tác không thành công.')
+    },
+  })
+
 
   // State for Edit Profile form
   const [editForm, setEditForm] = useState({
@@ -236,18 +355,69 @@ export default function ProfilePage() {
             <p className="text-xs text-slate-400">
               🗓️ Thành viên từ: {formatDate(profile.created_at)}
             </p>
+            {/* EXT-02: Follow stats counters */}
+            <div className="flex items-center justify-center sm:justify-start gap-4 text-xs sm:text-sm text-slate-400 pt-2">
+              <button
+                type="button"
+                onClick={() => currentUser && setFollowModalType('followers')}
+                disabled={!currentUser}
+                className="hover:text-primary-300 transition-colors cursor-pointer disabled:cursor-default"
+                title={currentUser ? 'Xem danh sách người theo dõi' : 'Đăng nhập để xem'}
+              >
+                <strong className="text-slate-100 font-semibold">{followStats?.followers ?? 0}</strong> Người theo dõi
+              </button>
+              <span className="text-slate-600">·</span>
+              <button
+                type="button"
+                onClick={() => currentUser && setFollowModalType('following')}
+                disabled={!currentUser}
+                className="hover:text-primary-300 transition-colors cursor-pointer disabled:cursor-default"
+                title={currentUser ? 'Xem danh sách đang theo dõi' : 'Đăng nhập để xem'}
+              >
+                <strong className="text-slate-100 font-semibold">{followStats?.following ?? 0}</strong> Đang theo dõi
+              </button>
+            </div>
           </div>
 
-          {/* Quick Action Button */}
-          {isOwner && activeTab !== 'edit' && (
-            <button
-              type="button"
-              onClick={() => setActiveTab('edit')}
-              className="btn-secondary text-sm flex items-center gap-1.5"
-            >
-              <span>✏️</span> Chỉnh sửa
-            </button>
-          )}
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            {isOwner && activeTab !== 'edit' && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('edit')}
+                className="btn-secondary text-sm flex items-center gap-1.5"
+              >
+                <span>✏️</span> Chỉnh sửa
+              </button>
+            )}
+
+            {!isOwner && currentUser && (
+              <button
+                type="button"
+                onClick={() => followMutation.mutate()}
+                disabled={followMutation.isPending}
+                className={`text-sm py-2 px-4 rounded-xl font-medium transition-all shadow-sm flex items-center gap-1.5 ${
+                  followStats?.is_following
+                    ? 'bg-surface border border-surface-border text-slate-300 hover:text-red-300 hover:border-red-400/50'
+                    : 'bg-primary-600 text-white hover:bg-primary-500'
+                }`}
+              >
+                {followMutation.isPending ? (
+                  'Đang xử lý...'
+                ) : followStats?.is_following ? (
+                  <><span>✓</span> Đang theo dõi</>
+                ) : (
+                  <><span>+</span> Theo dõi</>
+                )}
+              </button>
+            )}
+
+            {!isOwner && !currentUser && (
+              <Link to="/login" className="btn-secondary text-sm">
+                Đăng nhập để theo dõi
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Bio preview in header */}
@@ -534,6 +704,15 @@ export default function ProfilePage() {
             </div>
           </form>
         </section>
+      )}
+
+      {/* ── Follow List Modal (EXT-02) ── */}
+      {followModalType && (
+        <FollowUsersModal
+          type={followModalType}
+          userId={id}
+          onClose={() => setFollowModalType(null)}
+        />
       )}
     </div>
   )

@@ -64,3 +64,13 @@ export const notificationAPI = {
   markAsRead:     (id)     => api.patch(`/users/me/notifications/${id}/read`),
   markAllAsRead:  ()       => api.patch('/users/me/notifications/read-all'),
 }
+
+// EXT-02: Follow System API
+export const followAPI = {
+  follow:         (userId)         => api.post(`/users/${userId}/follow`),
+  unfollow:       (userId)         => api.delete(`/users/${userId}/follow`),
+  getFollowers:   (userId, params) => api.get(`/users/${userId}/followers`, { params }),
+  getFollowing:   (userId, params) => api.get(`/users/${userId}/following`, { params }),
+  getFollowStats: (userId)         => api.get(`/users/${userId}/follow-stats`),
+}
+

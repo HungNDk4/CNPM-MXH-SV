@@ -49,3 +49,18 @@ export const documentAPI = {
     timeout: 90000,
   }),
 }
+
+// EXT-01: Bookmarks API
+export const bookmarkAPI = {
+  save:   (postId) => api.post(`/posts/${postId}/bookmark`),
+  remove: (postId) => api.delete(`/posts/${postId}/bookmark`),
+  getAll: (params) => api.get('/posts/bookmarks', { params }),
+}
+
+// EXT-04: In-app Notifications API
+export const notificationAPI = {
+  getAll:         (params) => api.get('/users/me/notifications', { params }),
+  getUnreadCount: ()       => api.get('/users/me/notifications/unread-count'),
+  markAsRead:     (id)     => api.patch(`/users/me/notifications/${id}/read`),
+  markAllAsRead:  ()       => api.patch('/users/me/notifications/read-all'),
+}

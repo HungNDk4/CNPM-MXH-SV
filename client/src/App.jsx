@@ -13,6 +13,7 @@ import PostDetailPage from '@/pages/posts/PostDetailPage'
 import DocumentDetailPage from '@/pages/documents/DocumentDetailPage'
 import CreatePostPage from '@/pages/posts/CreatePostPage'
 import ProfilePage   from '@/pages/profile/ProfilePage'
+import BookmarksPage from '@/pages/bookmarks/BookmarksPage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
 import NotFoundPage  from '@/pages/NotFoundPage'
 
@@ -42,6 +43,9 @@ export default function App() {
         {/* Protected */}
         <Route path="/posts/create" element={
           <ProtectedRoute><CreatePostPage /></ProtectedRoute>
+        } />
+        <Route path="/bookmarks" element={
+          <ProtectedRoute><BookmarksPage /></ProtectedRoute>
         } />
       </Route>
 

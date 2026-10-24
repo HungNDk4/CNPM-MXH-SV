@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { commentAPI, likeAPI, postAPI } from '@/services/api'
+import { commentAPI, likeAPI, postAPI, bookmarkAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 
 const MAX_COMMENT = 2000
@@ -14,6 +14,40 @@ const stamp = value => {
   if (!value) return ''
   const d = new Date(value)
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('vi-VN')
+}
+
+function BookmarkButton({ postId }) {
+  const qc = useQueryClient()
+  const authenticated = useAuthStore((state) => state.isAuthenticated)
+  const [bookmarked, setBookmarked] = useState(false)
+
+  const toggle = useMutation({
+    mutationFn: () => (bookmarked ? bookmarkAPI.remove(postId) : bookmarkAPI.save(postId)),
+    onSuccess: (res) => {
+      const isSaved = res.data.data.bookmarked
+      setBookmarked(isSaved)
+      qc.invalidateQueries({ queryKey: ['bookmarks'] })
+      toast.success(isSaved ? 'Đã lưu bài viết!' : 'Đã bỏ lưu bài viết.')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể lưu bài viết.')
+    },
+  })
+
+  if (!authenticated) return null
+
+  return (
+    <button
+      type="button"
+      onClick={() => toggle.mutate()}
+      disabled={toggle.isPending}
+      className={'btn-secondary min-h-10 px-3 py-2 text-sm flex items-center gap-1.5 transition-colors ' + (bookmarked ? 'text-amber-400 border-amber-600/50 bg-amber-950/20' : '')}
+      aria-label={bookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
+    >
+      <span aria-hidden="true">{bookmarked ? '🔖' : '📑'}</span>
+      <span>{toggle.isPending ? 'Đang lưu...' : bookmarked ? 'Đã lưu' : 'Lưu bài'}</span>
+    </button>
+  )
 }
 
 function LikeButton({ targetType, targetId }) {
@@ -305,7 +339,10 @@ export default function PostDetailPage() {
           </div>
         )}
         <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-3">
-          <LikeButton targetType="post" targetId={post.id} />
+          <div className="flex items-center gap-2 flex-wrap">
+            <LikeButton targetType="post" targetId={post.id} />
+            <BookmarkButton postId={post.id} />
+          </div>
           <span className="text-xs text-slate-500">👁️ {post.view_count ?? 0} lượt xem</span>
         </div>
       </article>

@@ -230,6 +230,19 @@ export default function MainLayout() {
                 {/* Chuông thông báo */}
                 <NotificationDropdown />
 
+                {/* Admin Link */}
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin/audit-logs"
+                    aria-label="Quản trị hệ thống"
+                    className="min-w-10 min-h-10 px-2 sm:px-2.5 flex items-center justify-center text-slate-300 hover:text-primary-300 hover:bg-white/5 rounded-xl transition-colors text-xs font-semibold gap-1"
+                    title="Nhật ký kiểm duyệt"
+                  >
+                    <span className="text-base" aria-hidden="true">🛡️</span>
+                    <span className="hidden md:inline">Quản trị</span>
+                  </Link>
+                )}
+
                 {/* Trang cá nhân */}
                 <Link to={`/profile/${user?.id}`} aria-label="Trang cá nhân" className="flex items-center justify-center min-w-10 min-h-10 hover:opacity-80 transition-opacity">
                   <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center text-white text-sm font-semibold overflow-hidden shadow">
@@ -247,6 +260,7 @@ export default function MainLayout() {
                     )}
                   </div>
                 </Link>
+
 
                 {/* Đăng xuất */}
                 <button type="button" onClick={handleLogout} aria-label="Đăng xuất" className="min-w-10 min-h-10 px-1 sm:px-2 text-slate-400 hover:text-slate-200 text-sm transition-colors">

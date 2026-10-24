@@ -74,3 +74,10 @@ export const followAPI = {
   getFollowStats: (userId)         => api.get(`/users/${userId}/follow-stats`),
 }
 
+// EXT-03: Admin Moderation & Audit Logs API
+export const adminAPI = {
+  getAuditLogs: (params) => api.get('/posts/moderation/audit-logs', { params }),
+  moderatePost: (postId, status) => api.patch(`/posts/${postId}/moderation`, { status }),
+}
+
+

@@ -182,7 +182,7 @@ export default function MainLayout() {
           </Link>
 
           {/* Global Search Bar */}
-          <form onSubmit={handleSearchSubmit} className="hidden sm:flex items-center flex-1 max-w-sm mx-4 sm:mx-8 relative" role="search">
+          <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center flex-1 max-w-sm mx-4 sm:mx-8 relative" role="search">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
               🔍
             </span>

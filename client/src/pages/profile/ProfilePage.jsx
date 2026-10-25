@@ -4,16 +4,31 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { userAPI, followAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
-
+import {
+  Users,
+  User,
+  GraduationCap,
+  Calendar,
+  Edit3,
+  Lock,
+  FileText,
+  Check,
+  Plus,
+  AlertTriangle,
+  X,
+  BookOpen,
+} from 'lucide-react'
 
 const formatDate = (isoString) => {
   if (!isoString) return ''
   const date = new Date(isoString)
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
+  return Number.isNaN(date.getTime())
+    ? ''
+    : date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
 }
 
 function FollowUsersModal({ type, userId, onClose }) {
@@ -34,47 +49,66 @@ function FollowUsersModal({ type, userId, onClose }) {
   const pagination = data?.pagination
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true">
-      <div className="bg-surface border border-surface-border rounded-2xl w-full max-w-md p-5 shadow-2xl space-y-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="bg-surface-card border border-surface-border rounded-2xl w-full max-w-md p-5 shadow-2xl space-y-4 text-slate-800 dark:text-slate-100">
         <div className="flex items-center justify-between pb-3 border-b border-surface-border">
-          <h3 className="font-bold text-lg text-slate-100 flex items-center gap-2">
-            <span>{isFollowers ? '👥' : '👤'}</span> {title}
+          <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+            {isFollowers ? <Users className="w-5 h-5 text-primary-600" /> : <User className="w-5 h-5 text-primary-600" />}
+            <span>{title}</span>
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 text-lg w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-card"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-muted"
             aria-label="Đóng"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
+        <div className="max-h-80 overflow-y-auto space-y-2.5 pr-1">
           {isLoading ? (
-            <p className="text-center text-slate-400 py-6 text-sm">Đang tải danh sách...</p>
+            <p className="text-center text-slate-500 py-6 text-sm">Đang tải danh sách...</p>
           ) : isError ? (
-            <p className="text-center text-red-400 py-6 text-sm">Không thể tải danh sách.</p>
+            <p className="text-center text-red-500 py-6 text-sm">Không thể tải danh sách.</p>
           ) : users.length === 0 ? (
-            <p className="text-center text-slate-400 py-6 text-sm">Chưa có ai trong danh sách.</p>
+            <p className="text-center text-slate-500 py-6 text-sm">Chưa có ai trong danh sách.</p>
           ) : (
             users.map((u) => (
               <Link
                 key={u.id}
                 to={`/profile/${u.id}`}
                 onClick={onClose}
-                className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-card transition-colors group"
+                className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-muted transition-colors group"
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white font-semibold shrink-0 overflow-hidden shadow">
+                <div className="w-10 h-10 rounded-full bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300 flex items-center justify-center font-semibold shrink-0 overflow-hidden border border-primary-200 dark:border-primary-800 shadow-subtle">
                   {u.avatar_url ? (
-                    <img src={u.avatar_url} alt={u.full_name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                    <img
+                      src={u.avatar_url}
+                      alt={u.full_name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
                   ) : (
                     u.full_name?.[0]?.toUpperCase() || 'U'
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-slate-200 group-hover:text-primary-300 text-sm truncate">{u.full_name}</p>
-                  {u.university && <p className="text-xs text-slate-400 truncate">🎓 {u.university}</p>}
+                  <p className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 text-sm truncate">
+                    {u.full_name}
+                  </p>
+                  {u.university && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      <span>{u.university}</span>
+                    </p>
+                  )}
                 </div>
               </Link>
             ))
@@ -82,7 +116,7 @@ function FollowUsersModal({ type, userId, onClose }) {
         </div>
 
         {pagination && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between pt-3 border-t border-surface-border text-xs text-slate-400">
+          <div className="flex items-center justify-between pt-3 border-t border-surface-border text-xs text-slate-500">
             <button
               type="button"
               disabled={page <= 1}
@@ -91,7 +125,9 @@ function FollowUsersModal({ type, userId, onClose }) {
             >
               Trước
             </button>
-            <span>Trang {page} / {pagination.totalPages}</span>
+            <span>
+              Trang {page} / {pagination.totalPages}
+            </span>
             <button
               type="button"
               disabled={page >= pagination.totalPages}
@@ -151,7 +187,6 @@ export default function ProfilePage() {
       toast.error(err.response?.data?.message || 'Thao tác không thành công.')
     },
   })
-
 
   // State for Edit Profile form
   const [editForm, setEditForm] = useState({
@@ -278,10 +313,10 @@ export default function ProfilePage() {
   // Invalid ID check
   if (!validId) {
     return (
-      <section className="card text-center py-16 space-y-4 max-w-lg mx-auto" role="alert">
-        <span className="text-4xl" aria-hidden="true">⚠️</span>
-        <h1 className="text-xl font-bold text-slate-100">Đường dẫn hồ sơ không hợp lệ</h1>
-        <p className="text-slate-400 text-sm">ID người dùng phải là số nguyên dương.</p>
+      <section className="card bg-surface-card border border-surface-border text-center py-16 space-y-4 max-w-lg mx-auto" role="alert">
+        <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Đường dẫn hồ sơ không hợp lệ</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">ID người dùng phải là số nguyên dương.</p>
         <Link to="/" className="btn-secondary inline-block">Về trang chủ</Link>
       </section>
     )
@@ -291,12 +326,12 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto space-y-6 animate-pulse" role="status">
-        <div className="card space-y-4">
+        <div className="card bg-surface-card border border-surface-border p-6 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-slate-700" />
+            <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-700" />
             <div className="space-y-2 flex-1">
-              <div className="h-6 bg-slate-700 rounded w-1/3" />
-              <div className="h-4 bg-slate-700 rounded w-1/4" />
+              <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
+              <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-1/4" />
             </div>
           </div>
         </div>
@@ -307,9 +342,9 @@ export default function ProfilePage() {
   // Error 404 / 500
   if (isError) {
     return (
-      <section className="card text-center py-16 space-y-4 max-w-lg mx-auto" role="alert">
-        <span className="text-4xl" aria-hidden="true">👤</span>
-        <h1 className="text-xl font-bold text-slate-100">
+      <section className="card bg-surface-card border border-surface-border text-center py-16 space-y-4 max-w-lg mx-auto" role="alert">
+        <User className="w-10 h-10 text-slate-400 mx-auto" />
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">
           {error?.response?.status === 404
             ? 'Người dùng không tồn tại hoặc đã bị khóa.'
             : 'Không thể tải thông tin hồ sơ.'}
@@ -324,12 +359,10 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* ── Header Card ── */}
-      <section className="card relative overflow-hidden" aria-label="Thông tin tổng quan hồ sơ">
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary-900/40 via-accent-900/30 to-primary-900/20 pointer-events-none" />
-        
-        <div className="relative pt-6 sm:pt-8 flex flex-col sm:flex-row items-center sm:items-end gap-5">
+      <section className="card bg-surface-card border border-surface-border p-6 sm:p-7 shadow-sm space-y-5" aria-label="Thông tin tổng quan hồ sơ">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
           {/* Avatar */}
-          <div className="w-24 h-24 rounded-full ring-4 ring-surface-card bg-gradient-brand flex items-center justify-center text-white text-3xl font-bold overflow-hidden shadow-2xl shrink-0">
+          <div className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 flex items-center justify-center text-3xl font-bold overflow-hidden shadow-sm shrink-0 border-2 border-primary-200 dark:border-primary-800">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
@@ -345,36 +378,38 @@ export default function ProfilePage() {
           </div>
 
           {/* User Meta */}
-          <div className="flex-1 text-center sm:text-left min-w-0 space-y-1">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-100 break-words">
+          <div className="flex-1 text-center sm:text-left min-w-0 space-y-1.5">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white break-words tracking-tight">
                 {profile.full_name}
               </h1>
               <span className="badge-type">Sinh viên</span>
             </div>
-            <p className="text-xs text-slate-400">
-              🗓️ Thành viên từ: {formatDate(profile.created_at)}
+            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center sm:justify-start gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Thành viên từ: {formatDate(profile.created_at)}</span>
             </p>
+
             {/* EXT-02: Follow stats counters */}
-            <div className="flex items-center justify-center sm:justify-start gap-4 text-xs sm:text-sm text-slate-400 pt-2">
+            <div className="flex items-center justify-center sm:justify-start gap-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400 pt-2">
               <button
                 type="button"
                 onClick={() => currentUser && setFollowModalType('followers')}
                 disabled={!currentUser}
-                className="hover:text-primary-300 transition-colors cursor-pointer disabled:cursor-default"
+                className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer disabled:cursor-default"
                 title={currentUser ? 'Xem danh sách người theo dõi' : 'Đăng nhập để xem'}
               >
-                <strong className="text-slate-100 font-semibold">{followStats?.followers ?? 0}</strong> Người theo dõi
+                <strong className="text-slate-900 dark:text-white font-semibold">{followStats?.followers ?? 0}</strong> Người theo dõi
               </button>
-              <span className="text-slate-600">·</span>
+              <span className="text-slate-300 dark:text-slate-600">·</span>
               <button
                 type="button"
                 onClick={() => currentUser && setFollowModalType('following')}
                 disabled={!currentUser}
-                className="hover:text-primary-300 transition-colors cursor-pointer disabled:cursor-default"
+                className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors cursor-pointer disabled:cursor-default"
                 title={currentUser ? 'Xem danh sách đang theo dõi' : 'Đăng nhập để xem'}
               >
-                <strong className="text-slate-100 font-semibold">{followStats?.following ?? 0}</strong> Đang theo dõi
+                <strong className="text-slate-900 dark:text-white font-semibold">{followStats?.following ?? 0}</strong> Đang theo dõi
               </button>
             </div>
           </div>
@@ -387,7 +422,8 @@ export default function ProfilePage() {
                 onClick={() => setActiveTab('edit')}
                 className="btn-secondary text-sm flex items-center gap-1.5"
               >
-                <span>✏️</span> Chỉnh sửa
+                <Edit3 className="w-4 h-4" />
+                <span>Chỉnh sửa</span>
               </button>
             )}
 
@@ -396,18 +432,24 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => followMutation.mutate()}
                 disabled={followMutation.isPending}
-                className={`text-sm py-2 px-4 rounded-xl font-medium transition-all shadow-sm flex items-center gap-1.5 ${
+                className={`text-sm py-2 px-4 rounded-lg font-medium transition-all shadow-sm flex items-center gap-1.5 ${
                   followStats?.is_following
-                    ? 'bg-surface border border-surface-border text-slate-300 hover:text-red-300 hover:border-red-400/50'
-                    : 'bg-primary-600 text-white hover:bg-primary-500'
+                    ? 'btn-secondary text-slate-700 dark:text-slate-200'
+                    : 'btn-primary'
                 }`}
               >
                 {followMutation.isPending ? (
                   'Đang xử lý...'
                 ) : followStats?.is_following ? (
-                  <><span>✓</span> Đang theo dõi</>
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Đang theo dõi</span>
+                  </>
                 ) : (
-                  <><span>+</span> Theo dõi</>
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Theo dõi</span>
+                  </>
                 )}
               </button>
             )}
@@ -422,7 +464,7 @@ export default function ProfilePage() {
 
         {/* Bio preview in header */}
         {profile.bio && (
-          <p className="mt-5 pt-4 border-t border-surface-border text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+          <p className="mt-4 pt-4 border-t border-surface-border text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
             {profile.bio}
           </p>
         )}
@@ -434,35 +476,38 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
-            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
+            className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
               activeTab === 'overview'
-                ? 'border-primary-500 text-primary-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            📋 Chi tiết hồ sơ
+            <FileText className="w-4 h-4" />
+            <span>Chi tiết hồ sơ</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('edit')}
-            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
+            className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
               activeTab === 'edit'
-                ? 'border-primary-500 text-primary-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            ✏️ Chỉnh sửa thông tin
+            <Edit3 className="w-4 h-4" />
+            <span>Chỉnh sửa thông tin</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('security')}
-            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
+            className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
               activeTab === 'security'
-                ? 'border-primary-500 text-primary-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            🔒 Đổi mật khẩu
+            <Lock className="w-4 h-4" />
+            <span>Đổi mật khẩu</span>
           </button>
         </nav>
       )}
@@ -471,33 +516,35 @@ export default function ProfilePage() {
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Học vấn */}
-          <div className="card space-y-4">
-            <h2 className="text-base font-semibold text-slate-200 flex items-center gap-2">
-              <span>🎓</span> Học vấn & Chuyên môn
+          <div className="card bg-surface-card border border-surface-border p-5 rounded-xl space-y-4 shadow-sm">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <span>Học vấn & Chuyên môn</span>
             </h2>
             <div className="space-y-3 text-sm">
               <div>
-                <span className="text-slate-500 block text-xs">Trường học:</span>
-                <span className="text-slate-200 font-medium">
-                  {profile.university || <span className="text-slate-500 italic">Chưa cập nhật</span>}
+                <span className="text-slate-500 dark:text-slate-400 block text-xs">Trường học:</span>
+                <span className="text-slate-800 dark:text-slate-200 font-medium">
+                  {profile.university || <span className="text-slate-400 italic">Chưa cập nhật</span>}
                 </span>
               </div>
               <div>
-                <span className="text-slate-500 block text-xs">Chuyên ngành:</span>
-                <span className="text-slate-200 font-medium">
-                  {profile.major || <span className="text-slate-500 italic">Chưa cập nhật</span>}
+                <span className="text-slate-500 dark:text-slate-400 block text-xs">Chuyên ngành:</span>
+                <span className="text-slate-800 dark:text-slate-200 font-medium">
+                  {profile.major || <span className="text-slate-400 italic">Chưa cập nhật</span>}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Giới thiệu */}
-          <div className="card space-y-4">
-            <h2 className="text-base font-semibold text-slate-200 flex items-center gap-2">
-              <span>📝</span> Tiểu sử cá nhân
+          <div className="card bg-surface-card border border-surface-border p-5 rounded-xl space-y-4 shadow-sm">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <span>Tiểu sử cá nhân</span>
             </h2>
-            <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
-              {profile.bio || <span className="text-slate-500 italic">Chưa có tiểu sử giới thiệu.</span>}
+            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+              {profile.bio || <span className="text-slate-400 italic">Chưa có tiểu sử giới thiệu.</span>}
             </p>
           </div>
         </div>
@@ -505,16 +552,17 @@ export default function ProfilePage() {
 
       {/* ── Tab Content: Edit Profile ── */}
       {isOwner && activeTab === 'edit' && (
-        <section className="card max-w-2xl mx-auto space-y-6" aria-labelledby="edit-profile-title">
-          <h2 id="edit-profile-title" className="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <span>✏️</span> Cập nhật thông tin cá nhân
+        <section className="card bg-surface-card border border-surface-border p-6 rounded-xl max-w-2xl mx-auto space-y-6 shadow-sm" aria-labelledby="edit-profile-title">
+          <h2 id="edit-profile-title" className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Edit3 className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <span>Cập nhật thông tin cá nhân</span>
           </h2>
 
           <form onSubmit={handleEditSubmit} className="space-y-4">
             {/* Họ tên */}
             <div className="space-y-1.5">
-              <label htmlFor="full_name" className="text-sm font-medium text-slate-300 block">
-                Họ và tên <span className="text-red-400">*</span>
+              <label htmlFor="full_name" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+                Họ và tên <span className="text-red-500">*</span>
               </label>
               <input
                 id="full_name"
@@ -530,7 +578,7 @@ export default function ProfilePage() {
 
             {/* Avatar URL */}
             <div className="space-y-1.5">
-              <label htmlFor="avatar_url" className="text-sm font-medium text-slate-300 block">
+              <label htmlFor="avatar_url" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
                 Đường dẫn ảnh đại diện (HTTPS)
               </label>
               <input
@@ -542,7 +590,7 @@ export default function ProfilePage() {
                 className="input"
                 placeholder="https://example.com/avatar.jpg"
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Để trống nếu muốn dùng avatar chữ cái đầu mặc định.
               </p>
             </div>
@@ -550,7 +598,7 @@ export default function ProfilePage() {
             {/* Trường & Ngành */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label htmlFor="university" className="text-sm font-medium text-slate-300 block">
+                <label htmlFor="university" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
                   Trường đại học / Cao đẳng
                 </label>
                 <input
@@ -565,7 +613,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="major" className="text-sm font-medium text-slate-300 block">
+                <label htmlFor="major" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
                   Chuyên ngành học
                 </label>
                 <input
@@ -583,10 +631,10 @@ export default function ProfilePage() {
             {/* Bio */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label htmlFor="bio" className="text-sm font-medium text-slate-300 block">
+                <label htmlFor="bio" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
                   Tiểu sử cá nhân
                 </label>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   {editForm.bio.length}/1000 ký tự
                 </span>
               </div>
@@ -624,16 +672,17 @@ export default function ProfilePage() {
 
       {/* ── Tab Content: Security / Change Password ── */}
       {isOwner && activeTab === 'security' && (
-        <section className="card max-w-lg mx-auto space-y-6" aria-labelledby="change-password-title">
-          <h2 id="change-password-title" className="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <span>🔒</span> Đổi mật khẩu tài khoản
+        <section className="card bg-surface-card border border-surface-border p-6 rounded-xl max-w-lg mx-auto space-y-6 shadow-sm" aria-labelledby="change-password-title">
+          <h2 id="change-password-title" className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Lock className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <span>Đổi mật khẩu tài khoản</span>
           </h2>
 
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
             {/* Mật khẩu hiện tại */}
             <div className="space-y-1.5">
-              <label htmlFor="current_password" className="text-sm font-medium text-slate-300 block">
-                Mật khẩu hiện tại <span className="text-red-400">*</span>
+              <label htmlFor="current_password" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+                Mật khẩu hiện tại <span className="text-red-500">*</span>
               </label>
               <input
                 id="current_password"
@@ -649,8 +698,8 @@ export default function ProfilePage() {
 
             {/* Mật khẩu mới */}
             <div className="space-y-1.5">
-              <label htmlFor="new_password" className="text-sm font-medium text-slate-300 block">
-                Mật khẩu mới (tối thiểu 6 ký tự) <span className="text-red-400">*</span>
+              <label htmlFor="new_password" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+                Mật khẩu mới (tối thiểu 6 ký tự) <span className="text-red-500">*</span>
               </label>
               <input
                 id="new_password"
@@ -668,8 +717,8 @@ export default function ProfilePage() {
 
             {/* Xác nhận mật khẩu mới */}
             <div className="space-y-1.5">
-              <label htmlFor="confirm_password" className="text-sm font-medium text-slate-300 block">
-                Xác nhận mật khẩu mới <span className="text-red-400">*</span>
+              <label htmlFor="confirm_password" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+                Xác nhận mật khẩu mới <span className="text-red-500">*</span>
               </label>
               <input
                 id="confirm_password"

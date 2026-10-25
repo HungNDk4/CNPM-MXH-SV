@@ -220,14 +220,14 @@ export default function MainLayout() {
     <div className="min-h-screen bg-surface text-slate-800 dark:text-slate-100 transition-colors duration-150">
       {/* ── Navbar ── */}
       <nav className="sticky top-0 z-50 bg-surface-card/95 backdrop-blur-md border-b border-surface-border shadow-2xs transition-colors duration-150">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 h-16 flex items-center justify-between gap-1.5 sm:gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 min-w-0 shrink-0" aria-label="Mini Study Network — Trang chủ">
-            <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-xs">
-              <GraduationCap className="w-5 h-5" />
+          <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink-0" aria-label="Mini Study Network — Trang chủ">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-xs">
+              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="font-bold text-slate-900 dark:text-white text-lg hidden sm:inline tracking-tight">Mini Study Network</span>
-            <span className="font-bold text-primary-600 text-base sm:hidden">MSN</span>
+            <span className="font-bold text-primary-600 text-sm sm:hidden font-mono tracking-tight">MSN</span>
           </Link>
 
           {/* Global Search Bar (Keep hidden lg:flex and exact placeholder for test contract) */}
@@ -267,7 +267,7 @@ export default function MainLayout() {
               onClick={toggleTheme}
               aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
               title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-              className="min-w-10 min-h-10 px-2.5 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="min-w-9 min-h-10 px-2 sm:min-w-10 sm:px-2.5 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
             >
               {theme === 'dark' ? (
                 <Sun className="w-5 h-5 text-amber-400" aria-hidden="true" />
@@ -345,8 +345,8 @@ export default function MainLayout() {
               </>
             ) : (
               <>
-                <Link to="/login"    className="btn-secondary text-sm px-3 sm:px-4 py-2 min-h-10 flex items-center">Đăng nhập</Link>
-                <Link to="/register" className="btn-primary text-sm px-3 sm:px-4 py-2 min-h-10 flex items-center">Đăng ký</Link>
+                <Link to="/login"    className="btn-secondary text-xs sm:text-sm px-2.5 sm:px-4 py-2 min-h-10 flex items-center shrink-0">Đăng nhập</Link>
+                <Link to="/register" className="btn-primary text-xs sm:text-sm px-2.5 sm:px-4 py-2 min-h-10 flex items-center shrink-0">Đăng ký</Link>
               </>
             )}
           </div>

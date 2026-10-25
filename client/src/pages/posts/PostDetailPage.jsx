@@ -72,7 +72,7 @@ function BookmarkButton({ postId }) {
       type="button"
       onClick={() => toggle.mutate()}
       disabled={toggle.isPending}
-      className={`btn-secondary min-h-9 px-3 py-1.5 text-xs sm:text-sm flex items-center gap-1.5 transition-colors ${
+      className={`btn-secondary min-h-10 px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5 transition-colors ${
         bookmarked ? 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-950/60' : ''
       }`}
       aria-label={bookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
@@ -115,7 +115,7 @@ function LikeButton({ targetType, targetId }) {
     <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm">
       <button
         type="button"
-        className={`btn-secondary min-h-9 px-3 py-1.5 inline-flex items-center gap-1.5 transition-colors ${
+        className={`btn-secondary min-h-10 px-3 py-2 text-xs sm:text-sm inline-flex items-center gap-1.5 transition-colors ${
           liked ? 'text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/60' : 'text-slate-700 dark:text-slate-200'
         }`}
         aria-label={'Thích hoặc bỏ thích ' + item}
@@ -199,7 +199,7 @@ function CommentItem({ comment, user, depth, create, remove }) {
           {canRemove && (
             <button
               type="button"
-              className="text-xs text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2 py-1 rounded-md transition-colors disabled:opacity-50 inline-flex items-center gap-1"
+              className="text-xs text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 min-h-10 px-3 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-rose-400"
               aria-label={'Xóa bình luận #' + comment.id}
               onClick={deleteItem}
               disabled={remove.isPending}
@@ -221,7 +221,7 @@ function CommentItem({ comment, user, depth, create, remove }) {
           {depth === 0 && (
             <button
               type="button"
-              className="text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-primary-400"
+              className="text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 min-h-10 px-3 rounded-lg inline-flex items-center gap-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-primary-400"
               aria-label="Trả lời bình luận"
               onClick={() => setReplyOpen((value) => !value)}
             >

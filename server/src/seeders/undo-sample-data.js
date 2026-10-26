@@ -1,167 +1,62 @@
-/**
- * Mini Study Network - Sample Data Undo / Rollback
- * 
- * Safely removes seeded sample student accounts and their associated interactions.
- * Strictly protects existing real user accounts (admin, hungnd, demo1) and their data.
- * 
- * Usage:
- *   cd server
- *   node src/seeders/undo-sample-data.js
- */
-
 'use strict';
 require('dotenv').config();
-
+const { assertDisposableEnvironment, assertDatabaseIdentity } = require('./fe66-disposable-guard');
+const dbName = assertDisposableEnvironment();
 const { Op } = require('sequelize');
-const {
-  sequelize,
-  User,
-  Post,
-  Comment,
-  Like,
-  Follow,
-  Bookmark,
-  Notification,
-} = require('../models');
-
-// Protected emails that must NEVER be touched
-const PROTECTED_EMAILS = [
-  'admin@studynet.vn',
-  'hungnd13112004@gmail.com',
-  'demo1@gmail.com',
-];
-
-const SAMPLE_EMAILS = [
-  'minhanh.tran@studynet.vn',
-  'hoangnam.le@studynet.vn',
-  'thutrang.pham@studynet.vn',
-  'quocbao.dang@studynet.vn',
-  'haiyen.vu@studynet.vn',
-  'ducthang.nguyen@studynet.vn',
-  'phuonglinh.bui@studynet.vn',
-  'quanghuy.do@studynet.vn',
-  'maichi.hoang@studynet.vn',
-  'tuankiet.trinh@studynet.vn',
-];
-
-async function undoSampleData() {
-  console.log('--- BẮT ĐẦU HOÀN TÁC (ROLLBACK) DỮ LIỆU MẪU ---');
-
-  // Find all sample users
-  const sampleUsers = await User.findAll({
-    where: {
-      email: {
-        [Op.in]: SAMPLE_EMAILS,
-        [Op.notIn]: PROTECTED_EMAILS,
-      },
-    },
-    attributes: ['id', 'email', 'full_name'],
-  });
-
-  const sampleUserIds = sampleUsers.map(u => u.id);
-  console.log(`Tìm thấy ${sampleUserIds.length} tài khoản mẫu cần hoàn tác.`);
-
-  if (sampleUserIds.length === 0) {
-    console.log('Không có tài khoản mẫu nào cần xóa.');
-    return;
+const { sequelize, User, Post, Comment, Like, Follow, Bookmark, Notification, Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog } = require('../models');
+const MARKER = '[FE66_DISPOSABLE_FIXTURE_V1]';
+const SAMPLE_EMAILS = Array.from({ length: 10 }, (_, i) => 'fe66-student-' + i + '@example.invalid');
+const EXPECTED = { users: 10, posts: 18, comments: 1, likes: 2, follows: 1, bookmarks: 1, notifications: 1 };
+async function inspect(transaction) {
+  for (const model of [Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog]) {
+    if (await model.count({ transaction })) throw new Error('REFUSED: unrelated data exists in ' + model.tableName);
   }
-
-  // Find sample posts
-  const samplePosts = await Post.findAll({
-    where: { user_id: { [Op.in]: sampleUserIds } },
-    attributes: ['id'],
-  });
-  const samplePostIds = samplePosts.map(p => p.id);
-
-  console.log(`Tìm thấy ${samplePostIds.length} bài viết mẫu.`);
-
-  await sequelize.transaction(async (transaction) => {
-    // 1. Delete notifications related to sample users or sample posts
-    const notifCount = await Notification.destroy({
-      where: {
-        [Op.or]: [
-          { actor_id: { [Op.in]: sampleUserIds } },
-          { recipient_id: { [Op.in]: sampleUserIds } },
-          ...(samplePostIds.length ? [{ post_id: { [Op.in]: samplePostIds } }] : []),
-        ],
-      },
-      transaction,
-    });
-    console.log(` Đã xóa ${notifCount} thông báo liên quan.`);
-
-    // 2. Delete likes by sample users or on sample posts
-    const likesCount = await Like.destroy({
-      where: {
-        [Op.or]: [
-          { user_id: { [Op.in]: sampleUserIds } },
-          ...(samplePostIds.length ? [{ target_type: 'post', target_id: { [Op.in]: samplePostIds } }] : []),
-        ],
-      },
-      transaction,
-    });
-    console.log(` Đã xóa ${likesCount} lượt thích liên quan.`);
-
-    // 3. Delete bookmarks by sample users or of sample posts
-    const bookmarkCount = await Bookmark.destroy({
-      where: {
-        [Op.or]: [
-          { user_id: { [Op.in]: sampleUserIds } },
-          ...(samplePostIds.length ? [{ post_id: { [Op.in]: samplePostIds } }] : []),
-        ],
-      },
-      transaction,
-    });
-    console.log(` Đã xóa ${bookmarkCount} bookmarks liên quan.`);
-
-    // 4. Delete follows involving sample users
-    const followCount = await Follow.destroy({
-      where: {
-        [Op.or]: [
-          { follower_id: { [Op.in]: sampleUserIds } },
-          { following_id: { [Op.in]: sampleUserIds } },
-        ],
-      },
-      transaction,
-    });
-    console.log(` Đã xóa ${followCount} quan hệ theo dõi liên quan.`);
-
-    // 5. Delete comments on sample posts or by sample users
-    const commentCount = await Comment.destroy({
-      where: {
-        [Op.or]: [
-          { user_id: { [Op.in]: sampleUserIds } },
-          ...(samplePostIds.length ? [{ post_id: { [Op.in]: samplePostIds } }] : []),
-        ],
-      },
-      transaction,
-    });
-    console.log(` Đã xóa ${commentCount} bình luận liên quan.`);
-
-    // 6. Delete sample posts
-    if (samplePostIds.length > 0) {
-      const deletedPosts = await Post.destroy({
-        where: { id: { [Op.in]: samplePostIds } },
-        transaction,
-      });
-      console.log(` Đã xóa ${deletedPosts} bài viết mẫu.`);
-    }
-
-    // 7. Delete sample users
-    const deletedUsers = await User.destroy({
-      where: { id: { [Op.in]: sampleUserIds } },
-      transaction,
-    });
-    console.log(` Đã xóa ${deletedUsers} tài khoản người dùng mẫu.`);
-  });
-
-  console.log('\n--- HOÀN TÁC DỮ LIỆU MẪU HOÀN TẤT VÀ AN TOÀN! ---');
-  console.log(`- Số lượng Users còn lại: ${await User.count()}`);
-  console.log(`- Số lượng Posts còn lại: ${await Post.count()}`);
+  const [users, posts, comments, likes, follows, bookmarks, notifications] = await Promise.all([
+    User.findAll({ transaction }), Post.findAll({ transaction }), Comment.findAll({ transaction }),
+    Like.findAll({ transaction }), Follow.findAll({ transaction }), Bookmark.findAll({ transaction }),
+    Notification.findAll({ transaction }),
+  ]);
+  const actual = { users: users.length, posts: posts.length, comments: comments.length, likes: likes.length, follows: follows.length, bookmarks: bookmarks.length, notifications: notifications.length };
+  if (Object.values(actual).every(v => v === 0)) return { actual, empty: true };
+  for (const [name, expected] of Object.entries(EXPECTED)) {
+    if (actual[name] !== expected) throw new Error('REFUSED: fixture cardinality mismatch for ' + name);
+  }
+  const ids = new Set(users.map(u => u.id));
+  const postIds = new Set(posts.map(p => p.id));
+  const commentIds = new Set(comments.map(c => c.id));
+  if (users.some(u => !SAMPLE_EMAILS.includes(u.email) || u.bio !== MARKER || u.role !== 'student') ||
+      posts.some(p => !ids.has(p.user_id) || !p.content?.startsWith(MARKER + '\n')) ||
+      comments.some(c => !ids.has(c.user_id) || !postIds.has(c.post_id) || !c.content.startsWith(MARKER)) ||
+      likes.some(l => !ids.has(l.user_id) || !(l.target_type === 'post' ? postIds.has(l.target_id) : commentIds.has(l.target_id))) ||
+      follows.some(f => !ids.has(f.follower_id) || !ids.has(f.following_id)) ||
+      bookmarks.some(b => !ids.has(b.user_id) || !postIds.has(b.post_id)) ||
+      notifications.some(n => !ids.has(n.actor_id) || !ids.has(n.recipient_id) ||
+        (n.post_id != null && !postIds.has(n.post_id)) || (n.comment_id != null && !commentIds.has(n.comment_id)))) {
+    throw new Error('REFUSED: foreign or modified ownership detected.');
+  }
+  return { actual, empty: false, users, posts, comments };
 }
-
-undoSampleData()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error('Lỗi khi hoàn tác dữ liệu:', err);
-    process.exit(1);
+async function undo() {
+  await assertDatabaseIdentity(sequelize, dbName);
+  const apply = process.argv.includes('--apply');
+  if (apply && process.env.FE66_ROLLBACK_CONFIRM !== dbName) {
+    throw new Error('REFUSED: --apply requires FE66_ROLLBACK_CONFIRM equal to exact disposable DB_NAME.');
+  }
+  await sequelize.transaction(async transaction => {
+    const data = await inspect(transaction);
+    console.log(JSON.stringify({ database: dbName, mode: apply ? 'APPLY' : 'DRY_RUN', ...data.actual }));
+    if (!apply || data.empty) return;
+    const userIds = data.users.map(u => u.id);
+    const postIds = data.posts.map(p => p.id);
+    const commentIds = data.comments.map(c => c.id);
+    await Notification.destroy({ where: { recipient_id: { [Op.in]: userIds } }, transaction });
+    await Like.destroy({ where: { user_id: { [Op.in]: userIds } }, transaction });
+    await Bookmark.destroy({ where: { user_id: { [Op.in]: userIds } }, transaction });
+    await Follow.destroy({ where: { follower_id: { [Op.in]: userIds } }, transaction });
+    await Comment.destroy({ where: { id: { [Op.in]: commentIds } }, transaction });
+    await Post.destroy({ where: { id: { [Op.in]: postIds } }, transaction });
+    await User.destroy({ where: { id: { [Op.in]: userIds } }, transaction });
+    console.log('FE66 rollback committed on disposable DB only.');
   });
+}
+undo().catch(err => { console.error(err.message); process.exitCode = 1; }).finally(() => sequelize.close());

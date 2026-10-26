@@ -408,7 +408,7 @@ async function seed() {
       throw new Error('REFUSED: non-fixture users already exist in disposable DB.');
     }
     const existingPosts = await Post.findAll({ transaction });
-    if (existingPosts.some(p => !p.content?.startsWith(MARKER + '\\n'))) {
+    if (existingPosts.some(p => !p.content?.startsWith(MARKER + '\n'))) {
       throw new Error('REFUSED: non-fixture posts already exist.');
     }
     // A rerun must be read-only: do not adopt, repair, or duplicate modified fixtures.
@@ -439,7 +439,7 @@ async function seed() {
       const idx = emailToIndex.get(p.authorEmail);
       if (idx === undefined) throw new Error('Fixture author not found.');
       posts.push(await Post.create({
-        user_id: users[idx].id, title: p.title, content: MARKER + '\\n' + p.content,
+        user_id: users[idx].id, title: p.title, content: MARKER + '\n' + p.content,
         post_type: p.post_type, subject: p.subject, tags: p.tags,
         price: 0, view_count: p.view_count, status: 'active', created_at: p.created_at
       }, { transaction }));

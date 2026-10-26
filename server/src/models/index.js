@@ -2,8 +2,31 @@ const User          = require('./User');
 const Post          = require('./Post');
 const Comment       = require('./Comment');
 const Order         = require('./Order');
+const DocumentFile  = require('./DocumentFile');
+const Bookmark      = require('./Bookmark');
+const Follow        = require('./Follow');
+const ModerationAuditLog = require('./ModerationAuditLog');
+const Notification  = require('./Notification');
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+
+// EXT-01: each bookmark belongs to exactly one account and post.
+User.hasMany(Bookmark, { foreignKey: 'user_id', as: 'bookmarks' });
+Bookmark.belongsTo(User, { foreignKey: 'user_id', as: 'owner' });
+Post.hasMany(Bookmark, { foreignKey: 'post_id', as: 'bookmarks' });
+Bookmark.belongsTo(Post, { foreignKey: 'post_id', as: 'post' });
+
+// EXT-02 directed follows: authenticated user owns the follower ID.
+User.hasMany(Follow, { foreignKey: 'follower_id', as: 'outgoingFollows' });
+User.hasMany(Follow, { foreignKey: 'following_id', as: 'incomingFollows' });
+Follow.belongsTo(User, { foreignKey: 'follower_id', as: 'follower' });
+Follow.belongsTo(User, { foreignKey: 'following_id', as: 'following' });
+
+// EXT-04 notifications: one recipient, one actor, optional visible content.
+Notification.belongsTo(User, { foreignKey: 'actor_id', as: 'actor' });
+Notification.belongsTo(User, { foreignKey: 'recipient_id', as: 'recipient' });
+Notification.belongsTo(Post, { foreignKey: 'post_id', as: 'targetPost' });
+Notification.belongsTo(Comment, { foreignKey: 'comment_id', as: 'targetComment' });
 
 // ── Like model (inline nhỏ gọn) ──────────────────────────────────
 const Like = sequelize.define('Like', {
@@ -23,6 +46,10 @@ const DocumentAccess = sequelize.define('DocumentAccess', {
   granted_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, { tableName: 'document_access', timestamps: false,
      indexes: [{ unique: true, fields: ['user_id', 'post_id'] }] });
+
+// DocumentFile: private metadata, one PDF per document post.
+Post.hasOne(DocumentFile, { foreignKey: 'post_id', as: 'privateFile' });
+DocumentFile.belongsTo(Post, { foreignKey: 'post_id', as: 'post' });
 
 // ── RefreshToken model ───────────────────────────────────────────
 const RefreshToken = sequelize.define('RefreshToken', {
@@ -68,4 +95,4 @@ DocumentAccess.belongsTo(Order, { foreignKey: 'order_id' });
 User.hasMany(RefreshToken, { foreignKey: 'user_id' });
 RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 
-module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken };
+module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile, Bookmark, Follow, ModerationAuditLog, Notification };

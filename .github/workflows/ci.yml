@@ -3,7 +3,7 @@ name: CI — syntax and frontend build
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, integration/team-dev-20261020]
 
 permissions:
   contents: read
@@ -30,6 +30,8 @@ jobs:
         run: npm ci
       - name: Check JavaScript syntax (not integration tests)
         run: find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: FE66 disposable seed guard unit tests (no database)
+        run: node --test tests/fe66-seed-guard.test.cjs
 
   frontend-build:
     name: Frontend production build
@@ -135,14 +137,233 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y default-mysql-client
       - name: Import SQL schema on disposable MySQL
         run: mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/schema.sql
+      - name: Apply DOC-03 document_files migration (disposable DB)
+        run: mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/migrations/20261021_document_files.sql
       - name: Install backend dependencies
         working-directory: server
         run: npm ci
       - name: Test API with real MySQL (no payment/PDF testing)
         working-directory: server
         run: node --test ../scripts/ubuntu/mysql-integration.test.cjs
+      - name: QA-01 two-account ownership and refresh regression (disposable MySQL)
+        working-directory: server
+        run: node --test ../scripts/ubuntu/auth-ownership.test.cjs
+      - name: DOC-03 PDF upload regression (disposable DB)
+        working-directory: server
+        run: node --test ../scripts/ubuntu/pdf-upload.test.cjs
+      - name: DOC-04 authenticated PDF download regression
+        working-directory: server
+        run: node --test ../scripts/ubuntu/pdf-download.test.cjs
       - name: Check Ubuntu scripts shell syntax
         run: bash -n scripts/ubuntu/doctor.sh scripts/ubuntu/setup.sh
       - name: Verify original SQL columns match Sequelize timestamps
         run: |
           mysql --protocol=tcp -h127.0.0.1 -uroot -p"$DB_PASSWORD" -D mini_study_network -e "SHOW COLUMNS FROM likes LIKE 'updated_at'; SHOW COLUMNS FROM refresh_tokens LIKE 'updated_at';"
+
+  e2e01-browser-fullstack:
+    name: E2E-01 Chrome + React + Express + MySQL + PDF
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: e2e01_ci_only
+          MYSQL_DATABASE: mini_study_network
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pe2e01_ci_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: test
+      DB_AUTO_SYNC: 'false'
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: mini_study_network
+      DB_USER: root
+      DB_PASSWORD: e2e01_ci_only
+      JWT_ACCESS_SECRET: e2e01_only_access_secret_not_for_production_20261021
+      JWT_REFRESH_SECRET: e2e01_only_refresh_secret_not_for_production_20261021
+      CLIENT_URL: http://127.0.0.1:5173
+      DOCUMENT_PRIVATE_DIR: /tmp/e2e01-private
+      PORT: 5000
+      E2E_DISPOSABLE_DB: 'true'
+      E2E_UI_URL: http://127.0.0.1:5173
+      E2E_API_URL: http://127.0.0.1:5000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+      - name: Import schema and PDF migration into disposable MySQL 8
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/schema.sql
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/migrations/20261021_document_files.sql
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" -D mini_study_network -e 'SHOW TABLES LIKE "document_files";'
+      - name: Install locked backend and frontend dependencies
+        run: |
+          npm --prefix server ci
+          npm --prefix client ci
+      - name: Install isolated Playwright runner and Chromium (CI-only)
+        run: |
+          npm --prefix client install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          cd client && npx playwright install --with-deps chromium
+      - name: Start actual Express and Vite HTTP servers
+        run: |
+          mkdir -p "$DOCUMENT_PRIVATE_DIR"
+          node server/src/index.js > "$RUNNER_TEMP/e2e01-backend.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/e2e01-backend.pid"
+          npm --prefix client run dev -- --host 127.0.0.1 --strictPort > "$RUNNER_TEMP/e2e01-vite.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/e2e01-vite.pid"
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5000/api/health >/dev/null &&
+               curl -fsS http://127.0.0.1:5173/ >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          echo "HTTP startup failed"; cat "$RUNNER_TEMP/e2e01-backend.log" "$RUNNER_TEMP/e2e01-vite.log"
+          exit 1
+      - name: Run real Chromium browser E2E against MySQL/private disk
+        run: |
+          node --test client/e2e/e2e01.test.cjs
+          node --test client/e2e/fe01.test.cjs
+          # Rate limiter is process-local; keep test-only browser suites independent.
+          # The MySQL 8 container and Vite stay unchanged, no data is reset.
+          old_backend_pid="$(cat "$RUNNER_TEMP/e2e01-backend.pid")"
+          kill "$old_backend_pid"
+          for i in $(seq 1 40); do
+            if ! kill -0 "$old_backend_pid" 2>/dev/null; then break; fi
+            sleep 0.25
+          done
+          node server/src/index.js > "$RUNNER_TEMP/e2e01-backend-p3.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/e2e01-backend.pid"
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:5000/api/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:5000/api/health >/dev/null
+          node --test client/e2e/fe66-p3.test.cjs
+      - name: Upload responsive Chromium screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fe01-responsive-screenshots
+          path: ${{ runner.temp }}/fe01-responsive/*.png
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Show process logs for diagnostics on failure
+
+        if: failure()
+        run: |
+          test ! -f "$RUNNER_TEMP/e2e01-backend.log" || tail -n 100 "$RUNNER_TEMP/e2e01-backend.log"
+          test ! -f "$RUNNER_TEMP/e2e01-vite.log" || tail -n 100 "$RUNNER_TEMP/e2e01-vite.log"
+      - name: Cleanup isolated processes and PDF fixtures
+        if: always()
+        run: |
+          for name in backend vite; do
+            if test -f "$RUNNER_TEMP/e2e01-$name.pid"; then
+              kill "$(cat "$RUNNER_TEMP/e2e01-$name.pid")" 2>/dev/null || true
+            fi
+          done
+          if test -n "$DOCUMENT_PRIVATE_DIR" && test -d "$DOCUMENT_PRIVATE_DIR"; then
+            rm -rf -- "$DOCUMENT_PRIVATE_DIR"
+          fi
+
+  fe66-seed-mysql8-regression:
+    name: FE66 P1 isolated MySQL 8 seed and rollback regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: fe66_ci_root_only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pfe66_ci_root_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: test
+      DB_AUTO_SYNC: 'false'
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_NAME: fe66_seed_ci_20261026
+      DB_USER: fe66_runner
+      DB_PASSWORD: fe66_ci_user_only
+      FE66_MYSQL_ROOT_PASSWORD: fe66_ci_root_only
+      FE66_SEED_DISPOSABLE: I_UNDERSTAND_THIS_IS_DISPOSABLE
+      FE66_DEMO_PASSWORD: OnlyForCiDemo_2026
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install locked backend dependencies and MySQL client
+        run: |
+          npm --prefix server ci
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
+      - name: Create isolated FE66 schema with no preexisting admin user
+        run: |
+          node scripts/ubuntu/fe66-prepare-ci-schema.cjs
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" < "$RUNNER_TEMP/fe66-schema.sql"
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" < "$RUNNER_TEMP/fe66-document-files.sql"
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" -e "CREATE USER 'fe66_runner'@'%' IDENTIFIED BY 'fe66_ci_user_only'; GRANT ALL PRIVILEGES ON fe66_seed_ci_20261026.* TO 'fe66_runner'@'%';"
+      - name: Execute destructive-safety and transactional regression against disposable MySQL 8
+        run: node --test scripts/ubuntu/fe66-seed-regression.test.cjs
+
+  fe66-p2-api-contract-regression:
+    name: FE66 P2 Express + MySQL 8 API Contract Regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: fe66_p2_ci_root_only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pfe66_p2_ci_root_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: test
+      DB_AUTO_SYNC: 'false'
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_NAME: fe66_seed_p2_ci2026
+      DB_USER: fe66_p2_runner
+      DB_PASSWORD: fe66_p2_ci_user_only
+      FE66_MYSQL_ROOT_PASSWORD: fe66_p2_ci_root_only
+      FE66_SEED_DISPOSABLE: I_UNDERSTAND_THIS_IS_DISPOSABLE
+      JWT_ACCESS_SECRET: fe66_p2_ci_access_only_do_not_use_outside_disposable_mysql8
+      CLIENT_URL: http://127.0.0.1:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install locked backend dependencies and MySQL client
+        run: |
+          npm --prefix server ci
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
+      - name: Prepare dedicated MySQL 8 schema and restricted CI account
+        run: |
+          node scripts/ubuntu/fe66-prepare-ci-schema.cjs
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" < "$RUNNER_TEMP/fe66-schema.sql"
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" < "$RUNNER_TEMP/fe66-document-files.sql"
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" -e "CREATE USER 'fe66_p2_runner'@'%' IDENTIFIED BY 'fe66_p2_ci_user_only'; GRANT ALL PRIVILEGES ON fe66_seed_p2_ci2026.* TO 'fe66_p2_runner'@'%';"
+      - name: Test Notifications, Follow, Bookmarks, Admin Audit HTTP contracts and authorization
+        run: node --test scripts/ubuntu/fe66-p2-api-contract.test.cjs

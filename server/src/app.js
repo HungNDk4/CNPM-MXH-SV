@@ -2,16 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const path = require('path');
 const rateLimit = require('express-rate-limit');
 
 const authRoutes    = require('./routes/auth.routes');
 const userRoutes    = require('./routes/user.routes');
 const postRoutes    = require('./routes/post.routes');
+const documentRoutes = require('./routes/document.routes');
 const commentRoutes = require('./routes/comment.routes');
 const likeRoutes    = require('./routes/like.routes');
-const orderRoutes   = require('./routes/order.routes');
-const paymentRoutes = require('./routes/payment.routes');
 
 const { errorHandler } = require('./middlewares/error.middleware');
 
@@ -42,7 +40,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // ─── Static Files (uploads) ──────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// No public static mount for protected PDFs (SEC-01).
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -53,10 +51,9 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth',     authRoutes);
 app.use('/api/users',    userRoutes);
 app.use('/api/posts',    postRoutes);
+app.use('/api/documents', documentRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/likes',    likeRoutes);
-app.use('/api/orders',   orderRoutes);
-app.use('/api/payment',  paymentRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────
 app.use('*', (req, res) => {

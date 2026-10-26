@@ -25,6 +25,9 @@ Sinh viên đăng câu hỏi, thảo luận và chia sẻ tài liệu học tậ
 
 Hướng dẫn và lưu ý: [docs/DEV_SETUP.md](docs/DEV_SETUP.md).
 
+## Bắt đầu lập trình song song — Sprint 01 (chưa merge main)
+- [TEAM_SPRINT01_20261020.md](docs/ops/TEAM_SPRINT01_20261020.md): shared preview `integration/team-dev-20261020`, GitHub Issues #11–#18, lệnh tách nhánh trên WSL và máy Frontend, API handoff/file boundary.
+
 ## WBS/Quy trình cho nhóm 2 người
 - [CORE_BACKEND_TEAM_HANDOFF_20261020.md](docs/CORE_BACKEND_TEAM_HANDOFF_20261020.md): phân luồng mới — người dùng xác nhận Core Backend; hướng Frontend/Design cho thành viên còn lại chờ xác nhận gói việc, setup status và backlog không overlap.
 - [TEAM_WBS_UNASSIGNED.md](docs/TEAM_WBS_UNASSIGNED.md): 43 work packages, phụ thuộc độc lập/cần hợp đồng/cần runtime/cần sign-off, chia theo 2 luồng A/B **không gán tên người**.

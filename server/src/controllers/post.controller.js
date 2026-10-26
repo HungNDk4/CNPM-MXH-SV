@@ -1,39 +1,91 @@
-const { Post, User, DocumentAccess, Like } = require('../models');
+const { Post, User } = require('../models');
 const { createError } = require('../middlewares/error.middleware');
 const { Op } = require('sequelize');
+const { toSafePost } = require('../utils/post.dto');
+const { positiveId } = require('../utils/interaction-target');
+const { validateCreatePost, validateEditPost } = require('../utils/post-input');
 
 /**
  * GET /api/posts?page=1&limit=10&type=document&subject=cnpm&search=react
  */
+// BE-06: bounded and validated query parsing; malformed input is a 422, never a DB error.
+const positiveIntQuery = (value, label, fallback, maximum) => {
+  if (value === undefined) return fallback;
+  if (typeof value !== 'string' || !/^[1-9][0-9]*$/.test(value)) {
+    throw createError(label + ' phải là số nguyên dương.', 422);
+  }
+  const n = Number(value);
+  if (!Number.isSafeInteger(n) || n > maximum) {
+    throw createError(label + ' vượt quá giới hạn.', 422);
+  }
+  return n;
+};
+
+const textQuery = (value, label, maximum) => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || !value.trim() || value.trim().length > maximum) {
+    throw createError(label + ' không hợp lệ.', 422);
+  }
+  return value.trim();
+};
+
+const priceQuery = (value, label) => {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || !/^(?:0|[1-9][0-9]{0,7})(?:\.[0-9]{1,2})?$/.test(value)) {
+    throw createError(label + ' phải là giá không âm, tối đa 2 chữ số thập phân.', 422);
+  }
+  return Number(value);
+};
+
+// MySQL/TiDB LIKE wildcards in user text must be matched literally.
+const escapeLike = (value) => value.replace(/[\\%_]/g, '\\$&');
+
 const getPosts = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, type, subject, search, minPrice, maxPrice } = req.query;
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const { type } = req.query;
+    // Keep ADR-002/011: only free document metadata is public; other feeds require login.
+    if (!req.user && type !== 'document') {
+      throw createError('Yêu cầu đăng nhập để xem bài viết.', 401);
+    }
+    if (type !== undefined && (typeof type !== 'string' ||
+        !['question', 'discussion', 'document'].includes(type))) {
+      throw createError('Loại bài viết không hợp lệ.', 422);
+    }
 
-    const where = { status: 'active' };
-    if (type)    where.post_type = type;
-    if (subject) where.subject = { [Op.like]: `%${subject}%` };
-    if (search)  where.title   = { [Op.like]: `%${search}%` };
-    if (minPrice !== undefined) where.price = { ...where.price, [Op.gte]: parseFloat(minPrice) };
-    if (maxPrice !== undefined) where.price = { ...where.price, [Op.lte]: parseFloat(maxPrice) };
+    const page = positiveIntQuery(req.query.page, 'page', 1, 10000);
+    const limit = positiveIntQuery(req.query.limit, 'limit', 10, 50);
+    const subject = textQuery(req.query.subject, 'subject', 200);
+    const search = textQuery(req.query.search, 'search', 100);
+    const minPrice = priceQuery(req.query.minPrice, 'minPrice');
+    const maxPrice = priceQuery(req.query.maxPrice, 'maxPrice');
+    if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+      throw createError('minPrice không được lớn hơn maxPrice.', 422);
+    }
+
+    // Free-first: no paid legacy posts (of any type), suppressed posts or file paths.
+    const where = { status: 'active', price: 0 };
+    if (type) where.post_type = type;
+    if (subject !== undefined) where.subject = { [Op.like]: '%' + escapeLike(subject) + '%' };
+    if (search !== undefined) where.title = { [Op.like]: '%' + escapeLike(search) + '%' };
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      const bounds = {};
+      if (minPrice !== undefined) bounds[Op.gte] = minPrice;
+      if (maxPrice !== undefined) bounds[Op.lte] = maxPrice;
+      where[Op.and] = [{ price: bounds }];
+    }
 
     const { count, rows } = await Post.findAndCountAll({
       where,
       include: [{ model: User, as: 'author', attributes: ['id', 'full_name', 'avatar_url', 'university'] }],
-      order:   [['created_at', 'DESC']],
-      limit:   parseInt(limit),
-      offset,
+      order: [['created_at', 'DESC'], ['id', 'DESC']],
+      limit,
+      offset: (page - 1) * limit,
     });
 
     res.json({
       success: true,
-      data: rows,
-      pagination: {
-        total: count,
-        page:  parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(count / parseInt(limit)),
-      },
+      data: rows.map(toSafePost),
+      pagination: { total: count, page, limit, totalPages: Math.ceil(count / limit) },
     });
   } catch (error) {
     next(error);
@@ -45,30 +97,26 @@ const getPosts = async (req, res, next) => {
  */
 const getPostById = async (req, res, next) => {
   try {
-    const post = await Post.findByPk(req.params.id, {
+    // Validate path ID before a public database query (422, never raw ORM error).
+    const id = positiveId(req.params.id);
+    const post = await Post.findByPk(id, {
       include: [{ model: User, as: 'author', attributes: ['id', 'full_name', 'avatar_url'] }],
     });
-    if (!post || post.status === 'deleted') throw createError('Bài viết không tồn tại.', 404);
-
-    // Ẩn file_url nếu tài liệu có phí và chưa mua
-    let responseData = post.toJSON();
-    if (post.price > 0 && post.post_type === 'document') {
-      if (!req.user) {
-        responseData.file_url = null;
-      } else {
-        const hasAccess = await DocumentAccess.findOne({
-          where: { user_id: req.user.id, post_id: post.id },
-        });
-        if (!hasAccess && post.user_id !== req.user.id) {
-          responseData.file_url = null;
-        }
-      }
+    if (!post) throw createError('Bài viết không tồn tại.', 404);
+    // Suppressed/paid posts must return the same 404 for guests and members.
+    // Check visibility before the member-only question/discussion login gate.
+    if (post.status !== 'active' || Number(post.price) !== 0) {
+      throw createError('Bài viết không tồn tại.', 404);
+    }
+    // ADR-002 still keeps general social posts member-only.
+    if (!req.user && post.post_type !== 'document') {
+      throw createError('Yêu cầu đăng nhập để xem bài viết.', 401);
     }
 
     // Tăng view count
     await post.increment('view_count');
 
-    res.json({ success: true, data: responseData });
+    res.json({ success: true, data: toSafePost(post) });
   } catch (error) {
     next(error);
   }
@@ -79,25 +127,12 @@ const getPostById = async (req, res, next) => {
  */
 const createPost = async (req, res, next) => {
   try {
-    const { title, content, post_type, price, subject, tags, file_url, file_name } = req.body;
-
-    const post = await Post.create({
-      user_id: req.user.id,
-      title, content, post_type,
-      price: parseFloat(price || 0),
-      subject, tags,
-      file_url, file_name,
+    const values = validateCreatePost(req.body);
+    const post = await Post.create({ ...values, user_id: req.user.id });
+    res.status(201).json({
+      success: true, message: 'Đăng bài thành công.', data: toSafePost(post),
     });
-
-    // Nếu tài liệu miễn phí, tự động cấp quyền cho tác giả
-    if (post.post_type === 'document') {
-      await DocumentAccess.create({ user_id: req.user.id, post_id: post.id });
-    }
-
-    res.status(201).json({ success: true, message: 'Đăng bài thành công.', data: post });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
 /**
@@ -105,19 +140,30 @@ const createPost = async (req, res, next) => {
  */
 const updatePost = async (req, res, next) => {
   try {
-    const post = await Post.findByPk(req.params.id);
+    const id = positiveId(req.params.id);
+    const post = await Post.findByPk(id);
     if (!post) throw createError('Bài viết không tồn tại.', 404);
-    if (post.user_id !== req.user.id && req.user.role !== 'admin') throw createError('Không có quyền sửa bài.', 403);
+    const admin = req.user.role === 'admin';
+    if (!admin && post.user_id !== req.user.id) {
+      throw createError('Không có quyền sửa bài.', 403);
+    }
+    // BE-10 fail-closed: ADR-013 authorizes hide/delete only, not restore
+    // or edits of suppressed content, even by Admin. The BE-08 endpoint is
+    // the supported post-publication moderation path.
+    if (post.status !== 'active') {
+      throw createError('Không thể sửa bài viết đã ẩn hoặc xóa.', 403);
+    }
+    const changes = validateEditPost(req.body);
 
-    const allowed = ['title', 'content', 'subject', 'tags', 'status'];
-    const updates = {};
-    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
-
-    await post.update(updates);
-    res.json({ success: true, message: 'Cập nhật thành công.', data: post });
-  } catch (error) {
-    next(error);
-  }
+    // Compare-and-set protects against concurrent moderation suppressing a post
+    // after the owner read it but before the write.
+    const where = { id, status: post.status };
+    if (!admin) where.user_id = req.user.id;
+    const [affected] = await Post.update(changes, { where });
+    if (affected !== 1) throw createError('Trạng thái bài viết đã thay đổi.', 409);
+    const updated = await Post.findByPk(id);
+    res.json({ success: true, message: 'Cập nhật thành công.', data: toSafePost(updated) });
+  } catch (error) { next(error); }
 };
 
 /**
@@ -125,15 +171,15 @@ const updatePost = async (req, res, next) => {
  */
 const deletePost = async (req, res, next) => {
   try {
-    const post = await Post.findByPk(req.params.id);
+    const id = positiveId(req.params.id);
+    const post = await Post.findByPk(id);
     if (!post) throw createError('Bài viết không tồn tại.', 404);
-    if (post.user_id !== req.user.id && req.user.role !== 'admin') throw createError('Không có quyền xóa.', 403);
-
-    await post.update({ status: 'deleted' }); // Soft delete
+    if (post.user_id !== req.user.id && req.user.role !== 'admin') {
+      throw createError('Không có quyền xóa.', 403);
+    }
+    await Post.update({ status: 'deleted' }, { where: { id } });
     res.json({ success: true, message: 'Xóa bài viết thành công.' });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };
 
 module.exports = { getPosts, getPostById, createPost, updatePost, deletePost };

@@ -190,12 +190,12 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       await page.goto(UI+'/');
       await page.getByRole('button',{name:'Thông báo'}).click();
       await page.getByRole('heading',{name:'Thông báo'}).waitFor();
-      await page.getByText('Bình luận về bài viết của bạn').first().waitFor();
+      await page.getByText('Đã bình luận về bài viết của bạn').first().waitFor();
       // Click first unread comment event; navigation must use actual post id.
       const pending=page.waitForResponse(res=>
         new URL(res.url()).pathname==='/api/users/me/notifications/'+first.id+'/read' &&
         res.request().method()==='PATCH');
-      await page.getByText('Bình luận về bài viết của bạn').first().click();
+      await page.getByText('Đã bình luận về bài viết của bạn').first().click();
       assert.equal((await pending).status(),200);
       await page.waitForURL(u=>u.pathname==='/posts/'+other.id);
       assert.equal((await Notification.findByPk(first.id)).is_read,true);
@@ -212,7 +212,7 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       await page.getByRole('heading',{name:other.title,exact:true}).waitFor();
       await page.getByRole('button',{name:'Xóa từ khóa tìm kiếm'}).click();
       await page.waitForURL(u=>!u.searchParams.has('search'));
-      await page.locator('main').getByRole('button',{name:'Thảo luận'}).click();
+      await page.getByRole('button',{name:'Thảo luận'}).last().click();
       await page.getByRole('heading',{name:other.title,exact:true}).waitFor();
       assert.equal(await page.getByRole('heading',{name:'P3 Edited '+seed,exact:true}).count(),0);
     });

@@ -258,3 +258,49 @@ jobs:
           if test -n "$DOCUMENT_PRIVATE_DIR" && test -d "$DOCUMENT_PRIVATE_DIR"; then
             rm -rf -- "$DOCUMENT_PRIVATE_DIR"
           fi
+
+  fe66-seed-mysql8-regression:
+    name: FE66 P1 isolated MySQL 8 seed and rollback regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: fe66_ci_root_only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pfe66_ci_root_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: test
+      DB_AUTO_SYNC: 'false'
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_NAME: fe66_seed_ci_20261026
+      DB_USER: fe66_runner
+      DB_PASSWORD: fe66_ci_user_only
+      FE66_MYSQL_ROOT_PASSWORD: fe66_ci_root_only
+      FE66_SEED_DISPOSABLE: I_UNDERSTAND_THIS_IS_DISPOSABLE
+      FE66_DEMO_PASSWORD: OnlyForCiDemo_2026
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install locked backend dependencies and MySQL client
+        run: |
+          npm --prefix server ci
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
+      - name: Create isolated FE66 schema with no preexisting admin user
+        run: |
+          node scripts/ubuntu/fe66-prepare-ci-schema.cjs
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" < "$RUNNER_TEMP/fe66-schema.sql"
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" < "$RUNNER_TEMP/fe66-document-files.sql"
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" -e "CREATE USER 'fe66_runner'@'%' IDENTIFIED BY 'fe66_ci_user_only'; GRANT ALL PRIVILEGES ON fe66_seed_ci_20261026.* TO 'fe66_runner'@'%';"
+      - name: Execute destructive-safety and transactional regression against disposable MySQL 8
+        run: node --test scripts/ubuntu/fe66-seed-regression.test.cjs

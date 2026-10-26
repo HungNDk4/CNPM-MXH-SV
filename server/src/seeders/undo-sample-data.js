@@ -50,6 +50,9 @@ async function undo() {
     const postIds = data.posts.map(p => p.id);
     const commentIds = data.comments.map(c => c.id);
     await Notification.destroy({ where: { recipient_id: { [Op.in]: userIds } }, transaction });
+    if (process.env.FE66_TEST_FAIL_STAGE === 'rollback-after-notifications') {
+      throw new Error('FE66 injected rollback failure after first deletion');
+    }
     await Like.destroy({ where: { user_id: { [Op.in]: userIds } }, transaction });
     await Bookmark.destroy({ where: { user_id: { [Op.in]: userIds } }, transaction });
     await Follow.destroy({ where: { follower_id: { [Op.in]: userIds } }, transaction });

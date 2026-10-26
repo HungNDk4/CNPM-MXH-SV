@@ -233,6 +233,7 @@ jobs:
         run: |
           node --test client/e2e/e2e01.test.cjs
           node --test client/e2e/fe01.test.cjs
+          node --test client/e2e/fe66-p3.test.cjs
       - name: Upload responsive Chromium screenshots
         if: always()
         uses: actions/upload-artifact@v4

@@ -30,6 +30,8 @@ jobs:
         run: npm ci
       - name: Check JavaScript syntax (not integration tests)
         run: find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: FE66 disposable seed guard unit tests (no database)
+        run: node --test tests/fe66-seed-guard.test.cjs
 
   frontend-build:
     name: Frontend production build

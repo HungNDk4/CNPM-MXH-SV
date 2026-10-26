@@ -444,6 +444,10 @@ async function seed() {
         price: 0, view_count: p.view_count, status: 'active', created_at: p.created_at
       }, { transaction }));
     }
+    // Simulate transaction failure only in the explicitly disposable test runtime.
+    if (process.env.FE66_TEST_FAIL_STAGE === 'seed-after-posts') {
+      throw new Error('FE66 injected seed failure after posts');
+    }
     // Entirely fixture-to-fixture relations; no references to real or existing accounts.
     const comment = await Comment.create({
       user_id: users[1].id, post_id: posts[0].id, content: MARKER + ' demo comment', status: 'active'

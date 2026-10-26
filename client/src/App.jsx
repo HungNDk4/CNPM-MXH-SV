@@ -13,6 +13,8 @@ import PostDetailPage from '@/pages/posts/PostDetailPage'
 import DocumentDetailPage from '@/pages/documents/DocumentDetailPage'
 import CreatePostPage from '@/pages/posts/CreatePostPage'
 import ProfilePage   from '@/pages/profile/ProfilePage'
+import BookmarksPage from '@/pages/bookmarks/BookmarksPage'
+import AdminAuditPage from '@/pages/admin/AdminAuditPage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
 import NotFoundPage  from '@/pages/NotFoundPage'
 
@@ -21,6 +23,15 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore()
   return isAuthenticated ? children : <Navigate to="/login" replace />
 }
+
+// Route bảo vệ Admin
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, user } = useAuthStore()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (user?.role !== 'admin') return <Navigate to="/" replace />
+  return children
+}
+
 
 export default function App() {
   return (
@@ -43,7 +54,17 @@ export default function App() {
         <Route path="/posts/create" element={
           <ProtectedRoute><CreatePostPage /></ProtectedRoute>
         } />
+        <Route path="/bookmarks" element={
+          <ProtectedRoute><BookmarksPage /></ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <Navigate to="/admin/audit-logs" replace />
+        } />
+        <Route path="/admin/audit-logs" element={
+          <AdminRoute><AdminAuditPage /></AdminRoute>
+        } />
       </Route>
+
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

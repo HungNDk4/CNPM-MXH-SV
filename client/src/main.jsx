@@ -5,8 +5,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import App from './App.jsx'
 import './index.css'
+import { useThemeStore } from '@/stores/themeStore'
+
+// Initialize theme on app boot
+useThemeStore.getState().initTheme()
 
 const queryClient = new QueryClient({
+
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,   // 5 phút

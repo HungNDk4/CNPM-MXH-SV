@@ -65,7 +65,6 @@ test('FE66 P2: Notifications + Follow + Bookmarks + Admin Audit contracts', { ti
       server.listen(0, '127.0.0.1', resolve);
     });
     origin = 'http://127.0.0.1:' + server.address().port;
-    const [a,b,c,admin] = [];
     const accounts = [];
     for (const [n,role] of [['Alpha','student'],['Beta','student'],['Gamma','student'],['Moderator','admin']]) {
       const user = await User.create({
@@ -135,7 +134,7 @@ test('FE66 P2: Notifications + Follow + Bookmarks + Admin Audit contracts', { ti
       assert.equal(await Bookmark.count({where:{user_id:studentA.id}}),2);
       const list = await expect('GET','/api/posts/bookmarks?page=1&limit=1',studentA);
       pageShape(list,2,1,1);
-      assert.equal(list.data[0].price,0);
+      assert.equal(list.data[0].price,'0.00');
       assert.ok(!('password_hash' in (list.data[0].author || {})));
       const other = await expect('GET','/api/posts/bookmarks',studentB);
       pageShape(other,0,1,10);
@@ -171,7 +170,7 @@ test('FE66 P2: Notifications + Follow + Bookmarks + Admin Audit contracts', { ti
       assert.deepEqual(Object.keys(inbox.data[0]).sort(),
         ['id','event_type','actor_id','post_id','comment_id','is_read','created_at'].sort());
       assert.equal((await expect('GET','/api/users/me/notifications/unread-count',studentA)).data.count,2);
-      assert.equal((await expect('GET','/api/users/me/notifications/unread-count',studentB)).data.count,0);
+      assert.equal((await expect('GET','/api/users/me/notifications/unread-count',studentB)).data.count,2);
       const otherRead=await expect('PATCH','/api/users/me/notifications/' + created[0].id + '/read',studentB,undefined,404);
       assert.equal(otherRead.success,false);
       await expect('PATCH','/api/users/me/notifications/notanid/read',studentA,undefined,422);

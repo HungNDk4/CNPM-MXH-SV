@@ -304,3 +304,50 @@ jobs:
           mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" -e "CREATE USER 'fe66_runner'@'%' IDENTIFIED BY 'fe66_ci_user_only'; GRANT ALL PRIVILEGES ON fe66_seed_ci_20261026.* TO 'fe66_runner'@'%';"
       - name: Execute destructive-safety and transactional regression against disposable MySQL 8
         run: node --test scripts/ubuntu/fe66-seed-regression.test.cjs
+
+  fe66-p2-api-contract-regression:
+    name: FE66 P2 Express + MySQL 8 API Contract Regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: fe66_p2_ci_root_only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pfe66_p2_ci_root_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: test
+      DB_AUTO_SYNC: 'false'
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_NAME: fe66_seed_p2_ci2026
+      DB_USER: fe66_p2_runner
+      DB_PASSWORD: fe66_p2_ci_user_only
+      FE66_MYSQL_ROOT_PASSWORD: fe66_p2_ci_root_only
+      FE66_SEED_DISPOSABLE: I_UNDERSTAND_THIS_IS_DISPOSABLE
+      JWT_ACCESS_SECRET: fe66_p2_ci_access_only_do_not_use_outside_disposable_mysql8
+      CLIENT_URL: http://127.0.0.1:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install locked backend dependencies and MySQL client
+        run: |
+          npm --prefix server ci
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
+      - name: Prepare dedicated MySQL 8 schema and restricted CI account
+        run: |
+          node scripts/ubuntu/fe66-prepare-ci-schema.cjs
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" < "$RUNNER_TEMP/fe66-schema.sql"
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" < "$RUNNER_TEMP/fe66-document-files.sql"
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$FE66_MYSQL_ROOT_PASSWORD" -e "CREATE USER 'fe66_p2_runner'@'%' IDENTIFIED BY 'fe66_p2_ci_user_only'; GRANT ALL PRIVILEGES ON fe66_seed_p2_ci2026.* TO 'fe66_p2_runner'@'%';"
+      - name: Test Notifications, Follow, Bookmarks, Admin Audit HTTP contracts and authorization
+        run: node --test scripts/ubuntu/fe66-p2-api-contract.test.cjs

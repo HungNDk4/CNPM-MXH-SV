@@ -233,6 +233,16 @@ jobs:
         run: |
           node --test client/e2e/e2e01.test.cjs
           node --test client/e2e/fe01.test.cjs
+          # Rate limiter is process-local; keep test-only browser suites independent.
+          # The MySQL 8 container and Vite stay unchanged, no data is reset.
+          kill "$(cat "$RUNNER_TEMP/e2e01-backend.pid")"
+          node server/src/index.js > "$RUNNER_TEMP/e2e01-backend-p3.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/e2e01-backend.pid"
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:5000/api/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:5000/api/health >/dev/null
           node --test client/e2e/fe66-p3.test.cjs
       - name: Upload responsive Chromium screenshots
         if: always()

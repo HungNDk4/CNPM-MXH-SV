@@ -36,14 +36,14 @@ const TYPE_CONFIG = {
   },
 }
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, initialBookmarked = false }) {
   const qc = useQueryClient()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   // Like & Bookmark state
   const [likesCount, setLikesCount] = useState(Number(post.like_count) || 0)
   const [isLiked, setIsLiked] = useState(null) // null = unknown until first user interaction
-  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked)
 
   const isFree = !post.price || parseFloat(post.price) === 0
   const typeConfig = TYPE_CONFIG[post.post_type] || TYPE_CONFIG.discussion

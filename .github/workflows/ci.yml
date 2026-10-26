@@ -3,7 +3,7 @@ name: CI — syntax and frontend build
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, integration/team-dev-20261020]
 
 permissions:
   contents: read

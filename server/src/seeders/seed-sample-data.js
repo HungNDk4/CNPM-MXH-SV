@@ -1,33 +1,13 @@
-/**
- * Mini Study Network - Sample Data Seeder
- * 
- * Safe, idempotent seed script for development and UI demo.
- * Does not overwrite or delete existing user data.
- * 
- * Usage:
- *   cd server
- *   node src/seeders/seed-sample-data.js
- */
-
 'use strict';
 require('dotenv').config();
-
 const bcrypt = require('bcryptjs');
-const {
-  sequelize,
-  User,
-  Post,
-  Comment,
-  Like,
-  Follow,
-  Bookmark,
-  Notification,
-} = require('../models');
-
-// Standard demo password for all seeded sample student accounts
-const DEMO_PASSWORD = 'Student@123';
-const DEMO_PASSWORD_HASH = bcrypt.hashSync(DEMO_PASSWORD, 10);
-
+const { assertDisposableEnvironment, assertDatabaseIdentity } = require('./fe66-disposable-guard');
+// Fail closed BEFORE loading DB models or creating any data.
+const dbName = assertDisposableEnvironment();
+const { sequelize, User, Post, Comment, Like, Follow, Bookmark, Notification, Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog } = require('../models');
+const MARKER = '[FE66_DISPOSABLE_FIXTURE_V1]';
+const DEMO_PASSWORD = process.env.FE66_DEMO_PASSWORD;
+if (!DEMO_PASSWORD || DEMO_PASSWORD.length < 12) throw new Error('FE66_DEMO_PASSWORD must be explicitly set (>=12 characters).');
 // 10 Sample Student Accounts
 const SAMPLE_STUDENTS = [
   {
@@ -411,448 +391,72 @@ Bạn nào đã từng tối ưu bài toán này trong thực tế có thể chi
   },
 ];
 
-// Seed function
-async function seedSampleData() {
-  console.log('--- BẮT ĐẦU SEED DỮ LIỆU MẪU CHO MINI STUDY NETWORK ---');
 
-  // Step 1: Ensure existing core users remain untouched
-  const existingUsers = await User.findAll({ attributes: ['id', 'email', 'full_name'] });
-  console.log(`Tìm thấy ${existingUsers.length} tài khoản người dùng hiện tại.`);
-
-  // Target user 2 (Nguyễn Hùng) if exists
-  const targetUser = existingUsers.find(u => u.id === 2 || u.email === 'hungnd13112004@gmail.com');
-  if (targetUser) {
-    console.log(`Tài khoản chính để kiểm thử: ${targetUser.full_name} (${targetUser.email}, ID: ${targetUser.id})`);
+const auxiliaryModels = [Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog];
+async function assertNoOtherData(transaction) {
+  for (const model of auxiliaryModels) {
+    if (await model.count({ transaction }) !== 0) throw new Error('REFUSED: auxiliary table contains non-fixture records: ' + model.tableName);
   }
-
-  // Step 2: Seed or update 10 sample students
-  console.log('\n--- 1. TẠO 10 TÀI KHOẢN SINH VIÊN MẪU ---');
-  const userMap = new Map(); // email -> user record
-
-  for (const stu of SAMPLE_STUDENTS) {
-    const [user, created] = await User.findOrCreate({
-      where: { email: stu.email },
-      defaults: {
-        ...stu,
-        password_hash: DEMO_PASSWORD_HASH,
-        wallet_balance: 0.00,
-        is_active: true,
-      },
-    });
-    userMap.set(stu.email, user);
-    console.log(` ${created ? '[TẠO MỚI]' : '[ĐÃ TỒN TẠI]'} ${user.full_name} (${user.email}) - ID: ${user.id}`);
-  }
-
-  // Also map existing user 2 and 3 if present
-  if (targetUser) userMap.set(targetUser.email, targetUser);
-  const demo1User = existingUsers.find(u => u.email === 'demo1@gmail.com');
-  if (demo1User) userMap.set(demo1User.email, demo1User);
-
-  const studentList = Array.from(userMap.values());
-
-  // Step 3: Seed 18 sample posts
-  console.log('\n--- 2. TẠO 18 BÀI VIẾT MẪU (THẢO LUẬN, HỎI ĐÁP, TÀI LIỆU) ---');
-  const postList = [];
-
-  for (const postData of SAMPLE_POSTS) {
-    const author = userMap.get(postData.authorEmail);
-    if (!author) continue;
-
-    const [post, created] = await Post.findOrCreate({
-      where: { title: postData.title },
-      defaults: {
-        user_id: author.id,
-        title: postData.title,
-        content: postData.content,
-        post_type: postData.post_type,
-        price: 0.00,
-        subject: postData.subject,
-        tags: postData.tags,
-        view_count: postData.view_count,
-        status: 'active',
-        created_at: postData.created_at,
-        updated_at: postData.created_at,
-      },
-    });
-    postList.push(post);
-    console.log(` ${created ? '[TẠO MỚI]' : '[ĐÃ TỒN TẠI]'} [${post.post_type.toUpperCase()}] "${post.title.slice(0, 45)}..." - Tác giả: ${author.full_name}`);
-  }
-
-  // Step 4: Seed Comments & 1-level Replies
-  console.log('\n--- 3. TẠO BÌNH LUẬN VÀ TRẢ LỜI BÌNH LUẬN ---');
-  let commentCount = 0;
-  const sampleCommentsConfig = [
-    // Post 0 (Kinh nghiệm đồ án)
-    {
-      postIndex: 0,
-      authorEmail: 'hoangnam.le@studynet.vn',
-      content: 'Bài viết quá chi tiết và thực tế! Em rất đồng ý với ý số 3 về việc chia branch và PR review nghiêm túc, lúc bảo vệ thầy cô mở commit log ra xem khen nhóm chuyên nghiệp lắm.',
-      replies: [
-        {
-          authorEmail: 'minhanh.tran@studynet.vn',
-          content: 'Cảm ơn Nam nhé! Làm nhóm từ 2 người trở lên mà không có Git review là rất dễ conflict code lúc gần ngày nộp.',
-        },
-      ],
-    },
-    {
-      postIndex: 0,
-      authorEmail: 'quanghuy.do@studynet.vn',
-      content: 'Cho mình hỏi về phần Unit test thì thường nhóm bạn viết bao nhiêu test case và dùng thư viện nào vậy?',
-      replies: [
-        {
-          authorEmail: 'minhanh.tran@studynet.vn',
-          content: 'Nhóm mình dùng Jest và Supertest cho backend, viết khoảng 45 test cases bao phủ các luồng auth, xử lý đơn hàng và phân quyền bạn nhé.',
-        },
-      ],
-    },
-    // Post 1 (MySQL Optimization)
-    {
-      postIndex: 1,
-      authorEmail: 'quocbao.dang@studynet.vn',
-      content: 'Với 5 triệu dòng thì không nên GROUP BY trực tiếp ở runtime nữa bạn ơi. Giải pháp chuẩn là tạo bảng `monthly_order_summary` chạy job cron tính sẵn mỗi đêm, query dashboard chỉ đọc từ bảng summary đó là dưới 50ms ngay.',
-      replies: [
-        {
-          authorEmail: 'thutrang.pham@studynet.vn',
-          content: 'Ý kiến rất hay ạ! Em sẽ áp dụng summary table cho các báo cáo lịch sử, cảm ơn anh Bảo nhiều!',
-        },
-      ],
-    },
-    {
-      postIndex: 1,
-      authorEmail: 'haiyen.vu@studynet.vn',
-      content: 'Kiểm tra xem composite index `(created_at, user_id)` thứ tự cột đã tối ưu cho mệnh đề WHERE và GROUP BY chưa nhé, nếu WHERE user_id trước thì index phải là `(user_id, created_at)`.',
-    },
-    // Post 2 (Bộ tài liệu Fullstack)
-    {
-      postIndex: 2,
-      authorEmail: 'ducthang.nguyen@studynet.vn',
-      content: 'Tài liệu trình bày rất trực quan và có tâm. Phần giải thích TanStack Query v5 đọc xong thông suốt luôn, bookmark lại để ôn tập!',
-    },
-    // Post 3 (Monolith vs Microservices)
-    {
-      postIndex: 3,
-      authorEmail: 'minhanh.tran@studynet.vn',
-      content: 'Chuẩn luôn! Nhóm mình kỳ trước đâm đầu vào microservices với Docker Swarm, mất cả tuần debug mạng nội bộ giữa các container mà tính năng nghiệp vụ thì chưa xong.',
-      replies: [
-        {
-          authorEmail: 'quocbao.dang@studynet.vn',
-          content: 'Đúng vậy bạn, quy tắc vàng là: Hãy bắt đầu với Monolith kiến trúc sạch sẽ, khi nào một module chịu tải riêng quá lớn thì mới tách nó ra.',
-        },
-      ],
-    },
-    // Post 4 (BCNF vs 3NF)
-    {
-      postIndex: 4,
-      authorEmail: 'thutrang.pham@studynet.vn',
-      content: 'Trong thực tế hầu hết các hệ thống OLTP đều dừng ở 3NF bạn nhé. Việc cố ép lên BCNF làm mất phụ thuộc hàm sẽ phải dùng Trigger hoặc Application code để kiểm tra ràng buộc, vừa tốn chi phí vừa dễ lỗi dữ liệu.',
-    },
-    // Post 6 (Refresh Token Rotation)
-    {
-      postIndex: 6,
-      authorEmail: 'quanghuy.do@studynet.vn',
-      content: 'Bạn dùng pattern `isRefreshing` kết hợp `failedQueue = []` trong axios interceptor nhé. Request 401 đầu tiên sẽ set `isRefreshing = true` và gọi API refresh; các request đến sau sẽ push callback vào `failedQueue`. Khi refresh xong thì duyệt queue để resolve tất cả.',
-      replies: [
-        {
-          authorEmail: 'ducthang.nguyen@studynet.vn',
-          content: 'Mình đã thử áp dụng pattern queue này và giải quyết triệt để lỗi rồi, cảm ơn Huy nhiều nhé!',
-        },
-      ],
-    },
-    // Post 7 (Database Schema MXH)
-    {
-      postIndex: 7,
-      authorEmail: 'tuankiet.trinh@studynet.vn',
-      content: 'Phần giới hạn 1 cấp reply rất hợp lý, các app như Twitter hay Threads cũng chỉ cho comment dạng phẳng hoặc 1 cấp để tối ưu UX di động.',
-    },
-    // Post 10 (React Query vs Redux)
-    {
-      postIndex: 10,
-      authorEmail: 'hoangnam.le@studynet.vn',
-      content: 'Hoàn toàn đồng ý. Hiện tại team mình chỉ dùng React Query cho API data và Zustand cho theme/auth user info, dự án nhẹ và dễ bảo trì hơn hẳn.',
-    },
-    // Post 15 (Deadlock InnoDB)
-    {
-      postIndex: 15,
-      authorEmail: 'minhanh.tran@studynet.vn',
-      content: 'Đúng rồi bạn! Luôn sắp xếp ID tài nguyên cần khóa theo thứ tự tăng dần `ORDER BY id ASC` trước khi SELECT ... FOR UPDATE sẽ triệt tiêu hoàn toàn chu trình chờ chéo (Deadlock).',
-    },
-  ];
-
-  for (const cfg of sampleCommentsConfig) {
-    const post = postList[cfg.postIndex];
-    if (!post) continue;
-    const author = userMap.get(cfg.authorEmail);
-    if (!author) continue;
-
-    // Check if root comment exists
-    let [rootComment, rCreated] = await Comment.findOrCreate({
-      where: {
-        post_id: post.id,
-        user_id: author.id,
-        parent_id: null,
-        content: cfg.content,
-      },
-      defaults: {
-        status: 'active',
-      },
-    });
-    if (rCreated) commentCount++;
-
-    // Replies
-    if (cfg.replies && cfg.replies.length > 0) {
-      for (const rep of cfg.replies) {
-        const repAuthor = userMap.get(rep.authorEmail);
-        if (!repAuthor) continue;
-        const [, repCreated] = await Comment.findOrCreate({
-          where: {
-            post_id: post.id,
-            user_id: repAuthor.id,
-            parent_id: rootComment.id,
-            content: rep.content,
-          },
-          defaults: {
-            status: 'active',
-          },
-        });
-        if (repCreated) commentCount++;
-      }
-    }
-  }
-  console.log(` Đã kiểm tra và thiết lập các bình luận & câu trả lời mẫu.`);
-
-  // Step 5: Seed Likes on posts and comments
-  console.log('\n--- 4. TẠO LƯỢT THÍCH (LIKES) BÀI VIẾT VÀ BÌNH LUẬN ---');
-  let likeCount = 0;
-  // Distribute likes across posts
-  for (let i = 0; i < postList.length; i++) {
-    const post = postList[i];
-    // Each post gets 3-7 likes from various students
-    const likerCount = 3 + (i % 5);
-    for (let j = 0; j < likerCount; j++) {
-      const liker = studentList[(i + j) % studentList.length];
-      const [, created] = await Like.findOrCreate({
-        where: {
-          user_id: liker.id,
-          target_type: 'post',
-          target_id: post.id,
-        },
-      });
-      if (created) likeCount++;
-    }
-
-    // Target user (user 2) likes some interesting posts
-    if (targetUser && (i === 0 || i === 2 || i === 5 || i === 7 || i === 10)) {
-      const [, created] = await Like.findOrCreate({
-        where: {
-          user_id: targetUser.id,
-          target_type: 'post',
-          target_id: post.id,
-        },
-      });
-      if (created) likeCount++;
-    }
-  }
-
-  // Like some top comments
-  const allComments = await Comment.findAll({ where: { status: 'active' }, limit: 10 });
-  for (const c of allComments) {
-    const likers = studentList.slice(0, 3);
-    for (const l of likers) {
-      const [, created] = await Like.findOrCreate({
-        where: {
-          user_id: l.id,
-          target_type: 'comment',
-          target_id: c.id,
-        },
-      });
-      if (created) likeCount++;
-    }
-  }
-  console.log(` Đã cập nhật ${likeCount} lượt thích mới (hoặc đã có sẵn).`);
-
-  // Step 6: Seed Follow relationships
-  console.log('\n--- 5. THIẾT LẬP MỐI QUAN HỆ THEO DÕI (FOLLOWS) ---');
-  let followCount = 0;
-  // Inter-student follows
-  for (let i = 0; i < studentList.length; i++) {
-    const follower = studentList[i];
-    // Follow 2-3 other students
-    for (let step = 1; step <= 3; step++) {
-      const following = studentList[(i + step) % studentList.length];
-      if (follower.id !== following.id) {
-        const [, created] = await Follow.findOrCreate({
-          where: {
-            follower_id: follower.id,
-            following_id: following.id,
-          },
-        });
-        if (created) followCount++;
-      }
-    }
-  }
-
-  // Connect with Target User (Nguyễn Hùng - user 2)
-  if (targetUser) {
-    // 6 students follow targetUser
-    const followersOfTarget = studentList.slice(0, 6);
-    for (const f of followersOfTarget) {
-      if (f.id !== targetUser.id) {
-        const [, created] = await Follow.findOrCreate({
-          where: {
-            follower_id: f.id,
-            following_id: targetUser.id,
-          },
-        });
-        if (created) followCount++;
-      }
-    }
-
-    // targetUser follows 4 students
-    const targetFollowings = studentList.slice(3, 7);
-    for (const f of targetFollowings) {
-      if (targetUser.id !== f.id) {
-        const [, created] = await Follow.findOrCreate({
-          where: {
-            follower_id: targetUser.id,
-            following_id: f.id,
-          },
-        });
-        if (created) followCount++;
-      }
-    }
-    console.log(` Đã kết nối tương tác follow cho người dùng chính (${targetUser.full_name}).`);
-  }
-  console.log(` Tổng số quan hệ theo dõi: ${followCount} mới tạo.`);
-
-  // Step 7: Seed Bookmarks
-  console.log('\n--- 6. TẠO BÀI VIẾT ĐÃ LƯU (BOOKMARKS) ---');
-  let bookmarkCount = 0;
-  if (targetUser && postList.length >= 8) {
-    // Target user bookmarks useful posts (e.g. SRS template, Fullstack doc, Kinh nghiệm đồ án, MySQL tips)
-    const bookmarkedPostIndices = [0, 2, 5, 7, 11];
-    for (const idx of bookmarkedPostIndices) {
-      const post = postList[idx];
-      if (post) {
-        const [, created] = await Bookmark.findOrCreate({
-          where: {
-            user_id: targetUser.id,
-            post_id: post.id,
-          },
-        });
-        if (created) bookmarkCount++;
-      }
-    }
-  }
-
-  // Other students also bookmark some documents
-  for (let i = 0; i < 5; i++) {
-    const student = studentList[i];
-    const post = postList[(i * 2 + 1) % postList.length];
-    if (student && post) {
-      const [, created] = await Bookmark.findOrCreate({
-        where: {
-          user_id: student.id,
-          post_id: post.id,
-        },
-      });
-      if (created) bookmarkCount++;
-    }
-  }
-  console.log(` Đã cập nhật ${bookmarkCount} bookmarks.`);
-
-  // Step 8: Seed In-app Notifications for target user
-  console.log('\n--- 7. TẠO THÔNG BÁO MẪU (NOTIFICATIONS) ---');
-  let notificationCount = 0;
-  if (targetUser) {
-    // Collect posts and comments belonging to targetUser, or post 1 (existing)
-    const targetPosts = await Post.findAll({ where: { user_id: targetUser.id } });
-    const targetPost = targetPosts[0] || postList[0];
-
-    const notificationEvents = [
-      {
-        actor: studentList[0],
-        event_type: 'like_post',
-        post_id: targetPost.id,
-        comment_id: null,
-        is_read: false,
-      },
-      {
-        actor: studentList[1],
-        event_type: 'comment',
-        post_id: targetPost.id,
-        comment_id: null,
-        is_read: false,
-      },
-      {
-        actor: studentList[2],
-        event_type: 'follow',
-        post_id: null,
-        comment_id: null,
-        is_read: false,
-      },
-      {
-        actor: studentList[3],
-        event_type: 'follow',
-        post_id: null,
-        comment_id: null,
-        is_read: true,
-      },
-      {
-        actor: studentList[4],
-        event_type: 'like_post',
-        post_id: targetPost.id,
-        comment_id: null,
-        is_read: true,
-      },
-    ];
-
-    for (const ev of notificationEvents) {
-      if (ev.actor && ev.actor.id !== targetUser.id) {
-        const existing = await Notification.findOne({
-          where: {
-            recipient_id: targetUser.id,
-            actor_id: ev.actor.id,
-            event_type: ev.event_type,
-            post_id: ev.post_id,
-          },
-        });
-        if (!existing) {
-          await Notification.create({
-            recipient_id: targetUser.id,
-            actor_id: ev.actor.id,
-            event_type: ev.event_type,
-            post_id: ev.post_id,
-            comment_id: ev.comment_id,
-            is_read: ev.is_read,
-            created_at: new Date(),
-          });
-          notificationCount++;
-        }
-      }
-    }
-    console.log(` Đã tạo ${notificationCount} thông báo mẫu cho người dùng ${targetUser.full_name}.`);
-  }
-
-  // Summary
-  console.log('\n======================================================');
-  console.log(' SEED DỮ LIỆU MẪU THÀNH CÔNG VÀ AN TOÀN!');
-  console.log(`- Tài khoản sinh viên demo: ${SAMPLE_STUDENTS.length} tài khoản`);
-  console.log(`- Mật khẩu đăng nhập demo: "${DEMO_PASSWORD}"`);
-  console.log(`- Bài viết phong phú: ${postList.length} bài viết (Hỏi đáp, Tài liệu, Thảo luận)`);
-  console.log(`- Thống kê DB hiện tại:`);
-  console.log(`  + Users:         ${await User.count()}`);
-  console.log(`  + Posts:         ${await Post.count()}`);
-  console.log(`  + Comments:      ${await Comment.count()}`);
-  console.log(`  + Likes:         ${await Like.count()}`);
-  console.log(`  + Follows:       ${await Follow.count()}`);
-  console.log(`  + Bookmarks:     ${await Bookmark.count()}`);
-  console.log(`  + Notifications: ${await Notification.count()}`);
-  console.log('======================================================\n');
 }
-
-seedSampleData()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error('Lỗi khi seed dữ liệu mẫu:', err);
-    process.exit(1);
+async function seed() {
+  await assertDatabaseIdentity(sequelize, dbName);
+  await sequelize.transaction(async transaction => {
+    await assertNoOtherData(transaction);
+    const existingUsers = await User.findAll({ transaction });
+    const allowedEmails = new Set(SAMPLE_STUDENTS.map((_, i) => 'fe66-student-' + i + '@example.invalid'));
+    if (existingUsers.some(u => !allowedEmails.has(u.email) || u.bio !== MARKER)) {
+      throw new Error('REFUSED: non-fixture users already exist in disposable DB.');
+    }
+    const existingPosts = await Post.findAll({ transaction });
+    if (existingPosts.some(p => !p.content?.startsWith(MARKER + '\\n'))) {
+      throw new Error('REFUSED: non-fixture posts already exist.');
+    }
+    // A rerun must be read-only: do not adopt, repair, or duplicate modified fixtures.
+    if (existingUsers.length || existingPosts.length) {
+      if (existingUsers.length !== SAMPLE_STUDENTS.length || existingPosts.length !== SAMPLE_POSTS.length) {
+        throw new Error('REFUSED: partial fixture state; recreate disposable DB instead.');
+      }
+      const expected = new Set(SAMPLE_POSTS.map(p => p.title));
+      if (existingPosts.some(p => !expected.has(p.title))) throw new Error('REFUSED: mismatched fixture posts.');
+      console.log('FE66 fixture already exists; no mutations performed.');
+      return;
+    }
+    for (const model of [Comment, Like, Follow, Bookmark, Notification]) {
+      if (await model.count({ transaction })) throw new Error('REFUSED: nonempty interaction table: ' + model.tableName);
+    }
+    const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
+    const users = [];
+    for (let i = 0; i < SAMPLE_STUDENTS.length; i++) {
+      const student = SAMPLE_STUDENTS[i];
+      users.push(await User.create({
+        ...student, email: 'fe66-student-' + i + '@example.invalid',
+        bio: MARKER, password_hash: hash, wallet_balance: 0, role: 'student', is_active: true
+      }, { transaction }));
+    }
+    const emailToIndex = new Map(SAMPLE_STUDENTS.map((u, i) => [u.email, i]));
+    const posts = [];
+    for (const p of SAMPLE_POSTS) {
+      const idx = emailToIndex.get(p.authorEmail);
+      if (idx === undefined) throw new Error('Fixture author not found.');
+      posts.push(await Post.create({
+        user_id: users[idx].id, title: p.title, content: MARKER + '\\n' + p.content,
+        post_type: p.post_type, subject: p.subject, tags: p.tags,
+        price: 0, view_count: p.view_count, status: 'active', created_at: p.created_at
+      }, { transaction }));
+    }
+    // Entirely fixture-to-fixture relations; no references to real or existing accounts.
+    const comment = await Comment.create({
+      user_id: users[1].id, post_id: posts[0].id, content: MARKER + ' demo comment', status: 'active'
+    }, { transaction });
+    await Like.create({ user_id: users[2].id, target_type: 'post', target_id: posts[0].id }, { transaction });
+    await Like.create({ user_id: users[3].id, target_type: 'comment', target_id: comment.id }, { transaction });
+    await Follow.create({ follower_id: users[0].id, following_id: users[1].id }, { transaction });
+    await Bookmark.create({ user_id: users[0].id, post_id: posts[0].id }, { transaction });
+    await Notification.create({
+      recipient_id: users[0].id, actor_id: users[1].id,
+      event_type: 'comment', post_id: posts[0].id, comment_id: comment.id, is_read: false
+    }, { transaction });
+    console.log('FE66 created 10 fixture users, 18 posts and isolated sample interactions in ' + dbName);
   });
+}
+seed().catch(err => { console.error(err.message); process.exitCode = 1; }).finally(() => sequelize.close());

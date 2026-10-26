@@ -15,6 +15,12 @@ const { errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
 
+// Render terminates TLS at its trusted proxy. Trust only the nearest hop,
+// never all forwarded IPs. Local tests and other hosts retain default setting.
+if (process.env.RENDER === 'true' && process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // ─── Security Middlewares ────────────────────────────────────────
 app.use(helmet());
 app.use(cors({
@@ -54,6 +60,22 @@ app.use('/api/posts',    postRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/likes',    likeRoutes);
+
+// Only serve the compiled SPA from the reviewed production preview.
+// /api/* routes precede this fallback; no source, DB or PDFs are static.
+if (process.env.NODE_ENV === 'production' && process.env.SERVE_CLIENT_DIST === 'true') {
+  const path = require('node:path');
+  const dist = path.resolve(__dirname, '../../client/dist');
+  app.use(express.static(dist, { index: false, dotfiles: 'deny' }));
+  app.get('*', (req, res, next) => {
+    if (req.path === '/api' || req.path.startsWith('/api/') ||
+        req.path === '/uploads' || req.path.startsWith('/uploads/') ||
+        req.path === '/private-documents' || req.path.startsWith('/private-documents/')) return next();
+    res.sendFile(path.join(dist, 'index.html'), err => {
+      if (err) next(err);
+    });
+  });
+}
 
 // ─── 404 Handler ─────────────────────────────────────────────────
 app.use('*', (req, res) => {

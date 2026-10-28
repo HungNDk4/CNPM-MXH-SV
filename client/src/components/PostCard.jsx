@@ -107,8 +107,16 @@ export default function PostCard({ post, initialBookmarked = false }) {
     }
   }
 
+  // Post type accent config (Campus Grove)
+  const typeAccent = {
+    question:   { border: 'border-l-4 border-amber-400', bg: '' },
+    document:   { border: 'border-l-4 border-primary-500', bg: '' },
+    discussion: { border: 'border-l-4 border-sage-400', bg: '' },
+  }
+  const accent = typeAccent[post.post_type] || { border: '', bg: '' }
+
   return (
-    <article className="card card-hover group p-5 sm:p-6 transition-all duration-300">
+    <article className={`card p-5 sm:p-6 ${accent.border}`}>
       {/* ── Top Header: Author + Meta ── */}
       <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
         <div className="flex items-center gap-3">
@@ -116,7 +124,7 @@ export default function PostCard({ post, initialBookmarked = false }) {
           {authorProfileUrl ? (
             <Link
               to={authorProfileUrl}
-              className="shrink-0 avatar-gradient-ring p-[2px] transition-transform duration-200 group-hover:scale-105"
+              className="shrink-0 avatar-gradient-ring p-[2px] "
               title={`Xem trang cá nhân ${post.author?.full_name || 'Tác giả'}`}
             >
               <div className="w-10 h-10 rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600 dark:text-primary-300">
@@ -310,7 +318,7 @@ export default function PostCard({ post, initialBookmarked = false }) {
         <button
           type="button"
           onClick={handleShareClick}
-          className="flex-1 py-2 px-2.5 flex items-center justify-center gap-2 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-600 transition-all duration-200 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+          className="flex-1 py-2 px-2.5 flex items-center justify-center gap-2 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/30 hover:text-green-600 transition-all duration-200 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
           aria-label="Chia sẻ liên kết bài viết"
           title="Sao chép liên kết bài viết"
         >

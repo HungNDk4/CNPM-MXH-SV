@@ -25,6 +25,19 @@ import Badge from '@/components/common/Badge'
 
 const MAX_PDF_BYTES = 10 * 1024 * 1024
 
+const SUBJECT_OPTIONS = [
+  'C�ng ngh? ph?n m?m',
+  'Co s? d? li?u',
+  'L?p tr�nh Web',
+  'Tr� tu? nh�n t?o',
+  'Ki?n tr�c m�y t�nh',
+  'An to�n th�ng tin',
+  'C?u tr�c d? li?u & Gi?i thu?t',
+  'M?ng m�y t�nh',
+  'To�n cao c?p / Gi?i t�ch',
+  'Kh�c',
+]
+
 const POST_TYPES = [
   { value: 'question', label: 'Câu hỏi / Hỏi đáp', icon: HelpCircle, color: 'text-amber-500' },
   { value: 'document', label: 'Chia sẻ tài liệu', icon: FileText, color: 'text-emerald-500' },
@@ -129,12 +142,12 @@ export default function CreatePostPage() {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* ── Page Header ── */}
       <div className="flex items-center gap-3.5">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary-600 to-indigo-500 text-white flex items-center justify-center shadow-glow-indigo">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-green-700 via-green-600 to-emerald-600 text-white flex items-center justify-center shadow-glow-green">
           <PenLine className="w-6 h-6" />
         </div>
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            Tạo bài viết & Chia sẻ tài liệu
+            Tạo bài viết &amp; Chia sẻ tài liệu
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Đặt câu hỏi bài tập, đóng góp tài liệu PDF 10MB hoặc mở chủ đề thảo luận học thuật.
@@ -144,142 +157,70 @@ export default function CreatePostPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* ═══════════════════════════════════════════════
-            CỘT TRÁI (FORM SOẠN THẢO): 7 Cols
+            CỘT TRÁI (FORM SOẠN THẢO - GROVELYN NUMBERED SECTIONS): 7 Cols
             ═══════════════════════════════════════════════ */}
-        <form onSubmit={handleSubmit} className="lg:col-span-7 card p-6 sm:p-7 space-y-5">
-          {/* Chọn hình thức đăng bài */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-              Hình thức bài đăng
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              {POST_TYPES.map(({ value, label, icon: Icon, color }) => {
-                const isSelected = form.post_type === value
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => setForm((prev) => ({ ...prev, post_type: value }))}
-                    aria-pressed={isSelected}
-                    className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition-all duration-200 cursor-pointer shadow-2xs ${
-                      isSelected
-                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-md scale-[1.02]'
-                        : 'bg-surface-card border-surface-border text-slate-600 dark:text-slate-300 hover:bg-surface-muted'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isSelected ? '' : color}`} />
-                    <span>{label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Tiêu đề */}
-          <div className="space-y-1.5">
-            <label htmlFor="post-title" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-              Tiêu đề bài viết <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="post-title"
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-              maxLength={300}
-              placeholder="Nhập tiêu đề tóm tắt ngắn gọn câu hỏi hoặc tài liệu..."
-              className="input rounded-xl"
-              required
-            />
-          </div>
-
-          {/* Nội dung chi tiết */}
-          <div className="space-y-1.5">
-            <label htmlFor="post-content" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-              {form.post_type === 'document' ? 'Mô tả tóm tắt tài liệu' : 'Nội dung chi tiết'}
-            </label>
-            <textarea
-              id="post-content"
-              name="content"
-              value={form.content}
-              onChange={handleChange}
-              maxLength={form.post_type === 'document' ? 5000 : undefined}
-              placeholder={
-                form.post_type === 'document'
-                  ? 'Mô tả tóm tắt giáo trình, đề cương, dạng bài tập hoặc lưu ý khi ôn thi...'
-                  : 'Trình bày chi tiết đề bài, thắc mắc hoặc chủ đề thảo luận...'
-              }
-              className="input rounded-xl resize-y"
-              rows={5}
-            />
-          </div>
-
-          {/* Upload PDF Box (For Document Type - Grovelyn Image 5 Style) */}
-          {form.post_type === 'document' && (
-            <div className="space-y-3 p-5 bg-gradient-to-br from-emerald-500/5 via-surface-card to-teal-500/5 rounded-2xl border-2 border-dashed border-emerald-500/30">
-              <label htmlFor="pdf-file" className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">
-                Tải lên file tài liệu PDF <span className="text-rose-500">*</span>
-              </label>
-
-              <div
-                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-                onDragLeave={() => setDragActive(false)}
-                onDrop={handleDrop}
-                className={`relative flex flex-col items-center justify-center p-6 rounded-xl border border-dashed text-center transition-all ${
-                  dragActive
-                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
-                    : 'border-surface-border bg-surface-card hover:bg-surface-muted/50'
-                }`}
-              >
-                <input
-                  id="pdf-file"
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  required
-                  disabled={loading}
-                  onChange={(event) => setPdfFile(event.target.files?.[0] ?? null)}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                />
-
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2 shadow-2xs">
-                  <UploadCloud className="w-6 h-6" />
-                </div>
-                <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">
-                  Kéo thả file PDF vào đây hoặc <span className="text-primary-600 dark:text-primary-400 underline">bấm để chọn</span>
-                </p>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Định dạng PDF · Tối đa 10 MiB (10.485.760 bytes) · 1 file duy nhất
-                </p>
+        <form onSubmit={handleSubmit} className="lg:col-span-7 card p-6 sm:p-7 space-y-6">
+          {/* Section 1: Đây là gì */}
+          <div className="space-y-4 pb-4 border-b border-surface-border">
+            <div className="flex items-baseline gap-2">
+              <span className="text-base font-black text-primary-600 dark:text-primary-400">1</span>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Đây là gì</h3>
+                <p className="text-[11px] text-slate-500">Lựa chọn hình thức và đặt tiêu đề để người đọc dễ dàng nhận biết.</p>
               </div>
-
-              {pdfFile && (
-                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs">
-                  <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 font-bold truncate">
-                    <FileText className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span className="truncate">{pdfFile.name}</span>
-                    <span className="text-[11px] text-emerald-600 font-normal shrink-0">
-                      ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPdfFile(null)}
-                    className="text-slate-400 hover:text-rose-500 p-1"
-                    title="Xóa file đã chọn"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
             </div>
-          )}
 
-          {/* Subject & Tags */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Chọn hình thức đăng bài */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                Hình thức bài đăng
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {POST_TYPES.map(({ value, label, icon: Icon, color }) => {
+                  const isSelected = form.post_type === value
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      disabled={loading}
+                      onClick={() => setForm((prev) => ({ ...prev, post_type: value }))}
+                      aria-pressed={isSelected}
+                      className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition-all duration-200 cursor-pointer shadow-2xs ${
+                        isSelected
+                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-md scale-[1.02]'
+                          : 'bg-surface-card border-surface-border text-slate-600 dark:text-slate-300 hover:bg-surface-muted'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isSelected ? '' : color}`} />
+                      <span>{label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Tiêu đề */}
+            <div className="space-y-1.5">
+              <label htmlFor="post-title" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                Tiêu đề bài viết <span className="text-rose-500">*</span>
+              </label>
+              <input
+                id="post-title"
+                name="title"
+                value={form.title}
+                onChange={handleChange}
+                maxLength={300}
+                placeholder="Ví dụ: Đề cương tóm tắt Giải tích 2, thắc mắc về React Hook..."
+                className="input rounded-xl"
+                required
+              />
+            </div>
+
+            {/* Môn học */}
             <div className="space-y-1.5">
               <label htmlFor="post-subject" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <BookOpen className="w-3.5 h-3.5 text-primary-500" />
-                <span>Môn học</span>
+                <span>Môn học / Lĩnh vực</span>
               </label>
               <input
                 id="post-subject"
@@ -287,14 +228,95 @@ export default function CreatePostPage() {
                 value={form.subject}
                 maxLength={200}
                 onChange={handleChange}
-                placeholder="Ví dụ: CNPM, CSDL, Giải tích..."
+                placeholder="Ví dụ: Công nghệ phần mềm, CSDL, Giải tích..."
                 className="input text-xs sm:text-sm rounded-xl"
               />
             </div>
+          </div>
 
+          {/* Section 2: Nội dung & Tệp đính kèm */}
+          <div className="space-y-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-base font-black text-primary-600 dark:text-primary-400">2</span>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Nội dung &amp; Tệp đính kèm</h3>
+                <p className="text-[11px] text-slate-500">Mô tả chi tiết và đính kèm tài liệu PDF (tối đa 10 MiB) nếu có.</p>
+              </div>
+            </div>
+
+            {/* Nội dung chi tiết */}
+            <div className="space-y-1.5">
+              <label htmlFor="post-content" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                {form.post_type === 'document' ? 'Mô tả tóm tắt tài liệu' : 'Nội dung chi tiết'}
+              </label>
+              <textarea
+                id="post-content"
+                name="content"
+                value={form.content}
+                onChange={handleChange}
+                maxLength={form.post_type === 'document' ? 5000 : undefined}
+                placeholder={
+                  form.post_type === 'document'
+                    ? 'Mô tả tóm tắt giáo trình, đề cương, dạng bài tập hoặc lưu ý khi ôn thi...'
+                    : 'Trình bày chi tiết đề bài, thắc mắc hoặc chủ đề thảo luận...'
+                }
+                className="input rounded-xl resize-y"
+                rows={5}
+              />
+            </div>
+
+            {/* Upload PDF Box (For Document Type - Grovelyn Image 4 Style) */}
+            {form.post_type === 'document' && (
+              <div className="space-y-3 p-5 bg-gradient-to-br from-emerald-500/5 via-surface-card to-teal-500/5 rounded-2xl border-2 border-dashed border-emerald-500/30">
+                <label htmlFor="pdf-file" className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">
+                  Tệp tài liệu PDF <span className="text-rose-500">*</span>
+                </label>
+
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                  onDragLeave={() => setDragActive(false)}
+                  onDrop={handleDrop}
+                  className={`relative flex flex-col items-center justify-center p-6 rounded-xl border border-dashed text-center transition-all ${
+                    dragActive
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
+                      : 'border-surface-border bg-surface-card hover:bg-surface-muted/50'
+                  }`}
+                >
+                  <input
+                    id="pdf-file"
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    required
+                    disabled={loading}
+                    onChange={(event) => setPdfFile(event.target.files?.[0] ?? null)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2 shadow-2xs">
+                    <UploadCloud className="w-6 h-6" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">
+                    Kéo thả tệp hoặc bấm để chọn
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Báo cáo PDF, slide bài giảng, đề thi. Tối đa 10 MB.
+                  </p>
+
+                  {pdfFile && (
+                    <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                      <FileCheck className="w-4 h-4 text-emerald-500" />
+                      <span className="truncate max-w-xs">{pdfFile.name}</span>
+                      <span className="text-slate-400">({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Tags */}
             <div className="space-y-1.5">
               <label htmlFor="post-tags" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-indigo-500" />
+                <Tag className="w-3.5 h-3.5 text-primary-500" />
                 <span>Tags (phân cách bằng dấu phẩy)</span>
               </label>
               <input

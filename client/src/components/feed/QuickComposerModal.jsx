@@ -148,10 +148,7 @@ export default function QuickComposerModal({ isOpen, onClose, user, initialType 
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Campus Pop</span>
-          </div>
+          
         </div>
 
         {/* Post Type Selector Tabs (Inspired by Image 4) */}
@@ -161,7 +158,7 @@ export default function QuickComposerModal({ isOpen, onClose, user, initialType 
             onClick={() => setPostType('discussion')}
             className={`flex-1 py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 ${
               postType === 'discussion'
-                ? 'bg-sky-600 text-white shadow-xs'
+                ? 'bg-primary-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >

@@ -15,9 +15,9 @@ const NAV_ITEMS = [
 ]
 
 const SHORTCUT_SUBJECTS = [
-  { label: 'CNPM', query: 'Công nghệ phần mềm', color: 'from-blue-600 to-sky-600', full: 'Công nghệ phần mềm' },
-  { label: 'CSDL', query: 'Cơ sở dữ liệu', color: 'from-teal-500 to-emerald-600', full: 'Cơ sở dữ liệu' },
-  { label: 'OOP',  query: 'Lập trình', color: 'from-sky-500 to-cyan-600', full: 'Lập trình OOP' },
+  { label: 'CNPM', query: 'Công nghệ phần mềm', color: 'from-green-700 to-emerald-600', full: 'Công nghệ phần mềm' },
+  { label: 'CSDL', query: 'Cơ sở dữ liệu', color: 'from-teal-600 to-green-600', full: 'Cơ sở dữ liệu' },
+  { label: 'OOP',  query: 'Lập trình', color: 'from-sage-500 to-green-600', full: 'Lập trình OOP' },
   { label: 'KTMT', query: 'Kiến trúc máy tính', color: 'from-amber-500 to-orange-600', full: 'Kiến trúc máy tính' },
 ]
 

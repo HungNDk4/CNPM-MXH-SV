@@ -35,7 +35,7 @@ const TYPE_CONFIG = {
   discussion: {
     label: 'Thảo luận',
     icon: MessageSquare,
-    badgeClass: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/60',
+    badgeClass: 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200/80 dark:border-green-800/60',
   },
   document: {
     label: 'Tài liệu',

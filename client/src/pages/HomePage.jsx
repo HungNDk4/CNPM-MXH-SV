@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { postAPI, followAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
 import { useAuthStore } from '@/stores/authStore'
-import QuickComposerModal from '@/components/feed/QuickComposerModal'
+import InlineComposer from '@/components/feed/InlineComposer'
 import {
   BookOpen,
   Search,
@@ -46,12 +46,9 @@ export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, isAuthenticated } = useAuthStore()
 
-  // Quick Composer State (Image 4 Style)
-  const [composerOpen, setComposerOpen] = useState(false)
+    
 
-
-  const [composerType, setComposerType] = useState('discussion')
-
+  
   // URL query params
   const activeType = searchParams.get('type') || ''
   const searchKeyword = searchParams.get('search') || ''
@@ -160,122 +157,36 @@ export default function HomePage() {
           CỘT CHÍNH (MAIN FEED): Tạo bài & Danh sách bài
           ═══════════════════════════════════════════════ */}
       <div className="lg:col-span-8 space-y-5">
-        {/* Quick Post Composer Card (Grovelyn Image 4 Style) */}
+        {/* Inline Post Composer (Grovelyn Image 4 Style - Part of Column 2) */}
         {isAuthenticated ? (
-          <>
-            <div className="card p-4 sm:p-5 bg-surface-card border border-surface-border shadow-bento space-y-3.5 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full avatar-gradient-ring p-[2px] shrink-0">
-                  <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600">
-                    {user?.avatar_url ? (
-                      <img
-                        src={user.avatar_url}
-                        alt={user.full_name || 'Avatar'}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.style.display = 'none' }}
-                      />
-                    ) : (
-                      user?.full_name?.[0]?.toUpperCase() || 'U'
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setComposerType('discussion')
-                    setComposerOpen(true)
-                  }}
-                  className="flex-1 bg-surface-muted hover:bg-surface-border/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full px-5 py-2.5 text-xs sm:text-sm text-left transition-all border border-surface-border cursor-pointer shadow-inner truncate"
-                >
-                  Hôm nay bạn cần giải đáp môn gì, {user?.full_name ? user.full_name.split(' ').slice(-1)[0] : 'bạn'}?
-                </button>
-              </div>
-
-              {/* Quick Action Pills (Inspired by Image 4) */}
-              <div className="flex items-center justify-between pt-2.5 border-t border-surface-border text-xs gap-2 flex-wrap sm:flex-nowrap">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setComposerType('question')
-                      setComposerOpen(true)
-                    }}
-                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold transition-colors border border-amber-500/20"
-                  >
-                    <HelpCircle className="w-4 h-4 text-amber-500" />
-                    <span>Đặt câu hỏi</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setComposerType('document')
-                      setComposerOpen(true)
-                    }}
-                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold transition-colors border border-emerald-500/20"
-                  >
-                    <FileText className="w-4 h-4 text-emerald-500" />
-                    <span>Chia sẻ PDF</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setComposerType('discussion')
-                      setComposerOpen(true)
-                    }}
-                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 font-semibold transition-colors border border-sky-500/20"
-                  >
-                    <MessageSquare className="w-4 h-4 text-sky-500" />
-                    <span>Thảo luận</span>
-                  </button>
-                </div>
-
-                <Link
-                  to="/posts/create"
-                  className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-semibold ml-auto hidden sm:inline"
-                >
-                  Trang tạo bài đầy đủ &rarr;
-                </Link>
-              </div>
-            </div>
-
-            {/* Quick Composer Modal */}
-            <QuickComposerModal
-              isOpen={composerOpen}
-              onClose={() => setComposerOpen(false)}
-              user={user}
-              initialType={composerType}
-            />
-          </>
+          <InlineComposer user={user} onPostSuccess={() => refetch()} />
         ) : (
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white p-6 sm:p-7 shadow-xl shadow-blue-900/10 border border-blue-400/20">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-green-700 via-green-600 to-emerald-700 text-white p-6 sm:p-7 shadow-xl shadow-green-900/10 border border-green-400/20">
             {/* Ambient Background Glow Inside Banner */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-sky-400/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-md text-sky-100 border border-white/20">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-md text-green-100 border border-white/20">
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   <span>Cộng đồng học thuật sinh viên 2026</span>
                 </div>
                 <h3 className="font-extrabold text-lg sm:text-xl text-white tracking-tight">
                   Khám phá & Chia sẻ kho tri thức đại học
                 </h3>
-                <p className="text-xs sm:text-sm text-sky-100/90 max-w-xl leading-relaxed">
+                <p className="text-xs sm:text-sm text-green-100/90 max-w-xl leading-relaxed">
                   Hơn 1,200+ tài liệu PDF, đồ án mẫu và đề cương ôn thi được sinh viên chia sẻ hoàn toàn miễn phí.
                 </p>
               </div>
               <div className="flex items-center gap-2.5 shrink-0">
                 <Link
                   to="/login"
-                  className="bg-white hover:bg-slate-100 text-blue-950 font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md transition-all active:scale-[0.98]"
+                  className="bg-white hover:bg-slate-100 text-green-900 font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md transition-all active:scale-[0.98]"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-blue-950/80 hover:bg-black text-white font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl border border-white/20 transition-all active:scale-[0.98]"
+                  className="bg-green-900/80 hover:bg-black text-white font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl border border-white/20 transition-all active:scale-[0.98]"
                 >
                   Đăng ký ngay
                 </Link>
@@ -285,7 +196,7 @@ export default function HomePage() {
         )}
 
         {/* ── Category Filter Pills (Sticky Header when scrolling feed) ── */}
-        <div className="sticky top-16 z-20 -mx-2 px-2 py-3 bg-surface/90 backdrop-blur-md border-b border-surface-border/60 transition-all flex items-center justify-between gap-2 overflow-x-auto scrollbar-none shadow-2xs">
+        <div className="py-1 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
           <div className="flex gap-2">
             {visibleFilters.map(({ label, value, icon: Icon }) => {
               const isActive = (effectiveType === value) || (!isAuthenticated && value === 'document')
@@ -315,7 +226,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2 flex-wrap text-slate-700 dark:text-slate-300">
               <span className="text-slate-400 font-medium">Đang lọc:</span>
               {searchKeyword && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800/60">
                   <Search className="w-3.5 h-3.5" />
                   <span>"{searchKeyword}"</span>
                   <button
@@ -451,7 +362,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════
           CỘT PHẢI (SIDE WIDGETS): Môn học, Bạn bè, Thống kê
           ═══════════════════════════════════════════════ */}
-      <div className="hidden lg:block lg:col-span-4 space-y-5 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-none pb-8">
+      <div className="hidden lg:block lg:col-span-4 space-y-5 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-8">
         {/* Widget 1: Bộ lọc nhanh theo Môn học (Subject Pills) */}
         <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-bento">
           <div className="flex items-center justify-between">
@@ -526,7 +437,7 @@ export default function HomePage() {
         )}
 
         {/* Widget 3: Thống kê sinh viên tuần này */}
-        <div className="card p-5 space-y-3 bg-gradient-to-br from-blue-500/10 via-sky-500/5 to-surface-card border border-primary-500/20">
+        <div className="card p-5 space-y-3 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-surface-card border border-primary-500/20">
           <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-wider">
             <BarChart3 className="w-4 h-4" />
             <span>Mạng xã hội học tập</span>

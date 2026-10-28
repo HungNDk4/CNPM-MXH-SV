@@ -439,11 +439,26 @@ export default function ProfilePage() {
     <div className="max-w-5xl mx-auto space-y-6">
       {/* ── Profile Header Card (Inspired by Grovelyn Image 5 & X Image 3) ── */}
       <section className="card overflow-hidden p-0 border border-surface-border shadow-bento bg-surface-card" aria-label="Thông tin tổng quan hồ sơ">
-        {/* Campus Cover Banner with Organic Gradients */}
-        <div className="h-36 sm:h-48 bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 relative overflow-hidden">
-          <div className="absolute inset-0 bg-radial-gradient from-white/10 to-transparent pointer-events-none" />
-          <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 border border-white/10">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+        {/* Campus Grove Cover Banner — Pastel green with decorative leaves (like Grovelyn Image 5) */}
+        <div className="h-36 sm:h-48 relative overflow-hidden grove-banner bg-gradient-to-br from-green-200 via-emerald-100 to-lime-100 dark:from-green-900 dark:via-emerald-950 dark:to-green-950">
+          {/* Decorative leaf shapes */}
+          <svg className="absolute top-4 right-8 w-12 h-12 text-green-400/50 dark:text-green-500/30 animate-leaf-sway" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <ellipse cx="50" cy="50" rx="30" ry="48" transform="rotate(-30 50 50)" />
+          </svg>
+          <svg className="absolute top-8 right-24 w-8 h-8 text-emerald-500/40 dark:text-emerald-400/20" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <ellipse cx="50" cy="50" rx="28" ry="44" transform="rotate(20 50 50)" />
+          </svg>
+          <svg className="absolute bottom-4 right-16 w-10 h-10 text-lime-400/40 dark:text-lime-500/20 animate-leaf-sway" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <ellipse cx="50" cy="50" rx="25" ry="40" transform="rotate(45 50 50)" />
+          </svg>
+          <svg className="absolute top-6 right-40 w-6 h-6 text-teal-400/50 dark:text-teal-500/25" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <circle cx="50" cy="50" r="30" />
+          </svg>
+          <svg className="absolute bottom-6 right-48 w-8 h-8 text-green-300/60 dark:text-green-400/20" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <ellipse cx="50" cy="50" rx="22" ry="36" transform="rotate(-15 50 50)" />
+          </svg>
+          <div className="absolute top-4 right-4 bg-white/50 dark:bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-green-800 dark:text-green-200 text-xs font-semibold flex items-center gap-1.5 border border-green-200/60 dark:border-white/10">
+            <Sparkles className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
             <span>Thành viên từ {formatDate(profile?.created_at)}</span>
           </div>
         </div>

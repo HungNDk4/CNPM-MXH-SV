@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    /* Campus Pop Academic Light: Gentle soft blue-sky canvas so white cards pop with warmth */
-    --bg-app: #edf3f8;
-    --bg-card: #ffffff;
-    --bg-muted: #e2eaf2;
+    /* Campus Grove Light: Warm parchment canvas — cards pop on sage-tinted background */
+    --bg-app:      #f4f7f2;
+    --bg-card:     #ffffff;
+    --bg-muted:    #e8eee5;
     --bg-elevated: #ffffff;
-    --border-subtle: #e2e8f0;
-    --text-main: #0f172a;
-    --text-muted: #64748b;
+    --border-subtle: #d4ddd0;
+    --text-main:   #1a2e1a;
+    --text-muted:  #5a7060;
   }
 
   .dark {
-    /* Campus Pop Midnight: Deep Navy Space / Electric Blue identity — Distinctive & Unique */
-    --bg-app: #080d1a;
-    --bg-card: #0f172a;
-    --bg-muted: #1e293b;
-    --bg-elevated: #162238;
-    --border-subtle: rgba(59, 130, 246, 0.14);
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    /* Campus Grove Midnight: Deep forest floor — distinctive green-tinted dark */
+    --bg-app:      #0b130e;
+    --bg-card:     #111f16;
+    --bg-muted:    #1a2e23;
+    --bg-elevated: #1e3528;
+    --border-subtle: rgba(74, 222, 128, 0.11);
+    --text-main:   #e8f5e8;
+    --text-muted:  #7aaa84;
   }
 
   * {
@@ -33,25 +33,25 @@
     background-color: var(--bg-app);
     color: var(--text-main);
   }
-  ::-webkit-scrollbar { @apply w-1.5 h-1.5; }
+  ::-webkit-scrollbar       { @apply w-1.5 h-1.5; }
   ::-webkit-scrollbar-track { @apply bg-transparent; }
-  ::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-slate-700/80 rounded-full; }
-  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-400 dark:bg-slate-600; }
+  ::-webkit-scrollbar-thumb { @apply bg-sage-300 dark:bg-sage-700/80 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-sage-400 dark:bg-sage-600; }
 }
 
 @layer components {
-  /* Campus Pop Buttons */
+  /* Campus Grove Buttons */
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2.5
-           rounded-xl transition-all duration-200 shadow-sm hover:shadow-glow-blue
+           rounded-xl transition-all duration-200 shadow-sm hover:shadow-glow-green
            active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40;
   }
   .btn-secondary {
     @apply bg-surface-card hover:bg-surface-muted text-slate-700 dark:text-slate-200 font-medium px-4 py-2.5
-           rounded-xl border border-surface-border transition-all duration-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600
+           rounded-xl border border-surface-border transition-all duration-200 shadow-2xs hover:border-sage-300 dark:hover:border-sage-700
            active:scale-[0.98] disabled:opacity-50
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/30;
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/30;
   }
   .btn-accent {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2.5 rounded-xl
@@ -68,7 +68,7 @@
            shadow-bento transition-all duration-200 text-slate-800 dark:text-slate-100;
   }
   .card-hover {
-    @apply card hover:border-blue-300/60 dark:hover:border-blue-500/30 hover:shadow-bento-hover hover:-translate-y-0.5;
+    @apply card hover:border-primary-300/60 dark:hover:border-primary-500/30 hover:shadow-bento-hover hover:-translate-y-0.5;
   }
 
   /* Inputs */
@@ -79,19 +79,31 @@
   }
 
   /* Badges */
-  .badge-free   { @apply bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/80; }
+  .badge-free   { @apply bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-primary-200 dark:border-primary-800/80; }
   .badge-paid   { @apply bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/80; }
-  .badge-type   { @apply bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800/80; }
+  .badge-type   { @apply bg-sage-100 dark:bg-sage-900/50 text-sage-700 dark:text-sage-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-sage-200 dark:border-sage-700/80; }
+
+  /* Post type indicators */
+  .post-type-question   { @apply border-l-4 border-amber-400; }
+  .post-type-document   { @apply border-l-4 border-primary-500; }
+  .post-type-discussion { @apply border-l-4 border-sage-400; }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 bg-clip-text text-transparent font-bold;
+    @apply bg-gradient-to-r from-primary-600 via-primary-500 to-sage-500 bg-clip-text text-transparent font-bold;
   }
   .glass {
     @apply bg-surface-card/85 backdrop-blur-md border border-surface-border shadow-bento;
   }
   .avatar-gradient-ring {
-    @apply p-0.5 rounded-full bg-gradient-to-tr from-sky-400 via-blue-500 to-cyan-400;
+    @apply p-0.5 rounded-full bg-gradient-to-tr from-primary-400 via-primary-500 to-sage-400;
+  }
+  /* Leaf decoration for profile banners */
+  .grove-banner {
+    background: linear-gradient(135deg, #d4edda 0%, #c8e6c9 30%, #e8f5e9 60%, #dcedc8 100%);
+  }
+  .dark .grove-banner {
+    background: linear-gradient(135deg, #1a3d24 0%, #14532d 40%, #1e3d28 100%);
   }
 }

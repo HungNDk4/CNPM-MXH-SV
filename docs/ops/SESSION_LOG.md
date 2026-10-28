@@ -304,3 +304,27 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 4. **Auth Separation:** Dedicated split-screen showcase with seamless background canvas strictly to `/login`, kept classic centered card layout for `/register`.
 5. **Remote Sync:** Branch `feat/campus-pop-redesign-20261028` pushed to `origin` and ready for PR review against `integration/team-dev-20261020`.
 **Verification:** Vite build `npm run build` PASS (4.54s, 2096 modules, 0 errors).
+
+
+## SESSION-20261029-FE-CAMPUS-GROVE-REDESIGN — Campus Grove Theme, Inline Composer & UI/UX Polish
+**Actor:** AI under user pairing. **Branch:** `feat/campus-pop-redesign-20261028` based on `integration/team-dev-20261020` @ `4753aea`.
+**Scope & Deliverables:**
+1. **Design System & Tokens (`Campus Grove`):**
+   - Transformed identity to Forest Green (`#16a34a`) & Sage (`#6d8260`) with custom dark forest canvas (`#0b130e` canvas, `#111f16` cards).
+   - Post type color-coding: Question (amber), Document (emerald), Discussion (sage/forest).
+2. **Inline Feed Composer (Grovelyn Image 4 Alignment):**
+   - Implemented `client/src/components/feed/InlineComposer.jsx` embedded directly into Column 2 (Feed), removing intrusive full-screen modal overlays.
+   - Smooth inline expandable composer supporting tabs (Discussion, Question, PDF Document), subject dropdown selection, drag-and-drop PDF (10MB limit), and inline cancel/submit actions.
+3. **UI/UX Polishing & Feed Improvements:**
+   - Unpinned category filter bar from sticky feed flow to avoid overlap; Column 3 scrollbar hidden via Tailwind utilities while retaining smooth independent scrolling.
+   - Removed hover-lift jumping effects (`card-hover`, avatar scale) from `PostCard.jsx` for calm, non-jittery feed consumption.
+   - Simplified top navigation bar to solid background (`bg-surface-card`), removing backdrop blur and transparency artifacts.
+   - Synchronized subject dropdown selector into `CreatePostPage.jsx` (`#post-subject`) matching the fast composer options.
+4. **Auth Experience Unification:**
+   - Unified both `/login` and `/register` into high-converting Split Screen layout with dark forest showcase on left and clean Bento Card form on right.
+   - Removed extraneous decorative stars (`<Sparkles>`) and redundant header badges across auth views.
+5. **Contract Safeguards:**
+   - 100% frontend changes strictly inside `client/`. Zero modifications to `server/` or `database/` (verified via `git diff origin/integration/team-dev-20261020 -- server/ database/` = EMPTY).
+   - Preserved all required E2E selectors (`#email`, `#password`, `#full_name`, `#university`, `#major`, `#pdf-file`, `#post-title`, `#post-content`, `#mod-post-id`, `#post-subject`).
+**Verification:**
+- `cd client && npm run build`: **PASS** (4.67s, 2096 modules, 0 errors, 0 warnings).

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
-import { Loader2, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react'
+import { Loader2, Mail, Lock, ArrowRight } from 'lucide-react'
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' })
@@ -33,7 +33,7 @@ export default function LoginPage() {
       <div className="space-y-2">
         <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
           <span>Đăng nhập</span>
-          <Sparkles className="w-6 h-6 text-amber-500" />
+          
         </h2>
         <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
           Đăng nhập vào mạng xã hội học tập để tiếp tục thảo luận và tải tài liệu.

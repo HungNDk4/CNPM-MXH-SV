@@ -79,19 +79,19 @@ export default function MainLayout() {
         className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-500 overflow-hidden"
         aria-hidden="true"
       >
-        {/* Light Mode Soft Ambient Sky Wash (Grovelyn inspired gentle tinted background) */}
-        <div className="dark:hidden absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-100/50 via-slate-100/60 to-transparent" />
-        <div className="dark:hidden absolute -top-40 -left-40 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl" />
-        <div className="dark:hidden absolute top-1/3 -right-40 w-96 h-96 bg-sky-200/25 rounded-full blur-3xl" />
+        {/* Light Mode Soft Ambient Grove Wash */}
+        <div className="dark:hidden absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-green-100/50 via-sage-50/40 to-transparent" />
+        <div className="dark:hidden absolute -top-40 -left-40 w-96 h-96 bg-green-200/30 rounded-full blur-3xl" />
+        <div className="dark:hidden absolute top-1/3 -right-40 w-96 h-96 bg-emerald-100/25 rounded-full blur-3xl" />
 
-        {/* Dark Mode Campus Midnight Blue Nebula (Distinctive High-Tech Academic Vibe) */}
-        <div className="hidden dark:block absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(37,99,235,0.18),transparent_70%)]" />
-        <div className="hidden dark:block absolute top-1/4 -left-32 w-80 h-80 bg-blue-600/12 rounded-full blur-3xl" />
-        <div className="hidden dark:block absolute top-1/2 -right-32 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl" />
+        {/* Dark Mode Campus Grove Midnight — Deep forest atmosphere */}
+        <div className="hidden dark:block absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(22,163,74,0.14),transparent_70%)]" />
+        <div className="hidden dark:block absolute top-1/4 -left-32 w-80 h-80 bg-green-800/12 rounded-full blur-3xl" />
+        <div className="hidden dark:block absolute top-1/2 -right-32 w-80 h-80 bg-emerald-700/10 rounded-full blur-3xl" />
       </div>
 
       {/* ── Top Header Navigation Bar (Sticky Glassmorphic) ── */}
-      <header className="sticky top-0 z-50 bg-surface-card/90 backdrop-blur-md border-b border-surface-border shadow-2xs transition-colors duration-200">
+      <header className="sticky top-0 z-50 bg-surface-card border-b border-surface-border shadow-2xs transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
           {/* Brand Logo & Title */}
           <Link
@@ -99,7 +99,7 @@ export default function MainLayout() {
             className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
             title="Mini Study Network"
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-sky-500 flex items-center justify-center text-white shadow-md shadow-primary/25 transition-transform duration-200 group-hover:scale-105">
+            <div className="w-10 h-10 rounded-2xl bg-primary-600 flex items-center justify-center text-white">
               <GraduationCap className="w-5 h-5" />
             </div>
             <div className="hidden sm:block text-left">

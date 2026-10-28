@@ -97,9 +97,9 @@ export default function NotificationsPage() {
       {/* ── Left/Center Column: Notifications Feed ── */}
       <div className="lg:col-span-8 space-y-4">
         {/* Header Banner */}
-        <div className="card p-5 bg-gradient-to-r from-primary-500/10 via-surface-card to-sky-500/10 border-primary-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="card p-5 bg-gradient-to-r from-green-500/10 via-surface-card to-emerald-500/10 border-primary-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-primary-600 text-white flex items-center justify-center shadow-glow-blue">
+            <div className="w-12 h-12 rounded-2xl bg-primary-600 text-white flex items-center justify-center shadow-glow-green">
               <Bell className="w-6 h-6" />
             </div>
             <div>

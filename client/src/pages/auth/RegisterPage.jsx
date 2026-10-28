@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
-import { Loader2, User, Mail, Lock, School, BookOpen, ArrowRight, Sparkles } from 'lucide-react'
+import { Loader2, User, Mail, Lock, School, BookOpen, ArrowRight } from 'lucide-react'
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ full_name: '', email: '', password: '', university: '', major: '' })
@@ -42,7 +42,7 @@ export default function RegisterPage() {
       <div className="space-y-1.5">
         <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
           <span>Gia nhập cộng đồng</span>
-          <Sparkles className="w-5 h-5 text-emerald-500" />
+          
         </h2>
         <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
           Tạo tài khoản miễn phí để chia sẻ tài liệu ôn thi và kết nối cùng bạn bè.

@@ -41,7 +41,7 @@
   /* Campus Pop Buttons */
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2.5
-           rounded-xl transition-all duration-200 shadow-sm hover:shadow-glow-indigo
+           rounded-xl transition-all duration-200 shadow-sm hover:shadow-glow-blue
            active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40;
   }
@@ -66,7 +66,7 @@
            shadow-bento transition-all duration-200 text-slate-800 dark:text-slate-100;
   }
   .card-hover {
-    @apply card hover:border-indigo-300/60 dark:hover:border-indigo-500/30 hover:shadow-bento-hover hover:-translate-y-0.5;
+    @apply card hover:border-blue-300/60 dark:hover:border-blue-500/30 hover:shadow-bento-hover hover:-translate-y-0.5;
   }
 
   /* Inputs */
@@ -79,17 +79,17 @@
   /* Badges */
   .badge-free   { @apply bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/80; }
   .badge-paid   { @apply bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/80; }
-  .badge-type   { @apply bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/80; }
+  .badge-type   { @apply bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800/80; }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent font-bold;
+    @apply bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 bg-clip-text text-transparent font-bold;
   }
   .glass {
     @apply bg-surface-card/85 backdrop-blur-md border border-surface-border shadow-bento;
   }
   .avatar-gradient-ring {
-    @apply p-0.5 rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-600;
+    @apply p-0.5 rounded-full bg-gradient-to-tr from-sky-400 via-blue-500 to-cyan-400;
   }
 }

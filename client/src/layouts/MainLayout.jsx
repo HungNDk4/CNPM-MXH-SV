@@ -83,7 +83,7 @@ export default function MainLayout() {
             className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
             title="Mini Study Network"
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-primary/25 transition-transform duration-200 group-hover:scale-105">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-sky-500 flex items-center justify-center text-white shadow-md shadow-primary/25 transition-transform duration-200 group-hover:scale-105">
               <GraduationCap className="w-5 h-5" />
             </div>
             <div className="hidden sm:block text-left">

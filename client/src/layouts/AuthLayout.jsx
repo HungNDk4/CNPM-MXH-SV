@@ -21,16 +21,16 @@ export default function AuthLayout() {
       {/* ══════════════════════════════════════════════════
           CỘT TRÁI (DESKTOP SHOWCASE - CẢM HỨNG GROVELYN)
           ══════════════════════════════════════════════════ */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[52%] flex-col justify-between p-10 xl:p-14 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white relative overflow-hidden select-none">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[52%] flex-col justify-between p-10 xl:p-14 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white relative overflow-hidden select-none">
         {/* Glowing Background Mesh & Organic Blobs */}
         <div className="absolute top-0 -left-20 w-96 h-96 bg-primary-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 -right-20 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Header: Brand + Back to Guest Feed */}
         <div className="flex items-center justify-between relative z-10">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-primary/25 text-white transition-transform group-hover:scale-105 duration-200">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-sky-400 flex items-center justify-center shadow-lg shadow-primary/25 text-white transition-transform group-hover:scale-105 duration-200">
               <GraduationCap className="w-6 h-6" />
             </div>
             <div>
@@ -124,7 +124,7 @@ export default function AuthLayout() {
         <div className="flex items-center justify-between w-full max-w-md mx-auto">
           {/* Mobile Logo */}
           <Link to="/" className="lg:hidden flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-indigo-600 flex items-center justify-center text-white shadow-md">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-500 flex items-center justify-center text-white shadow-md">
               <GraduationCap className="w-5 h-5" />
             </div>
             <span className="font-extrabold text-slate-900 dark:text-white text-base">

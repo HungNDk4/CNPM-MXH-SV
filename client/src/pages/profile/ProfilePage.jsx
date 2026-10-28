@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -224,7 +224,7 @@ export default function ProfilePage() {
       ]
     }
     return [
-      { title: profile?.major ? `Chuyên ngành ${profile.major}` : 'Kỹ năng học tập đại học', desc: 'Trao đổi phương pháp học tập, giải bài tập và làm việc nhóm.' },
+      { title: profile?.major ? `Chuyên ngành ${profile?.major}` : 'Kỹ năng học tập đại học', desc: 'Trao đổi phương pháp học tập, giải bài tập và làm việc nhóm.' },
       { title: 'Tài liệu & Đồ án môn học', desc: 'Đóng góp slide bài giảng, đề cương và tài liệu ôn tập hữu ích.' },
     ]
   }, [userPosts, profile?.major])
@@ -272,9 +272,9 @@ export default function ProfilePage() {
       setEditForm({
         full_name: profile.full_name || '',
         avatar_url: profile.avatar_url || '',
-        university: profile.university || '',
-        major: profile.major || '',
-        bio: profile.bio || '',
+        university: profile?.university || '',
+        major: profile?.major || '',
+        bio: profile?.bio || '',
       })
     }
   }, [profile])
@@ -424,18 +424,20 @@ export default function ProfilePage() {
     )
   }
 
-  const initialLetter = profile.full_name?.[0]?.toUpperCase() || 'U'
+  if (!profile) return null
+
+  const initialLetter = profile?.full_name?.[0]?.toUpperCase() || 'U'
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* ── Profile Header Card (Inspired by Grovelyn Image 5 & X Image 3) ── */}
       <section className="card overflow-hidden p-0 border border-surface-border shadow-bento bg-surface-card" aria-label="Thông tin tổng quan hồ sơ">
         {/* Campus Cover Banner with Organic Gradients */}
-        <div className="h-36 sm:h-48 bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 relative overflow-hidden">
+        <div className="h-36 sm:h-48 bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 relative overflow-hidden">
           <div className="absolute inset-0 bg-radial-gradient from-white/10 to-transparent pointer-events-none" />
           <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 border border-white/10">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Thành viên từ {formatDate(profile.created_at)}</span>
+            <span>Thành viên từ {formatDate(profile?.created_at)}</span>
           </div>
         </div>
 
@@ -538,16 +540,16 @@ export default function ProfilePage() {
               <span className="badge-type">Sinh viên</span>
             </div>
 
-            {(profile.university || profile.major) && (
+            {(profile?.university || profile?.major) && (
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center sm:justify-start gap-1.5">
                 <GraduationCap className="w-4 h-4 text-primary-500 shrink-0" />
-                <span>{profile.university ? `${profile.university}` : ''} {profile.major ? `· ${profile.major}` : ''}</span>
+                <span>{profile?.university ? `${profile?.university}` : ''} {profile?.major ? `· ${profile?.major}` : ''}</span>
               </p>
             )}
 
-            {profile.bio && (
+            {profile?.bio && (
               <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap pt-1 max-w-2xl">
-                {profile.bio}
+                {profile?.bio}
               </p>
             )}
           </div>
@@ -713,13 +715,13 @@ export default function ProfilePage() {
                   <div className="p-4 rounded-2xl bg-surface-muted/60 border border-surface-border space-y-1">
                     <span className="text-slate-400 block text-xs">Trường Đại học / Cao đẳng</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 block text-sm">
-                      {profile.university || 'Chưa cập nhật'}
+                      {profile?.university || 'Chưa cập nhật'}
                     </span>
                   </div>
                   <div className="p-4 rounded-2xl bg-surface-muted/60 border border-surface-border space-y-1">
                     <span className="text-slate-400 block text-xs">Chuyên ngành học tập</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 block text-sm">
-                      {profile.major || 'Chưa cập nhật'}
+                      {profile?.major || 'Chưa cập nhật'}
                     </span>
                   </div>
                 </div>
@@ -731,7 +733,7 @@ export default function ProfilePage() {
                   <span>Tiểu sử cá nhân</span>
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                  {profile.bio || 'Người dùng chưa viết phần giới thiệu bản thân.'}
+                  {profile?.bio || 'Người dùng chưa viết phần giới thiệu bản thân.'}
                 </p>
               </div>
 
@@ -947,7 +949,7 @@ export default function ProfilePage() {
               <span>Đang làm gì</span>
             </h4>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-              {profile.bio || `Sinh viên ${profile.major || 'chuyên ngành'} tại ${profile.university || 'trường đại học'}. Tích cực tham gia trao đổi bài học, tải lên tài liệu và chia sẻ kinh nghiệm học tập.`}
+              {profile?.bio || `Sinh viên ${profile?.major || 'chuyên ngành'} tại ${profile?.university || 'trường đại học'}. Tích cực tham gia trao đổi bài học, tải lên tài liệu và chia sẻ kinh nghiệm học tập.`}
             </p>
           </div>
 

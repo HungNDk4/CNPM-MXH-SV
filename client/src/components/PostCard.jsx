@@ -310,7 +310,7 @@ export default function PostCard({ post, initialBookmarked = false }) {
         <button
           type="button"
           onClick={handleShareClick}
-          className="flex-1 py-2 px-2.5 flex items-center justify-center gap-2 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-600 transition-all duration-200 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+          className="flex-1 py-2 px-2.5 flex items-center justify-center gap-2 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-600 transition-all duration-200 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
           aria-label="Chia sẻ liên kết bài viết"
           title="Sao chép liên kết bài viết"
         >

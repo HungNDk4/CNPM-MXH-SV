@@ -161,7 +161,7 @@ export default function QuickComposerModal({ isOpen, onClose, user, initialType 
             onClick={() => setPostType('discussion')}
             className={`flex-1 py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 ${
               postType === 'discussion'
-                ? 'bg-purple-600 text-white shadow-xs'
+                ? 'bg-sky-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >

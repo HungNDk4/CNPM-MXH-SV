@@ -6,19 +6,19 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#4f46e5', // Modern Indigo Academic Brand
-          hover:   '#4338ca',
-          50:  '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+          DEFAULT: '#2563eb', // Modern Academic Vibrant Blue (Pure Xanh Dương)
+          hover:   '#1d4ed8',
+          50:  '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+          950: '#172554',
         },
         pop: {
           emerald: {
@@ -73,7 +73,8 @@ export default {
         'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
         'bento': '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 8px 20px -4px rgba(0, 0, 0, 0.04)',
         'bento-hover': '0 12px 30px -8px rgba(0, 0, 0, 0.09), 0 4px 12px -2px rgba(0, 0, 0, 0.04)',
-        'glow-indigo': '0 0 24px -4px rgba(99, 102, 241, 0.25)',
+        'glow-indigo': '0 0 24px -4px rgba(37, 99, 235, 0.25)',
+        'glow-blue': '0 0 24px -4px rgba(37, 99, 235, 0.25)',
         'glow-emerald': '0 0 24px -4px rgba(16, 185, 129, 0.25)',
         'glow-amber': '0 0 24px -4px rgba(245, 158, 11, 0.25)',
       },

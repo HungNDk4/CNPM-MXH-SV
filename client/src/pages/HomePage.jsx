@@ -208,9 +208,9 @@ export default function HomePage() {
                       setComposerType('discussion')
                       setComposerOpen(true)
                     }}
-                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold transition-colors border border-purple-500/20"
+                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 font-semibold transition-colors border border-sky-500/20"
                   >
-                    <MessageSquare className="w-4 h-4 text-purple-500" />
+                    <MessageSquare className="w-4 h-4 text-sky-500" />
                     <span>Thảo luận</span>
                   </button>
                 </div>
@@ -233,14 +233,14 @@ export default function HomePage() {
             />
           </>
         ) : (
-          <div className="card p-5 bg-gradient-to-r from-primary-600 to-indigo-700 text-white space-y-3">
+          <div className="card p-5 bg-gradient-to-r from-blue-600 via-blue-700 to-sky-700 text-white space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white shrink-0">
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="font-bold text-base text-white">Tham gia Mini Study Network</h3>
-                <p className="text-xs text-indigo-100">
+                <p className="text-xs text-sky-100">
                   Cộng đồng sinh viên chia sẻ tài liệu PDF, giải đáp bài tập và kết nối chuyên ngành.
                 </p>
               </div>
@@ -497,7 +497,7 @@ export default function HomePage() {
         )}
 
         {/* Widget 3: Thống kê sinh viên tuần này */}
-        <div className="card p-5 space-y-3 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-surface-card border border-primary-500/20">
+        <div className="card p-5 space-y-3 bg-gradient-to-br from-blue-500/10 via-sky-500/5 to-surface-card border border-primary-500/20">
           <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-wider">
             <BarChart3 className="w-4 h-4" />
             <span>Mạng xã hội học tập</span>

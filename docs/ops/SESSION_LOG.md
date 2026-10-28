@@ -294,3 +294,13 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 - `cd client && npm run build`: **PASS** (2095 modules transformed, Vite bundle 466 kB JS / 66 kB CSS, 0 errors).
 - Backend syntax verification (`node --check server/src/**/*.js`): **PASS** (100% clean).
 - Git branch: `feat/campus-pop-redesign-20261028` clean, commit `98f9027`.
+
+## SESSION-20261028-FE-CAMPUS-POP-REFINEMENT — Theme harmony, split-screen auth, guest access
+**Actor:** AI under user pairing. **Branch:** `feat/campus-pop-redesign-20261028` based on `integration/team-dev-20261020` @ `4753aea`.
+**Key Refinements:**
+1. **Blue Theme Realignment:** Shifted full color scheme from indigo/purple to pure academic vibrant blue (`#2563eb`).
+2. **Guest Feed 401 Fix:** Enforced `effectiveType = isAuthenticated ? activeType : 'document'` in `HomePage.jsx` and `ProfilePage.jsx` in compliance with ADR-002/011.
+3. **Profile Stability:** Resolved `useMemo` reference error and added defensive guards for user profile views.
+4. **Auth Separation:** Dedicated split-screen showcase with seamless background canvas strictly to `/login`, kept classic centered card layout for `/register`.
+5. **Remote Sync:** Branch `feat/campus-pop-redesign-20261028` pushed to `origin` and ready for PR review against `integration/team-dev-20261020`.
+**Verification:** Vite build `npm run build` PASS (4.54s, 2096 modules, 0 errors).

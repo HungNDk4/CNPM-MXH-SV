@@ -17,13 +17,13 @@ export default function AuthLayout() {
   const isLogin = location.pathname.includes('/login')
 
   // ═════════════════════════════════════════════════════════════════
-  // 1. TRANG ĐĂNG NHẬP: SPLIT SCREEN SHOWCASE + FORM TRÀN CHÌM VÀO NỀN
+  // 1. TRANG ĐĂNG NHẬP: CHIA 2 NỬA (SPLIT SCREEN SHOWCASE + FORM TRÀN CHÌM VÀO NỀN)
   // ═════════════════════════════════════════════════════════════════
   if (isLogin) {
     return (
-      <div className="min-h-screen bg-surface flex flex-col lg:flex-row relative">
-        {/* CỘT TRÁI (DESKTOP SHOWCASE NGHỆ THUẬT) */}
-        <div className="hidden lg:flex lg:w-1/2 xl:w-[52%] flex-col justify-between p-10 xl:p-14 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white relative overflow-hidden select-none">
+      <div className="min-h-screen bg-surface flex flex-col md:flex-row relative">
+        {/* CỘT TRÁI: SHOWCASE ĐỒ HỌA MẠNG XÃ HỘI HỌC TẬP (NỬA MÀN HÌNH) */}
+        <div className="hidden md:flex md:w-1/2 xl:w-[52%] flex-col justify-between p-8 lg:p-12 xl:p-14 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white relative overflow-hidden select-none">
           {/* Ambient Glows */}
           <div className="absolute top-0 -left-20 w-96 h-96 bg-primary-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 -right-20 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -118,11 +118,11 @@ export default function AuthLayout() {
           </div>
         </div>
 
-        {/* CỘT PHẢI: FORM ĐĂNG NHẬP TRÀN CHÌM VÀO NỀN (KHÔNG CARD HỘP, KHÔNG DƯ CHỮ) */}
-        <div className="w-full lg:w-1/2 xl:w-[48%] flex flex-col justify-between p-6 sm:p-10 lg:p-14 relative overflow-y-auto">
-          {/* Top Control Bar: Logo mobile + Theme Toggle (Không dư chữ) */}
+        {/* CỘT PHẢI: FORM ĐĂNG NHẬP TRÀN CHÌM TRỰC TIẾP VÀO NỀN (KHÔNG CARD HỘP NỔI, KHÔNG DƯ CHỮ) */}
+        <div className="w-full md:w-1/2 xl:w-[48%] flex flex-col justify-between p-6 sm:p-10 lg:p-14 relative overflow-y-auto bg-surface">
+          {/* Top Bar: Mobile Logo + Theme toggle */}
           <div className="flex items-center justify-between w-full max-w-md mx-auto">
-            <Link to="/" className="lg:hidden flex items-center gap-2.5">
+            <Link to="/" className="md:hidden flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-500 flex items-center justify-center text-white shadow-md">
                 <GraduationCap className="w-5 h-5" />
               </div>
@@ -142,7 +142,7 @@ export default function AuthLayout() {
             </button>
           </div>
 
-          {/* Form Container: CHÌM TRỰC TIẾP VÀO NỀN (Không card, không border, không bóng hộp) */}
+          {/* Form Container: CHÌM TRỰC TIẾP VÀO NỀN (KHÔNG CARD NỔI, KHÔNG SHADOW HỘP) */}
           <div className="w-full max-w-md mx-auto my-auto py-8 animate-fade-in">
             <Outlet />
           </div>

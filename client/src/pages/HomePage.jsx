@@ -284,8 +284,8 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── Category Filter Pills ── */}
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {/* ── Category Filter Pills (Sticky Header when scrolling feed) ── */}
+        <div className="sticky top-16 z-20 -mx-2 px-2 py-3 bg-surface/90 backdrop-blur-md border-b border-surface-border/60 transition-all flex items-center justify-between gap-2 overflow-x-auto scrollbar-none shadow-2xs">
           <div className="flex gap-2">
             {visibleFilters.map(({ label, value, icon: Icon }) => {
               const isActive = (effectiveType === value) || (!isAuthenticated && value === 'document')
@@ -451,7 +451,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════
           CỘT PHẢI (SIDE WIDGETS): Môn học, Bạn bè, Thống kê
           ═══════════════════════════════════════════════ */}
-      <div className="hidden lg:block lg:col-span-4 space-y-5 sticky top-20">
+      <div className="hidden lg:block lg:col-span-4 space-y-5 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-none pb-8">
         {/* Widget 1: Bộ lọc nhanh theo Môn học (Subject Pills) */}
         <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-bento">
           <div className="flex items-center justify-between">

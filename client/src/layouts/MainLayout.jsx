@@ -73,7 +73,7 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col transition-colors duration-200 relative overflow-x-hidden">
+    <div className="min-h-screen bg-surface flex flex-col transition-colors duration-200 relative">
       {/* ── Ambient Academic Campus Wash / Glow Layer (Light & Dark) ── */}
       <div
         className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-500 overflow-hidden"
@@ -91,7 +91,7 @@ export default function MainLayout() {
       </div>
 
       {/* ── Top Header Navigation Bar (Sticky Glassmorphic) ── */}
-      <header className="sticky top-0 z-50 relative bg-surface-card/90 backdrop-blur-md border-b border-surface-border shadow-2xs transition-colors duration-200">
+      <header className="sticky top-0 z-50 bg-surface-card/90 backdrop-blur-md border-b border-surface-border shadow-2xs transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
           {/* Brand Logo & Title */}
           <Link

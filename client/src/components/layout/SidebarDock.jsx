@@ -31,7 +31,7 @@ export default function SidebarDock({ isAuthenticated, user }) {
 
   return (
     <aside
-      className="hidden md:flex flex-col justify-between w-20 py-4 items-center h-[calc(100vh-4.5rem)] sticky top-[4.5rem] bg-surface-card/60 backdrop-blur-md border-r border-surface-border/60 transition-colors duration-200 select-none z-30"
+      className="hidden md:flex flex-col justify-between w-20 py-4 items-center h-[calc(100vh-4rem)] sticky top-16 bg-surface-card/60 backdrop-blur-md border-r border-surface-border/60 transition-colors duration-200 select-none z-30"
       aria-label="Thanh điều hướng nhanh"
     >
       {/* Top Main Nav Icons */}

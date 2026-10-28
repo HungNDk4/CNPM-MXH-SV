@@ -37,7 +37,7 @@ const EVENT_CONFIG = {
   follow: {
     label: 'Đã bắt đầu theo dõi bạn',
     icon: User,
-    iconColor: 'text-purple-500 bg-purple-50 dark:bg-purple-950/50',
+    iconColor: 'text-blue-500 bg-blue-50 dark:bg-blue-950/50',
   },
 }
 

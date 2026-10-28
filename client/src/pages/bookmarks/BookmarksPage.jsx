@@ -22,7 +22,7 @@ export default function BookmarksPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* ── Campus Pop Header Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-indigo-500/10 border border-amber-500/20 p-6 md:p-8 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-blue-500/10 border border-amber-500/20 p-6 md:p-8 backdrop-blur-sm">
         <div className="absolute -top-10 -right-10 w-44 h-44 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">

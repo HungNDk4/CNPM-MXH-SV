@@ -53,7 +53,7 @@ export default function HomePage() {
   const { data: featuredStudentsData } = useQuery({
     queryKey: ['featured-students'],
     queryFn: () => userAPI.getFeaturedStudents(),
-    enabled: isAuthenticated,
+    enabled: true,
     staleTime: 5 * 60 * 1000,
   })
   const featuredStudents = featuredStudentsData?.data?.data || []
@@ -237,25 +237,36 @@ export default function HomePage() {
             />
           </>
         ) : (
-          <div className="card p-5 bg-gradient-to-r from-blue-600 via-blue-700 to-sky-700 text-white space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white shrink-0">
-                <GraduationCap className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-white">Tham gia Mini Study Network</h3>
-                <p className="text-xs text-sky-100">
-                  Cộng đồng sinh viên chia sẻ tài liệu PDF, giải đáp bài tập và kết nối chuyên ngành.
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white p-6 sm:p-7 shadow-xl shadow-blue-900/10 border border-blue-400/20">
+            {/* Ambient Background Glow Inside Banner */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-sky-400/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-md text-sky-100 border border-white/20">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Cộng đồng học thuật sinh viên 2026</span>
+                </div>
+                <h3 className="font-extrabold text-lg sm:text-xl text-white tracking-tight">
+                  Khám phá & Chia sẻ kho tri thức đại học
+                </h3>
+                <p className="text-xs sm:text-sm text-sky-100/90 max-w-xl leading-relaxed">
+                  Hơn 1,200+ tài liệu PDF, đồ án mẫu và đề cương ôn thi được sinh viên chia sẻ hoàn toàn miễn phí.
                 </p>
               </div>
-            </div>
-            <div className="flex gap-2.5 pt-1">
-              <Link to="/login" className="btn-secondary bg-white text-slate-900 border-none font-bold text-xs py-2 px-4 rounded-xl">
-                Đăng nhập
-              </Link>
-              <Link to="/register" className="btn-primary bg-slate-900 hover:bg-black text-white font-bold text-xs py-2 px-4 rounded-xl">
-                Đăng ký thành viên
-              </Link>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <Link
+                  to="/login"
+                  className="bg-white hover:bg-slate-100 text-blue-950 font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-md transition-all active:scale-[0.98]"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-blue-950/80 hover:bg-black text-white font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl border border-white/20 transition-all active:scale-[0.98]"
+                >
+                  Đăng ký ngay
+                </Link>
+              </div>
             </div>
           </div>
         )}
@@ -460,7 +471,8 @@ export default function HomePage() {
         </div>
 
         {/* Widget 2: Đang học & Sinh viên cùng trường (Kilogram & Grovelyn Style) */}
-        {isAuthenticated && (
+        {/* Widget 2: Sinh viên nổi bật */}
+        {true && (
           <div className="card p-5 space-y-3.5 bg-surface-card border border-surface-border shadow-bento">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">

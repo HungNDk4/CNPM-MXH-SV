@@ -63,7 +63,7 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
       {open && (
         <div className="absolute right-0 mt-3 w-72 bg-surface-card border border-surface-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-slide-up">
           {/* Header Banner */}
-          <div className="p-4 bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 text-white relative overflow-hidden">
+          <div className="p-4 bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 text-white relative overflow-hidden">
             <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary-500/20 rounded-full blur-xl pointer-events-none" />
             <div className="flex items-center gap-3 relative z-10">
               <div className="w-12 h-12 rounded-full avatar-gradient-ring flex items-center justify-center shrink-0">
@@ -84,7 +84,7 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
                 <h4 className="font-bold text-sm truncate text-white leading-tight">
                   {user?.full_name || 'Thành viên'}
                 </h4>
-                <p className="text-[11px] text-indigo-200/80 truncate mt-0.5">
+                <p className="text-[11px] text-sky-200/80 truncate mt-0.5">
                   {user?.university || user?.major || 'Sinh viên học tập'}
                 </p>
                 <div className="mt-1">

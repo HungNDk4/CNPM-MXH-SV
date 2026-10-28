@@ -4,23 +4,25 @@
 
 @layer base {
   :root {
-    --bg-app: #F8FAFC;
-    --bg-card: #FFFFFF;
-    --bg-muted: #F1F5F9;
-    --bg-elevated: #FFFFFF;
-    --border-subtle: #E2E8F0;
-    --text-main: #0F172A;
-    --text-muted: #64748B;
+    /* Campus Pop Academic Light: Gentle soft blue-sky canvas so white cards pop with warmth */
+    --bg-app: #edf3f8;
+    --bg-card: #ffffff;
+    --bg-muted: #e2eaf2;
+    --bg-elevated: #ffffff;
+    --border-subtle: #e2e8f0;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
   }
 
   .dark {
-    --bg-app: #0B0F19;
-    --bg-card: #131B2E;
-    --bg-muted: #1B253D;
-    --bg-elevated: #222E4A;
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --text-main: #F8FAFC;
-    --text-muted: #94A3B8;
+    /* Campus Pop Midnight: Deep Navy Space / Electric Blue identity — Distinctive & Unique */
+    --bg-app: #080d1a;
+    --bg-card: #0f172a;
+    --bg-muted: #1e293b;
+    --bg-elevated: #162238;
+    --border-subtle: rgba(59, 130, 246, 0.14);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
   }
 
   * {

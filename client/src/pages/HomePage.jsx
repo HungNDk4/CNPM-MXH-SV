@@ -49,26 +49,7 @@ export default function HomePage() {
   // Quick Composer State (Image 4 Style)
   const [composerOpen, setComposerOpen] = useState(false)
 
-  // Featured active students derived safely from feed posts
-  const featuredStudents = useMemo(() => {
-    const list = []
-    const seen = new Set()
-    const items = data?.data || []
-    for (const item of items) {
-      if (item.author && !seen.has(item.author.id)) {
-        seen.add(item.author.id)
-        list.push({
-          id: item.author.id,
-          full_name: item.author.full_name,
-          avatar_url: item.author.avatar_url,
-          university: item.author.university,
-          major: item.subject || 'Công nghệ thông tin',
-        })
-        if (list.length >= 6) break
-      }
-    }
-    return list
-  }, [data])
+
   const [composerType, setComposerType] = useState('discussion')
 
   // URL query params
@@ -110,6 +91,26 @@ export default function HomePage() {
   })
 
   const posts = data?.data || []
+
+  // Featured active students derived safely from feed posts
+  const featuredStudents = useMemo(() => {
+    const list = []
+    const seen = new Set()
+    for (const item of posts) {
+      if (item.author && !seen.has(item.author.id)) {
+        seen.add(item.author.id)
+        list.push({
+          id: item.author.id,
+          full_name: item.author.full_name,
+          avatar_url: item.author.avatar_url,
+          university: item.author.university,
+          major: item.subject || 'Công nghệ thông tin',
+        })
+        if (list.length >= 6) break
+      }
+    }
+    return list
+  }, [posts])
   const pagination = data?.pagination || { total: 0, totalPages: 1 }
 
   // Guest view: only document posts allowed without login

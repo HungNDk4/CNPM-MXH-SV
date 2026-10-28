@@ -20,31 +20,38 @@ import {
   Eye,
   AlertCircle,
   Lock,
+  GraduationCap,
+  Sparkles,
 } from 'lucide-react'
+import Badge, { TYPE_BADGE_CONFIG } from '@/components/common/Badge'
 
 const MAX_COMMENT = 2000
 const TYPE_CONFIG = {
   question: {
     label: 'Hỏi đáp',
     icon: HelpCircle,
-    badgeClass: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60',
+    badgeClass: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60',
   },
   discussion: {
     label: 'Thảo luận',
     icon: MessageSquare,
-    badgeClass: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/60',
+    badgeClass: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/60',
   },
   document: {
     label: 'Tài liệu',
     icon: FileText,
-    badgeClass: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60',
+    badgeClass: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60',
   },
 }
 
 const stamp = (value) => {
   if (!value) return ''
   const d = new Date(value)
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('vi-VN')
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 }
 
 function BookmarkButton({ postId }) {
@@ -72,8 +79,10 @@ function BookmarkButton({ postId }) {
       type="button"
       onClick={() => toggle.mutate()}
       disabled={toggle.isPending}
-      className={`btn-secondary min-h-10 px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5 transition-colors ${
-        bookmarked ? 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-950/60' : ''
+      className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm flex items-center gap-2 rounded-xl transition-all ${
+        bookmarked
+          ? 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40'
+          : ''
       }`}
       aria-label={bookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
     >
@@ -115,8 +124,10 @@ function LikeButton({ targetType, targetId }) {
     <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm">
       <button
         type="button"
-        className={`btn-secondary min-h-10 px-3 py-2 text-xs sm:text-sm inline-flex items-center gap-1.5 transition-colors ${
-          liked ? 'text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/60' : 'text-slate-700 dark:text-slate-200'
+        className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 rounded-xl transition-all ${
+          liked
+            ? 'text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40'
+            : 'text-slate-700 dark:text-slate-200'
         }`}
         aria-label={'Thích hoặc bỏ thích ' + item}
         aria-pressed={liked === null ? 'mixed' : liked}
@@ -125,12 +136,12 @@ function LikeButton({ targetType, targetId }) {
         disabled={toggle.isPending}
       >
         <Heart
-          className={`w-4 h-4 ${liked ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`}
+          className={`w-4 h-4 transition-transform ${liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400'}`}
           aria-hidden="true"
         />
-        <span>{toggle.isPending ? 'Đang lưu...' : label}</span>
+        <span className="font-semibold">{toggle.isPending ? 'Đang lưu...' : label}</span>
       </button>
-      <span className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
+      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium" aria-live="polite">
         {isLoading ? '…' : isError ? 'Chưa tải được số thích' : `${count ?? 0} lượt thích`}
       </span>
     </div>
@@ -160,46 +171,48 @@ function CommentItem({ comment, user, depth, create, remove }) {
   }
 
   return (
-    <li className={depth ? 'ml-3 sm:ml-7 mt-2 pl-3 sm:pl-4 border-l-2 border-surface-border' : ''}>
-      <div className={`rounded-xl p-3.5 sm:p-4 space-y-2.5 transition-all ${
+    <li className={depth ? 'ml-3 sm:ml-8 mt-3 pl-3 sm:pl-4 border-l-2 border-indigo-500/20 dark:border-indigo-500/30' : ''}>
+      <div className={`rounded-2xl p-4 sm:p-5 space-y-3 transition-all shadow-bento ${
         depth === 0
-          ? 'bg-surface-muted/60 border border-surface-border'
-          : 'bg-surface-card border border-surface-border shadow-subtle'
+          ? 'bg-surface-card border border-surface-border'
+          : 'bg-surface-muted/50 border border-surface-border'
       }`}>
         {/* Comment Header */}
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 font-semibold flex items-center justify-center shrink-0 border border-primary-200/60 dark:border-primary-800/60 overflow-hidden text-xs shadow-subtle" aria-hidden="true">
-              {comment.author?.avatar_url ? (
-                <img
-                  src={comment.author.avatar_url}
-                  alt={comment.author.full_name || 'Sinh viên'}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.currentTarget.style.display = 'none' }}
-                />
-              ) : (
-                comment.author?.full_name?.[0]?.toUpperCase() || 'S'
-              )}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-full avatar-gradient-ring p-[1.5px] shrink-0" aria-hidden="true">
+              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600">
+                {comment.author?.avatar_url ? (
+                  <img
+                    src={comment.author.avatar_url}
+                    alt={comment.author.full_name || 'Sinh viên'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                  />
+                ) : (
+                  comment.author?.full_name?.[0]?.toUpperCase() || 'S'
+                )}
+              </div>
             </div>
             <div className="min-w-0">
               {comment.author?.id ? (
                 <Link
-                  className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors break-words"
+                  className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors break-words"
                   to={'/profile/' + comment.author.id}
                 >
                   {comment.author.full_name || 'Sinh viên'}
                 </Link>
               ) : (
-                <span className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-100">Sinh viên</span>
+                <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">Sinh viên</span>
               )}
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 ml-2">{stamp(comment.created_at)}</span>
+              <span className="text-[11px] text-slate-400 ml-2">{stamp(comment.created_at)}</span>
             </div>
           </div>
 
           {canRemove && (
             <button
               type="button"
-              className="text-xs text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 min-h-10 px-3 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-rose-400"
+              className="text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 p-2 rounded-xl transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
               aria-label={'Xóa bình luận #' + comment.id}
               onClick={deleteItem}
               disabled={remove.isPending}
@@ -216,12 +229,12 @@ function CommentItem({ comment, user, depth, create, remove }) {
         </p>
 
         {/* Actions Row */}
-        <div className="flex gap-3 items-center flex-wrap pt-1">
+        <div className="flex gap-3 items-center flex-wrap pt-1 border-t border-surface-border/50">
           <LikeButton targetType="comment" targetId={comment.id} />
           {depth === 0 && (
             <button
               type="button"
-              className="text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 min-h-10 px-3 rounded-lg inline-flex items-center gap-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-primary-400"
+              className="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950/40 py-1.5 px-3 rounded-xl inline-flex items-center gap-1.5 transition-colors"
               aria-label="Trả lời bình luận"
               onClick={() => setReplyOpen((value) => !value)}
             >
@@ -234,47 +247,47 @@ function CommentItem({ comment, user, depth, create, remove }) {
         {/* Reply form */}
         {replyOpen && (
           <form onSubmit={submitReply} className="space-y-2 mt-3 pt-3 border-t border-surface-border">
-            <label htmlFor={'reply-' + comment.id} className="text-xs font-medium text-slate-700 dark:text-slate-300 block">
+            <label htmlFor={'reply-' + comment.id} className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
               Nội dung trả lời
             </label>
             <textarea
               id={'reply-' + comment.id}
-              className="input resize-y text-xs sm:text-sm"
+              className="input resize-y text-xs sm:text-sm rounded-xl"
               rows={3}
               value={reply}
               onChange={(e) => setReply(e.target.value)}
               maxLength={MAX_COMMENT}
-              placeholder="Viết câu trả lời..."
+              placeholder="Viết câu trả lời thảo luận..."
               required
             />
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setReplyOpen(false)}
-                className="btn-secondary text-xs py-1.5 px-3"
+                className="btn-secondary text-xs py-1.5 px-3 rounded-xl"
               >
                 Hủy
               </button>
               <button
                 type="submit"
-                className="btn-primary text-xs py-1.5 px-3"
-                disabled={!reply.trim() || create.isPending}
+                className="btn-primary text-xs py-1.5 px-4 rounded-xl"
+                disabled={create.isPending}
               >
-                {create.isPending ? 'Đang gửi...' : 'Gửi trả lời'}
+                Gửi trả lời
               </button>
             </div>
           </form>
         )}
       </div>
 
-      {depth === 0 && replies.length > 0 && (
-        <ul aria-label="Các câu trả lời" className="space-y-2.5 mt-2.5">
-          {replies.map((item) => (
+      {replies.length > 0 && (
+        <ul className="space-y-3">
+          {replies.map((child) => (
             <CommentItem
-              key={item.id}
-              comment={item}
+              key={child.id}
+              comment={child}
               user={user}
-              depth={1}
+              depth={depth + 1}
               create={create}
               remove={remove}
             />
@@ -286,79 +299,79 @@ function CommentItem({ comment, user, depth, create, remove }) {
 }
 
 function Comments({ postId }) {
-  const user = useAuthStore((state) => state.user)
-  const [draft, setDraft] = useState('')
   const qc = useQueryClient()
+  const user = useAuthStore((state) => state.user)
+  const authenticated = useAuthStore((state) => state.isAuthenticated)
+  const [root, setRoot] = useState('')
   const key = ['fe01-comments', postId]
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: key,
     queryFn: async () => (await commentAPI.getByPost(postId)).data.data,
+    enabled: Boolean(postId && authenticated),
     retry: false,
   })
 
   const create = useMutation({
-    mutationFn: (fields) => commentAPI.create({ post_id: postId, ...fields }),
+    mutationFn: ({ content, parent_id }) => commentAPI.create(postId, { content, parent_id }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key })
-      toast.success('Đã đăng bình luận.')
+      toast.success('Bình luận đã được gửi.')
     },
-    onError: (error) => toast.error(error.response?.data?.message || 'Không thể đăng bình luận.'),
+    onError: (err) => toast.error(err.response?.data?.message || 'Không thể gửi bình luận.'),
   })
 
   const remove = useMutation({
-    mutationFn: (id) => commentAPI.delete(id),
+    mutationFn: (commentId) => commentAPI.delete(commentId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key })
-      toast.success('Đã xóa bình luận.')
+      toast.success('Bình luận đã được xóa.')
     },
-    onError: (error) => toast.error(error.response?.data?.message || 'Không thể xóa bình luận.'),
+    onError: (err) => toast.error(err.response?.data?.message || 'Không thể xóa bình luận.'),
   })
 
-  const submit = async (event) => {
+  const submitRoot = async (event) => {
     event.preventDefault()
-    const content = draft.trim()
+    const content = root.trim()
     if (!content || create.isPending) return
     try {
       await create.mutateAsync({ content, parent_id: null })
-      setDraft('')
-    } catch { /* Shown by onError. */ }
+      setRoot('')
+    } catch { /* toast shown */ }
   }
 
-  const roots = Array.isArray(data) ? data.filter((item) => item.parent_id == null) : []
-  const count = roots.reduce((n, item) => n + 1 + (Array.isArray(item.replies) ? item.replies.length : 0), 0)
+  const comments = Array.isArray(data) ? data : []
 
   return (
-    <section className="card bg-surface-card border border-surface-border rounded-xl p-5 sm:p-6 shadow-sm space-y-5" aria-labelledby="fe01-comments-title">
-      <h2 id="fe01-comments-title" className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-        <MessageSquare className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-        <span>Bình luận</span>
-        {!isLoading && <span className="text-slate-500 dark:text-slate-400 text-sm font-normal">({count})</span>}
-      </h2>
+    <section className="card p-5 sm:p-7 space-y-6" aria-label="Bình luận và thảo luận">
+      <div className="flex items-center justify-between pb-3 border-b border-surface-border">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+          <span>Bình luận ({comments.length})</span>
+        </h2>
+      </div>
 
-      {/* Main Comment Form */}
-      <form onSubmit={submit} className="space-y-3">
-        <label htmlFor="fe01-comment-input" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-          Viết bình luận
+      {/* Input box */}
+      <form onSubmit={submitRoot} className="space-y-3">
+        <label htmlFor="root-comment" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+          Viết bình luận của bạn
         </label>
         <textarea
-          id="fe01-comment-input"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          maxLength={MAX_COMMENT}
+          id="root-comment"
+          className="input resize-y text-xs sm:text-sm rounded-2xl"
           rows={3}
-          className="input resize-y text-sm bg-surface-muted/60 border-surface-border focus:bg-surface-card"
-          placeholder="Chia sẻ ý kiến hoặc câu trả lời của bạn..."
+          value={root}
+          onChange={(e) => setRoot(e.target.value)}
+          maxLength={MAX_COMMENT}
+          placeholder="Tham gia thảo luận hoặc đặt câu hỏi mở rộng..."
           required
         />
-        <div className="flex flex-wrap justify-between gap-2 items-center">
-          <span className="text-xs text-slate-400 dark:text-slate-500">
-            {draft.length}/{MAX_COMMENT} ký tự
-          </span>
+        <div className="flex justify-between items-center">
+          <span className="text-[11px] text-slate-400">Tối đa 2.000 ký tự</span>
           <button
             type="submit"
-            className="btn-primary inline-flex items-center gap-1.5 text-sm px-4 py-2"
-            disabled={!draft.trim() || create.isPending}
+            disabled={create.isPending || !root.trim()}
+            className="btn-primary text-xs sm:text-sm py-2 px-5 rounded-xl inline-flex items-center gap-2"
           >
             <Send className="w-4 h-4" />
             <span>{create.isPending ? 'Đang gửi...' : 'Gửi bình luận'}</span>
@@ -367,37 +380,29 @@ function Comments({ postId }) {
       </form>
 
       {/* Comments List */}
-      <div className="border-t border-surface-border pt-5">
-        {isLoading ? (
-          <p role="status" className="text-slate-500 dark:text-slate-400 text-sm text-center py-4">Đang tải bình luận...</p>
-        ) : isError ? (
-          <div role="alert" className="text-center py-6 space-y-2">
-            <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
-            <p className="text-slate-700 dark:text-slate-300 text-sm font-medium">Không thể tải bình luận.</p>
-            <button type="button" className="btn-secondary text-xs" onClick={() => refetch()}>
-              Thử lại
-            </button>
-          </div>
-        ) : roots.length === 0 ? (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400 space-y-1">
-            <p className="text-slate-700 dark:text-slate-200 font-medium text-sm">Chưa có bình luận nào.</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500">Hãy là người đầu tiên chia sẻ câu trả lời hoặc thảo luận!</p>
-          </div>
-        ) : (
-          <ul aria-label="Danh sách bình luận" className="space-y-3 sm:space-y-4">
-            {roots.map((item) => (
-              <CommentItem
-                key={item.id}
-                comment={item}
-                user={user}
-                depth={0}
-                create={create}
-                remove={remove}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
+      {isLoading ? (
+        <p className="text-center text-slate-400 text-xs py-8">Đang tải bình luận...</p>
+      ) : isError ? (
+        <p className="text-center text-rose-500 text-xs py-8">Không thể tải bình luận.</p>
+      ) : comments.length === 0 ? (
+        <div className="text-center py-10 space-y-2 text-slate-400">
+          <MessageSquare className="w-8 h-8 mx-auto opacity-50" />
+          <p className="text-xs">Chưa có bình luận nào. Hãy là người đầu tiên trao đổi!</p>
+        </div>
+      ) : (
+        <ul className="space-y-4 pt-2">
+          {comments.map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              user={user}
+              depth={0}
+              create={create}
+              remove={remove}
+            />
+          ))}
+        </ul>
+      )}
     </section>
   )
 }
@@ -405,31 +410,29 @@ function Comments({ postId }) {
 export default function PostDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
+  const user = useAuthStore((state) => state.user)
   const authenticated = useAuthStore((state) => state.isAuthenticated)
-  const currentUser = useAuthStore((state) => state.user)
-  const validId = /^[1-9]\d*$/.test(id || '')
+  const validId = /^[1-9]\d*$/.test(String(id || ''))
 
-  const { data: post, isLoading, isError, error } = useQuery({
-    queryKey: ['fe01-post', id],
-    queryFn: async () => (await postAPI.getById(id)).data.data,
-    enabled: authenticated && validId,
-    retry: false,
-    staleTime: 20000,
-  })
-
-  const canModify = currentUser && post && (Number(currentUser.id) === Number(post.user_id) || currentUser.role === 'admin')
-
-  // Edit State & Mutations
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({ title: '', content: '', subject: '', tags: '' })
+
+  const { data: post, isLoading, isError, error } = useQuery({
+    queryKey: ['post-detail', id],
+    queryFn: async () => (await postAPI.getById(id)).data.data,
+    enabled: Boolean(validId && authenticated),
+    retry: false,
+  })
+
+  const canModify = authenticated && post && (Number(user?.id) === Number(post.user_id) || user?.role === 'admin')
 
   const startEdit = () => {
     setEditForm({
       title: post.title || '',
       content: post.content || '',
       subject: post.subject || '',
-      tags: Array.isArray(post.tags) ? post.tags.join(', ') : '',
+      tags: Array.isArray(post.tags) ? post.tags.join(', ') : post.tags || '',
     })
     setIsEditing(true)
   }
@@ -437,9 +440,9 @@ export default function PostDetailPage() {
   const editPostMutation = useMutation({
     mutationFn: (payload) => postAPI.update(post.id, payload),
     onSuccess: (res) => {
-      queryClient.setQueryData(['fe01-post', id], res.data.data)
+      toast.success('Đã cập nhật bài viết thành công!')
       setIsEditing(false)
-      toast.success('Cập nhật bài viết thành công!')
+      qc.invalidateQueries({ queryKey: ['post-detail', id] })
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || 'Không thể cập nhật bài viết.')
@@ -482,7 +485,7 @@ export default function PostDetailPage() {
   }
 
   if (!validId) return (
-    <section className="card bg-surface-card border border-surface-border rounded-xl text-center py-14 space-y-4 shadow-sm" role="alert">
+    <section className="card text-center py-14 space-y-4" role="alert">
       <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
       <h1 className="text-xl font-bold text-slate-900 dark:text-white">Đường dẫn bài viết không hợp lệ.</h1>
       <Link to="/" className="btn-secondary inline-block">Về bảng tin</Link>
@@ -490,7 +493,7 @@ export default function PostDetailPage() {
   )
 
   if (!authenticated) return (
-    <section className="card bg-surface-card border border-surface-border rounded-xl text-center py-14 space-y-4 max-w-xl mx-auto shadow-sm">
+    <section className="card text-center py-14 space-y-4 max-w-xl mx-auto">
       <Lock className="w-10 h-10 text-primary-600 dark:text-primary-400 mx-auto" />
       <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Đăng nhập để xem bài viết</h1>
       <p className="text-slate-500 dark:text-slate-400 text-sm">Bài hỏi đáp và thảo luận dành cho thành viên đã đăng nhập.</p>
@@ -499,15 +502,15 @@ export default function PostDetailPage() {
   )
 
   if (isLoading) return (
-    <section className="card bg-surface-card border border-surface-border rounded-xl max-w-3xl mx-auto space-y-4 animate-pulse p-6 shadow-sm" role="status">
-      <p className="text-slate-500 dark:text-slate-400 text-sm">Đang tải bài viết...</p>
+    <section className="card max-w-3xl mx-auto space-y-4 animate-pulse p-6" role="status">
+      <p className="text-slate-500 text-sm">Đang tải bài viết...</p>
       <div className="h-7 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
       <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-full" />
     </section>
   )
 
   if (isError) return (
-    <section className="card bg-surface-card border border-surface-border rounded-xl text-center py-14 space-y-4 max-w-2xl mx-auto shadow-sm" role="alert">
+    <section className="card text-center py-14 space-y-4 max-w-2xl mx-auto" role="alert">
       <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
       <h1 className="text-xl font-bold text-slate-900 dark:text-white">
         {error?.response?.status === 404
@@ -521,7 +524,7 @@ export default function PostDetailPage() {
   )
 
   if (!post || post.status !== 'active' || !TYPE_CONFIG[post.post_type]) return (
-    <section className="card bg-surface-card border border-surface-border rounded-xl text-center py-14 space-y-4 max-w-2xl mx-auto shadow-sm">
+    <section className="card text-center py-14 space-y-4 max-w-2xl mx-auto">
       <h1 className="font-bold text-xl text-slate-900 dark:text-white">Bài viết không khả dụng tại trang này.</h1>
       {post?.post_type === 'document' && post.status === 'active' ? (
         <Link to={'/documents/' + post.id} className="btn-primary inline-block">Xem tài liệu</Link>
@@ -531,25 +534,27 @@ export default function PostDetailPage() {
     </section>
   )
 
-  const typeConfig = TYPE_CONFIG[post.post_type] || TYPE_CONFIG.discussion
-  const TypeIcon = typeConfig.icon
   const tags = Array.isArray(post.tags) ? post.tags.filter((tag) => typeof tag === 'string') : []
 
   return (
-    <main className="max-w-3xl mx-auto space-y-5">
-      {/* Back button */}
-      <nav aria-label="Điều hướng bài viết">
-        <Link className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors" to="/">
+    <main className="max-w-4xl mx-auto space-y-6">
+      {/* Navigation bar */}
+      <nav aria-label="Điều hướng bài viết" className="flex items-center justify-between">
+        <Link
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          to="/"
+        >
           <ArrowLeft className="w-4 h-4" />
-          <span>Về bảng tin</span>
+          <span>Quay lại bảng tin</span>
         </Link>
       </nav>
 
+      {/* Post or Edit Mode */}
       {isEditing ? (
-        <article className="card bg-surface-card border border-surface-border rounded-xl p-5 sm:p-6 shadow-sm space-y-5 animate-fade-in" aria-label="Chỉnh sửa bài viết">
+        <article className="card p-6 sm:p-8 space-y-5 animate-fade-in" aria-label="Chỉnh sửa bài viết">
           <div className="flex items-center justify-between pb-3 border-b border-surface-border">
             <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Edit3 className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <Edit3 className="w-5 h-5 text-primary-600" />
               <span>Chỉnh sửa bài viết</span>
             </h2>
             <button
@@ -563,7 +568,7 @@ export default function PostDetailPage() {
 
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="edit-title" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+              <label htmlFor="edit-title" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                 Tiêu đề <span className="text-red-500">*</span>
               </label>
               <input
@@ -579,7 +584,7 @@ export default function PostDetailPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="edit-subject" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+              <label htmlFor="edit-subject" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                 Môn học
               </label>
               <input
@@ -594,7 +599,7 @@ export default function PostDetailPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="edit-tags" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+              <label htmlFor="edit-tags" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                 Thẻ (phân cách bằng dấu phẩy)
               </label>
               <input
@@ -608,7 +613,7 @@ export default function PostDetailPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="edit-content" className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+              <label htmlFor="edit-content" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                 Nội dung bài viết
               </label>
               <textarea
@@ -626,14 +631,14 @@ export default function PostDetailPage() {
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="btn-secondary text-sm"
+                className="btn-secondary text-xs sm:text-sm"
               >
                 Hủy bỏ
               </button>
               <button
                 type="submit"
                 disabled={editPostMutation.isPending}
-                className="btn-primary text-sm"
+                className="btn-primary text-xs sm:text-sm"
               >
                 {editPostMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
               </button>
@@ -641,14 +646,11 @@ export default function PostDetailPage() {
           </form>
         </article>
       ) : (
-        <article className="card bg-surface-card border border-surface-border rounded-xl p-5 sm:p-7 shadow-sm space-y-5">
+        <article className="card p-6 sm:p-8 space-y-6">
           {/* Top meta row */}
           <div className="flex flex-wrap gap-3 items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full border ${typeConfig.badgeClass}`}>
-                <TypeIcon className="w-3.5 h-3.5" />
-                {typeConfig.label}
-              </span>
+              <Badge type={post.post_type} />
               <span className="text-slate-400 text-xs">·</span>
               <span className="text-slate-500 dark:text-slate-400 text-xs">{stamp(post.created_at)}</span>
             </div>
@@ -659,75 +661,79 @@ export default function PostDetailPage() {
                 <button
                   type="button"
                   onClick={startEdit}
-                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 hover:text-primary-600 dark:hover:text-primary-400"
+                  className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 rounded-xl hover:text-primary-600"
                   aria-label="Sửa bài viết"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
-                  <span>Sửa</span>
+                  <span>Sửa bài viết</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleDeletePost}
                   disabled={deletePostMutation.isPending}
-                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-700 border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40"
                   aria-label="Xóa bài viết"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>{deletePostMutation.isPending ? 'Đang xóa...' : 'Xóa'}</span>
+                  <span>{deletePostMutation.isPending ? 'Đang xóa...' : 'Xóa bài viết'}</span>
                 </button>
               </div>
             )}
           </div>
 
-          {/* Post Title */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white leading-snug break-words tracking-tight">
+          {/* Post Title (Heading hook for test) */}
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-snug break-words tracking-tight">
             {post.title}
           </h1>
 
           {/* Author info header */}
-          <div className="flex items-center gap-3 py-3 border-y border-surface-border">
-            <div className="w-10 h-10 rounded-full bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 font-semibold flex items-center justify-center shrink-0 border border-primary-200/60 dark:border-primary-800/60 overflow-hidden text-sm shadow-subtle" aria-hidden="true">
-              {post.author?.avatar_url ? (
-                <img
-                  src={post.author.avatar_url}
-                  alt={post.author.full_name || 'Tác giả'}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.currentTarget.style.display = 'none' }}
-                />
-              ) : (
-                post.author?.full_name?.[0]?.toUpperCase() || 'S'
-              )}
+          <div className="flex items-center gap-3.5 py-4 border-y border-surface-border">
+            <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0">
+              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600">
+                {post.author?.avatar_url ? (
+                  <img
+                    src={post.author.avatar_url}
+                    alt={post.author.full_name || 'Tác giả'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                  />
+                ) : (
+                  post.author?.full_name?.[0]?.toUpperCase() || 'S'
+                )}
+              </div>
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               {post.author?.id ? (
-                <Link to={'/profile/' + post.author.id} className="font-semibold text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors break-words text-sm sm:text-base">
+                <Link to={'/profile/' + post.author.id} className="font-bold text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors break-words text-sm sm:text-base">
                   {post.author.full_name || 'Sinh viên'}
                 </Link>
               ) : (
-                <span className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">Sinh viên</span>
+                <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Sinh viên</span>
               )}
-              <p className="text-xs text-slate-500 dark:text-slate-400">Tác giả bài viết</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {post.author?.university || post.author?.major || 'Tác giả bài viết'}
+              </p>
             </div>
           </div>
 
           {/* Subject tag */}
           {post.subject && (
-            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-surface-muted px-2.5 py-1 rounded-md border border-surface-border">
-              <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/40 px-3 py-1.5 rounded-full border border-primary-200/60 dark:border-primary-800/60">
+              <BookOpen className="w-4 h-4 text-primary-500" />
               <span>Môn học: {post.subject}</span>
             </div>
           )}
 
           {/* Content */}
-          <p className="whitespace-pre-wrap break-words leading-relaxed text-slate-800 dark:text-slate-200 text-[15px] sm:text-base">
-            {post.content || <span className="text-slate-400 dark:text-slate-500 italic">Bài viết chưa có nội dung.</span>}
-          </p>
+          <div className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
+            {post.content || <span className="text-slate-400 italic">Bài viết chưa có nội dung.</span>}
+          </div>
 
           {/* Tags */}
           {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1" aria-label="Thẻ bài viết">
+            <div className="flex flex-wrap gap-2 pt-2" aria-label="Thẻ bài viết">
               {tags.map((tag, i) => (
-                <span className="text-xs font-medium text-primary-700 dark:text-primary-300 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-2.5 py-1 rounded-md" key={tag + i}>
+                <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 bg-surface-muted px-3 py-1 rounded-full border border-surface-border" key={tag + i}>
                   #{tag}
                 </span>
               ))}
@@ -735,13 +741,13 @@ export default function PostDetailPage() {
           )}
 
           {/* Post Footer Interaction */}
-          <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-wrap">
               <LikeButton targetType="post" targetId={post.id} />
               <BookmarkButton postId={post.id} />
             </div>
-            <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-              <Eye className="w-3.5 h-3.5 text-slate-400" />
+            <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+              <Eye className="w-4 h-4" />
               <span>{post.view_count ?? 0} lượt xem</span>
             </span>
           </div>

@@ -4,20 +4,22 @@
 
 @layer base {
   :root {
-    --bg-app: #F5F7FA;
+    --bg-app: #F8FAFC;
     --bg-card: #FFFFFF;
-    --bg-muted: #F8FAFC;
+    --bg-muted: #F1F5F9;
+    --bg-elevated: #FFFFFF;
     --border-subtle: #E2E8F0;
-    --text-main: #1F2937;
+    --text-main: #0F172A;
     --text-muted: #64748B;
   }
 
   .dark {
-    --bg-app: #0F172A;
-    --bg-card: #1E293B;
-    --bg-muted: #273449;
-    --border-subtle: #334155;
-    --text-main: #F1F5F9;
+    --bg-app: #0B0F19;
+    --bg-card: #131B2E;
+    --bg-muted: #1B253D;
+    --bg-elevated: #222E4A;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --text-main: #F8FAFC;
     --text-muted: #94A3B8;
   }
 
@@ -29,59 +31,65 @@
     background-color: var(--bg-app);
     color: var(--text-main);
   }
-  ::-webkit-scrollbar { @apply w-1.5; }
-  ::-webkit-scrollbar-track { @apply bg-slate-100 dark:bg-slate-900; }
-  ::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-slate-700 rounded-full; }
+  ::-webkit-scrollbar { @apply w-1.5 h-1.5; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-slate-700/80 rounded-full; }
   ::-webkit-scrollbar-thumb:hover { @apply bg-slate-400 dark:bg-slate-600; }
 }
 
 @layer components {
-  /* Buttons */
+  /* Campus Pop Buttons */
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2
-           rounded-lg transition-all duration-150 shadow-sm
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2.5
+           rounded-xl transition-all duration-200 shadow-sm hover:shadow-glow-indigo
            active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30;
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40;
   }
   .btn-secondary {
-    @apply bg-surface-card hover:bg-surface-muted text-slate-700 dark:text-slate-200 font-medium px-4 py-2
-           rounded-lg border border-surface-border transition-all duration-150 shadow-sm
+    @apply bg-surface-card hover:bg-surface-muted text-slate-700 dark:text-slate-200 font-medium px-4 py-2.5
+           rounded-xl border border-surface-border transition-all duration-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600
            active:scale-[0.98] disabled:opacity-50
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 dark:focus-visible:ring-slate-600;
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/30;
   }
   .btn-accent {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg
-           transition-all duration-150 shadow-sm active:scale-[0.98]
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30;
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2.5 rounded-xl
+           transition-all duration-200 shadow-sm active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40;
+  }
+  .btn-pill {
+    @apply rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-200;
   }
 
-  /* Cards */
+  /* Bento Cards */
   .card {
-    @apply bg-surface-card rounded-xl border border-surface-border p-5
-           shadow-sm transition-all duration-150 text-slate-800 dark:text-slate-100;
+    @apply bg-surface-card rounded-2xl border border-surface-border p-5
+           shadow-bento transition-all duration-200 text-slate-800 dark:text-slate-100;
   }
   .card-hover {
-    @apply card hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md;
+    @apply card hover:border-indigo-300/60 dark:hover:border-indigo-500/30 hover:shadow-bento-hover hover:-translate-y-0.5;
   }
 
   /* Inputs */
   .input {
-    @apply w-full bg-surface-card border border-surface-border text-slate-900 dark:text-slate-100 rounded-lg
-           px-3.5 py-2.5 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:ring-2
-           focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-150;
+    @apply w-full bg-surface-card border border-surface-border text-slate-900 dark:text-slate-100 rounded-xl
+           px-4 py-2.5 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:ring-2
+           focus:ring-primary-500/30 focus:border-primary-500 transition-all duration-200;
   }
 
   /* Badges */
-  .badge-free   { @apply bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60; }
-  .badge-paid   { @apply bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/60; }
-  .badge-type   { @apply bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-medium px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800/60; }
+  .badge-free   { @apply bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/80; }
+  .badge-paid   { @apply bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/80; }
+  .badge-type   { @apply bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/80; }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply text-primary-600 dark:text-primary-400 font-bold;
+    @apply bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent font-bold;
   }
   .glass {
-    @apply bg-surface-card/90 backdrop-blur-md border border-surface-border shadow-sm;
+    @apply bg-surface-card/85 backdrop-blur-md border border-surface-border shadow-bento;
+  }
+  .avatar-gradient-ring {
+    @apply p-0.5 rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-600;
   }
 }

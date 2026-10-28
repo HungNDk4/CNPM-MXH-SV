@@ -65,17 +65,21 @@ export default function HomePage() {
   const selectedSubject = searchParams.get('subject') || ''
   const [page, setPage] = useState(1)
 
+  // When not logged in, guests can only view free document posts (ADR-002 / ADR-011)
+  const effectiveType = isAuthenticated ? activeType : 'document'
+
   // Query posts with React Query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['posts', activeType, searchKeyword, selectedSubject, page],
+    queryKey: ['posts', effectiveType, searchKeyword, selectedSubject, page, isAuthenticated],
     queryFn: async () => {
       const params = { page, limit: 10 }
-      if (activeType) params.type = activeType
+      if (effectiveType) params.type = effectiveType
       if (searchKeyword) params.search = searchKeyword
       if (selectedSubject) params.subject = selectedSubject
       return (await postAPI.getAll(params)).data
     },
     keepPreviousData: true,
+    retry: 1,
   })
 
   // Query popular active students
@@ -260,7 +264,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
           <div className="flex gap-2">
             {visibleFilters.map(({ label, value, icon: Icon }) => {
-              const isActive = activeType === value
+              const isActive = (effectiveType === value) || (!isAuthenticated && value === 'document')
               return (
                 <button
                   key={value}

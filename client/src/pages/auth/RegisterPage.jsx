@@ -39,23 +39,7 @@ export default function RegisterPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Switcher Tabs (Grovelyn style) */}
-      <div className="flex p-1 bg-surface-muted rounded-2xl border border-surface-border text-xs font-bold">
-        <Link
-          to="/login"
-          className="flex-1 py-2 text-center rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
-        >
-          Đăng nhập
-        </Link>
-        <button
-          type="button"
-          className="flex-1 py-2 text-center rounded-xl bg-surface-card text-primary-600 dark:text-primary-400 shadow-2xs transition-all"
-        >
-          Đăng ký tài khoản
-        </button>
-      </div>
-
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
           <span>Gia nhập cộng đồng</span>
           <Sparkles className="w-5 h-5 text-emerald-500" />
@@ -90,7 +74,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full mt-2 py-3 inline-flex items-center justify-center gap-2 font-bold shadow-lg shadow-primary/25 rounded-2xl transition-all cursor-pointer"
+          className="btn-primary w-full mt-3 py-3 inline-flex items-center justify-center gap-2 font-bold shadow-lg shadow-primary/25 rounded-2xl transition-all cursor-pointer"
         >
           {loading ? (
             <>

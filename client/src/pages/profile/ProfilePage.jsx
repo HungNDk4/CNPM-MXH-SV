@@ -173,9 +173,11 @@ export default function ProfilePage() {
   const { data: userPostsData, isLoading: isLoadingPosts } = useQuery({
     queryKey: ['profile-posts', id, Boolean(currentUser)],
     queryFn: async () => {
-      const params = { user_id: id, limit: 30 }
+      const params = { limit: 50 }
       if (!currentUser) params.type = 'document'
-      return (await postAPI.getAll(params)).data
+      const res = await postAPI.getAll(params)
+      const list = res?.data?.data || []
+      return { data: list.filter((p) => Number(p.user_id) === Number(id) || Number(p.author?.id) === Number(id)) }
     },
     enabled: validId,
     retry: 1,

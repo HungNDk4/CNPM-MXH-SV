@@ -88,19 +88,6 @@ router.get('/:id/followers', authenticate, (req,res,next) => listFollows(req,res
 router.get('/:id/following', authenticate, (req,res,next) => listFollows(req,res,next,'following'));
 router.get('/:id/follow-stats', authenticate, followStats);
 
-// GET /api/users/featured/students — active public students for feed widgets
-router.get('/featured/students', async (req, res, next) => {
-  try {
-    const students = await User.findAll({
-      where: { role: 'student', is_active: true },
-      attributes: ['id', 'full_name', 'avatar_url', 'university', 'major'],
-      limit: 6,
-      order: [['id', 'ASC']],
-    });
-    res.json({ success: true, data: students });
-  } catch (error) { next(error); }
-});
-
 // GET /api/users/:id — active public projection only; never expose account data.
 router.get('/:id', async (req, res, next) => {
   try {

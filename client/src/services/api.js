@@ -36,7 +36,6 @@ export const userAPI = {
   getProfile:      (id)   => api.get(`/users/${id}`),
   updateProfile:   (data) => api.put('/users/profile', data),
   changePassword:  (data) => api.put('/users/change-password', data),
-  getFeaturedStudents: ()     => api.get('/users/featured/students'),
 }
 
 // Authenticated PDF upload (multipart browser boundary) and binary download.

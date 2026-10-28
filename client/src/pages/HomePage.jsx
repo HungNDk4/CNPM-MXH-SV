@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
-import { postAPI, followAPI } from '@/services/api'
+import { postAPI, followAPI, userAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
 import { useAuthStore } from '@/stores/authStore'
 import QuickComposerModal from '@/components/feed/QuickComposerModal'
@@ -48,6 +48,15 @@ export default function HomePage() {
 
   // Quick Composer State (Image 4 Style)
   const [composerOpen, setComposerOpen] = useState(false)
+
+  // Real backend query for featured students (Grovelyn & Kilogram side widget)
+  const { data: featuredStudentsData } = useQuery({
+    queryKey: ['featured-students'],
+    queryFn: () => userAPI.getFeaturedStudents(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+  })
+  const featuredStudents = featuredStudentsData?.data?.data || []
   const [composerType, setComposerType] = useState('discussion')
 
   // URL query params
@@ -472,14 +481,14 @@ export default function HomePage() {
                 >
                   <div className="w-9 h-9 rounded-full avatar-gradient-ring p-[1.5px] shrink-0">
                     <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center font-bold text-primary-600 text-xs">
-                      {student.name[0]}
+                      {(student.full_name || student.name || 'U')[0]}
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-primary-600 truncate">
-                      {student.name}
+                      {student.full_name || student.name}
                     </p>
-                    <p className="text-[11px] text-slate-500 truncate">{student.uni}</p>
+                    <p className="text-[11px] text-slate-500 truncate">{student.university ? `${student.university}${student.major ? ' • ' + student.major : ''}` : (student.uni || 'Sinh viên')}</p>
                   </div>
                 </Link>
               ))}

@@ -15,10 +15,10 @@ const NAV_ITEMS = [
 ]
 
 const SHORTCUT_SUBJECTS = [
-  { label: 'CNPM', color: 'from-blue-600 to-indigo-600' },
-  { label: 'CSDL', color: 'from-teal-500 to-emerald-600' },
-  { label: 'OOP',  color: 'from-purple-500 to-pink-600' },
-  { label: 'KTMT', color: 'from-amber-500 to-orange-600' },
+  { label: 'CNPM', query: 'Công nghệ phần mềm', color: 'from-blue-600 to-indigo-600', full: 'Công nghệ phần mềm' },
+  { label: 'CSDL', query: 'Cơ sở dữ liệu', color: 'from-teal-500 to-emerald-600', full: 'Cơ sở dữ liệu' },
+  { label: 'OOP',  query: 'Lập trình', color: 'from-purple-500 to-pink-600', full: 'Lập trình OOP' },
+  { label: 'KTMT', query: 'Kiến trúc máy tính', color: 'from-amber-500 to-orange-600', full: 'Kiến trúc máy tính' },
 ]
 
 export default function SidebarDock({ isAuthenticated, user }) {
@@ -85,9 +85,9 @@ export default function SidebarDock({ isAuthenticated, user }) {
           {SHORTCUT_SUBJECTS.map((sub) => (
             <Link
               key={sub.label}
-              to={`/?subject=${encodeURIComponent(sub.label)}`}
+              to={`/?subject=${encodeURIComponent(sub.query || sub.label)}`}
               className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${sub.color} text-white font-mono text-[11px] font-bold flex items-center justify-center shadow-2xs hover:scale-110 hover:shadow-md transition-all duration-200`}
-              title={`Lọc môn học ${sub.label}`}
+              title={`Lọc môn học ${sub.full || sub.label}`}
             >
               {sub.label}
             </Link>

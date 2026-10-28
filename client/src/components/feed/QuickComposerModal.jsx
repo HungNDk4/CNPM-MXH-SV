@@ -326,3 +326,4 @@ export default function QuickComposerModal({ isOpen, onClose, user, initialType 
     </Modal>
   )
 }
+

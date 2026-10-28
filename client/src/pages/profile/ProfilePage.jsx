@@ -179,6 +179,66 @@ export default function ProfilePage() {
   const userPosts = userPostsData?.data || []
   const userDocuments = userPosts.filter((p) => p.post_type === 'document')
 
+  // ── Dynamic Logic Derived for Profile Widgets (Grovelyn & Kilogram style) ──
+  // 1. Công cụ & Kỹ năng: lấy từ tags của các bài viết thực tế của user, fallback theo major
+  const derivedSkills = useMemo(() => {
+    const rawTags = userPosts.flatMap((p) => {
+      if (Array.isArray(p.tags)) return p.tags
+      if (typeof p.tags === 'string') {
+        try {
+          const parsed = JSON.parse(p.tags)
+          if (Array.isArray(parsed)) return parsed
+        } catch {
+          return p.tags.split(',').map((s) => s.trim())
+        }
+      }
+      return []
+    }).filter(Boolean)
+
+    const uniqueTags = Array.from(new Set(rawTags))
+    if (uniqueTags.length > 0) return uniqueTags.slice(0, 10)
+
+    const m = (profile?.major || '').toLowerCase()
+    if (m.includes('máy tính') || m.includes('phần mềm') || m.includes('thông tin')) {
+      return ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Git', 'Linux']
+    }
+    if (m.includes('kinh tế') || m.includes('quản trị') || m.includes('marketing')) {
+      return ['Excel', 'PowerPoint', 'Data Analysis', 'Marketing', 'Teamwork', 'Git']
+    }
+    return ['Office', 'Git', 'Thuyết trình', 'Làm việc nhóm', 'Nghiên cứu tài liệu']
+  }, [userPosts, profile?.major])
+
+  // 2. Mình có thể góp ý về: lấy từ các môn học (subject) mà user đã từng đăng bài
+  const derivedAdviceTopics = useMemo(() => {
+    const subjects = Array.from(new Set(userPosts.map((p) => p.subject).filter(Boolean)))
+    if (subjects.length >= 2) {
+      return [
+        { title: subjects[0], desc: `Kinh nghiệm làm bài tập và tài liệu ôn thi môn ${subjects[0]}.` },
+        { title: subjects[1], desc: `Tài liệu tóm tắt và giải đáp câu hỏi chuyên sâu về ${subjects[1]}.` },
+      ]
+    }
+    if (subjects.length === 1) {
+      return [
+        { title: subjects[0], desc: `Kinh nghiệm làm bài tập và tài liệu môn ${subjects[0]}.` },
+        { title: 'Kỹ năng học tập & Đồ án', desc: `Chia sẻ phương pháp tự học và hoàn thành đồ án môn học ${profile?.major || ''}.` },
+      ]
+    }
+    return [
+      { title: profile?.major ? `Chuyên ngành ${profile.major}` : 'Kỹ năng học tập đại học', desc: 'Trao đổi phương pháp học tập, giải bài tập và làm việc nhóm.' },
+      { title: 'Tài liệu & Đồ án môn học', desc: 'Đóng góp slide bài giảng, đề cương và tài liệu ôn tập hữu ích.' },
+    ]
+  }, [userPosts, profile?.major])
+
+  // 3. Chăm chỉ học tập: Thống kê định lượng thực tế từ backend
+  const learningStats = useMemo(() => {
+    const totalLikes = userPosts.reduce((acc, p) => acc + (Number(p.likes_count) || 0), 0)
+    return {
+      totalPosts: userPosts.length,
+      totalDocuments: userDocuments.length,
+      totalLikes,
+    }
+  }, [userPosts, userDocuments])
+
   // EXT-02: Mutation Follow / Unfollow
   const followMutation = useMutation({
     mutationFn: async () => {
@@ -878,46 +938,50 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Right Column: Widgets (Inspired by Grovelyn Image 5) */}
+        {/* Right Column: Widgets (Derived from Real Backend Data) */}
         <div className="lg:col-span-4 space-y-5">
-          {/* Widget 1: Đang làm gì (Image 5 Style) */}
+          {/* Widget 1: Đang làm gì */}
           <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
             <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               <span>Đang làm gì</span>
             </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Sinh viên ngành Kỹ thuật Phần mềm. Đang làm đồ án môn học, tích cực giải bài tập và học thêm về tối ưu hóa giao diện người dùng.
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+              {profile.bio || `Sinh viên ${profile.major || 'chuyên ngành'} tại ${profile.university || 'trường đại học'}. Tích cực tham gia trao đổi bài học, tải lên tài liệu và chia sẻ kinh nghiệm học tập.`}
             </p>
           </div>
 
-          {/* Widget 2: Mình có thể góp ý về (Image 5 Style) */}
+          {/* Widget 2: Mình có thể góp ý về (Derived from subjects & major) */}
           <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
             <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
               <span>Mình có thể góp ý về</span>
             </h4>
             <div className="space-y-2 text-xs">
-              <div className="p-3 rounded-xl bg-primary-50 dark:bg-primary-950/40 border border-primary-200/60 dark:border-primary-800/60">
-                <p className="font-bold text-primary-700 dark:text-primary-300">Trải nghiệm người dùng (UX/UI)</p>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">Cách thiết kế card, bố cục responsive và màu sắc hài hòa.</p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60">
-                <p className="font-bold text-emerald-700 dark:text-emerald-300">Kiến trúc phần mềm & Cơ sở dữ liệu</p>
-                <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">Tối ưu truy vấn SQL, thiết kế bảng 3NF và phân tách mô hình.</p>
-              </div>
+              {derivedAdviceTopics.map((topic, idx) => (
+                <div
+                  key={idx}
+                  className={`p-3 rounded-xl border ${
+                    idx === 0
+                      ? 'bg-primary-50 dark:bg-primary-950/40 border-primary-200/60 dark:border-primary-800/60 text-primary-700 dark:text-primary-300'
+                      : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'
+                  }`}
+                >
+                  <p className="font-bold">{topic.title}</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">{topic.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Widget 3: Công cụ và kỹ năng (Image 5 Style) */}
+          {/* Widget 3: Công cụ và kỹ năng (Derived from post tags & major) */}
           <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
             <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
               <span>Công cụ & Kỹ năng</span>
             </h4>
             <div className="flex flex-wrap gap-1.5">
-              {['React', 'Node.js', 'MySQL', 'Tailwind CSS', 'Next.js', 'Python', 'Java', 'Git', 'Docker', 'UI/UX'].map((skill) => (
+              {derivedSkills.map((skill) => (
                 <span
                   key={skill}
                   className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-muted border border-surface-border text-slate-700 dark:text-slate-300 hover:border-primary-300 transition-colors"
@@ -928,14 +992,28 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Widget 4: Đóng góp học tập */}
-          <div className="card p-5 space-y-2 bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-surface-card border border-amber-500/20">
+          {/* Widget 4: Chăm chỉ học tập (Real metrics from user posts & likes) */}
+          <div className="card p-5 space-y-3 bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-surface-card border border-amber-500/20">
             <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs uppercase tracking-wider">
               <Flame className="w-4 h-4" />
               <span>Chăm chỉ học tập</span>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Tích cực đóng góp tài liệu và giải đáp câu hỏi giúp hồ sơ của bạn nổi bật hơn trong cộng đồng Mini Study Network.
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <div className="bg-surface-card/80 p-2 rounded-xl border border-surface-border">
+                <span className="block text-base font-black text-slate-900 dark:text-white">{learningStats.totalPosts}</span>
+                <span className="text-[10px] text-slate-500 font-medium">Bài viết</span>
+              </div>
+              <div className="bg-surface-card/80 p-2 rounded-xl border border-surface-border">
+                <span className="block text-base font-black text-slate-900 dark:text-white">{learningStats.totalDocuments}</span>
+                <span className="text-[10px] text-slate-500 font-medium">Tài liệu PDF</span>
+              </div>
+              <div className="bg-surface-card/80 p-2 rounded-xl border border-surface-border">
+                <span className="block text-base font-black text-rose-500">{learningStats.totalLikes}</span>
+                <span className="text-[10px] text-slate-500 font-medium">Lượt thích</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">
+              Thống kê hoạt động học tập thực tế và tương tác từ cộng đồng sinh viên.
             </p>
           </div>
         </div>

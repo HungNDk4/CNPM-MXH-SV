@@ -177,3 +177,4 @@ SELECT
   (SELECT COUNT(*) FROM bookmarks) AS total_bookmarks,
   (SELECT COUNT(*) FROM user_follows) AS total_follows,
   (SELECT COUNT(*) FROM notifications) AS total_notifications;
+

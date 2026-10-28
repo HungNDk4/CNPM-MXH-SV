@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { userAPI, followAPI } from '@/services/api'
+import { userAPI, followAPI, postAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
+import PostCard from '@/components/PostCard'
+import { PostCardSkeleton } from '@/components/common/Skeleton'
+import EmptyState from '@/components/common/EmptyState'
 import {
   Users,
   User,
@@ -15,12 +18,17 @@ import {
   Check,
   Plus,
   AlertTriangle,
-  X,
   BookOpen,
   Sparkles,
   Share2,
   Code2,
   Flame,
+  MessageSquare,
+  HelpCircle,
+  FileUp,
+  MapPin,
+  ExternalLink,
+  Laptop,
 } from 'lucide-react'
 import Modal from '@/components/common/Modal'
 
@@ -143,7 +151,7 @@ export default function ProfilePage() {
   const validId = /^[1-9]\d*$/.test(id || '')
   const isOwner = Number(currentUser?.id) === Number(id)
 
-  const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'edit' | 'security'
+  const [activeTab, setActiveTab] = useState('posts') // 'posts' | 'documents' | 'about' | 'edit' | 'security'
   const [followModalType, setFollowModalType] = useState(null) // 'followers' | 'following' | null
 
   // Query profile
@@ -160,6 +168,16 @@ export default function ProfilePage() {
     queryFn: async () => (await followAPI.getFollowStats(id)).data.data,
     enabled: validId && Boolean(currentUser),
   })
+
+  // Query User's Posts from API
+  const { data: userPostsData, isLoading: isLoadingPosts } = useQuery({
+    queryKey: ['profile-posts', id],
+    queryFn: async () => (await postAPI.getAll({ user_id: id, limit: 30 })).data,
+    enabled: validId,
+  })
+
+  const userPosts = userPostsData?.data || []
+  const userDocuments = userPosts.filter((p) => p.post_type === 'document')
 
   // EXT-02: Mutation Follow / Unfollow
   const followMutation = useMutation({
@@ -211,7 +229,7 @@ export default function ProfilePage() {
         updateUser(updated)
       }
       toast.success('Cập nhật hồ sơ thành công!')
-      setActiveTab('overview')
+      setActiveTab('about')
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || 'Không thể cập nhật hồ sơ.')
@@ -235,7 +253,7 @@ export default function ProfilePage() {
         new_password: '',
         confirm_password: '',
       })
-      setActiveTab('overview')
+      setActiveTab('about')
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || 'Không thể đổi mật khẩu.')
@@ -318,7 +336,7 @@ export default function ProfilePage() {
     return (
       <div className="max-w-5xl mx-auto space-y-6 animate-pulse" role="status">
         <div className="card p-6 space-y-4">
-          <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded-2xl w-full" />
+          <div className="h-36 bg-slate-200 dark:bg-slate-700 rounded-2xl w-full" />
           <div className="flex items-center gap-4 px-4">
             <div className="w-24 h-24 rounded-full bg-slate-300 dark:bg-slate-600 border-4 border-surface-card -mt-12" />
             <div className="space-y-2 flex-1">
@@ -350,12 +368,12 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* ── Profile Header Card (Grovelyn Image 2 & 5 Style with Cover) ── */}
-      <section className="card overflow-hidden p-0 border border-surface-border shadow-bento" aria-label="Thông tin tổng quan hồ sơ">
-        {/* Cover Banner */}
-        <div className="h-36 sm:h-48 bg-gradient-to-r from-indigo-900 via-primary-700 to-emerald-800 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/10 to-transparent pointer-events-none" />
-          <div className="absolute top-4 right-4 bg-black/30 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 border border-white/10">
+      {/* ── Profile Header Card (Inspired by Grovelyn Image 5 & X Image 3) ── */}
+      <section className="card overflow-hidden p-0 border border-surface-border shadow-bento bg-surface-card" aria-label="Thông tin tổng quan hồ sơ">
+        {/* Campus Cover Banner with Organic Gradients */}
+        <div className="h-36 sm:h-48 bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 relative overflow-hidden">
+          <div className="absolute inset-0 bg-radial-gradient from-white/10 to-transparent pointer-events-none" />
+          <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 border border-white/10">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>Thành viên từ {formatDate(profile.created_at)}</span>
           </div>
@@ -364,44 +382,56 @@ export default function ProfilePage() {
         {/* Profile Info Row with Overlapping Avatar */}
         <div className="px-6 sm:px-8 pb-6 pt-0 space-y-4">
           <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 -mt-16 sm:-mt-20">
-            {/* Avatar */}
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full avatar-gradient-ring p-1 shrink-0 shadow-xl">
-              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-4xl font-black text-primary-600 border-4 border-surface-card">
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.full_name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.currentTarget.style.display = 'none' }}
-                  />
-                ) : (
-                  <span>{initialLetter}</span>
-                )}
+            {/* Avatar with Status Ring */}
+            <div className="relative group">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full avatar-gradient-ring p-1 shrink-0 shadow-xl bg-surface-card">
+                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-4xl font-black text-primary-600 border-4 border-surface-card">
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.full_name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  ) : (
+                    <span>{initialLetter}</span>
+                  )}
+                </div>
               </div>
+
+              {/* Status Badge (Inspired by Image 5) */}
+              <span className="absolute bottom-1 right-1 bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-surface-card flex items-center gap-1 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                Đang học
+              </span>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2.5 self-center sm:self-end pt-2">
-              {isOwner && activeTab !== 'edit' && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('edit')}
-                  className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex items-center gap-2"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  <span>Chỉnh sửa thông tin</span>
-                </button>
-              )}
+            <div className="flex items-center gap-2.5 self-center sm:self-end pt-2 flex-wrap">
+              {isOwner && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('edit')}
+                    className={`btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex items-center gap-2 ${
+                      activeTab === 'edit' ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 font-bold border-primary-300' : ''
+                    }`}
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span>Chỉnh sửa thông tin</span>
+                  </button>
 
-              {isOwner && activeTab !== 'security' && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('security')}
-                  className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex items-center gap-2"
-                >
-                  <Lock className="w-4 h-4" />
-                  <span>Đổi mật khẩu</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('security')}
+                    className={`btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex items-center gap-2 ${
+                      activeTab === 'security' ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 font-bold border-primary-300' : ''
+                    }`}
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>Đổi mật khẩu</span>
+                  </button>
+                </>
               )}
 
               {!isOwner && currentUser && (
@@ -409,7 +439,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => followMutation.mutate()}
                   disabled={followMutation.isPending}
-                  className={`text-xs sm:text-sm py-2.5 px-5 rounded-xl font-bold transition-all shadow-sm flex items-center gap-2 ${
+                  className={`text-xs sm:text-sm py-2.5 px-6 rounded-full font-bold transition-all shadow-sm flex items-center gap-2 ${
                     followStats?.is_following
                       ? 'btn-secondary text-slate-700 dark:text-slate-200'
                       : 'btn-primary shadow-glow-indigo'
@@ -450,110 +480,185 @@ export default function ProfilePage() {
 
             {(profile.university || profile.major) && (
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center sm:justify-start gap-1.5">
-                <GraduationCap className="w-4 h-4 text-primary-500" />
+                <GraduationCap className="w-4 h-4 text-primary-500 shrink-0" />
                 <span>{profile.university ? `${profile.university}` : ''} {profile.major ? `· ${profile.major}` : ''}</span>
               </p>
             )}
 
             {profile.bio && (
-              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap pt-2 max-w-2xl">
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap pt-1 max-w-2xl">
                 {profile.bio}
               </p>
             )}
           </div>
 
-          {/* Follow Stats Counters */}
-          <div className="flex items-center justify-center sm:justify-start gap-6 pt-3 border-t border-surface-border text-sm">
+          {/* Follow Stats Counters (Inspired by Grovelyn Image 5) */}
+          <div className="flex items-center justify-center sm:justify-start gap-6 pt-3 border-t border-surface-border text-sm flex-wrap">
+            <div className="text-xs text-slate-500 font-semibold flex items-center gap-1">
+              <strong className="text-slate-900 dark:text-white font-black text-sm">
+                {userPosts.length}
+              </strong>
+              <span>bài đăng</span>
+            </div>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
+            <div className="text-xs text-slate-500 font-semibold flex items-center gap-1">
+              <strong className="text-slate-900 dark:text-white font-black text-sm">
+                {userDocuments.length}
+              </strong>
+              <span>tài liệu</span>
+            </div>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
             <button
               type="button"
               onClick={() => currentUser && setFollowModalType('followers')}
               disabled={!currentUser}
-              className="hover:text-primary-600 transition-colors cursor-pointer disabled:cursor-default"
+              className="hover:text-primary-600 transition-colors cursor-pointer disabled:cursor-default inline-flex items-center gap-1 text-xs"
               title={currentUser ? 'Xem danh sách người theo dõi' : 'Đăng nhập để xem'}
             >
-              <strong className="text-slate-900 dark:text-white font-black text-base mr-1">
+              <strong className="text-slate-900 dark:text-white font-black text-sm">
                 {followStats?.followers ?? 0}
               </strong>
-              <span className="text-slate-500 text-xs font-semibold">Người theo dõi</span>
+              <span className="text-slate-500 font-semibold">Người theo dõi</span>
             </button>
             <span className="text-slate-300 dark:text-slate-700">·</span>
             <button
               type="button"
               onClick={() => currentUser && setFollowModalType('following')}
               disabled={!currentUser}
-              className="hover:text-primary-600 transition-colors cursor-pointer disabled:cursor-default"
+              className="hover:text-primary-600 transition-colors cursor-pointer disabled:cursor-default inline-flex items-center gap-1 text-xs"
               title={currentUser ? 'Xem danh sách đang theo dõi' : 'Đăng nhập để xem'}
             >
-              <strong className="text-slate-900 dark:text-white font-black text-base mr-1">
+              <strong className="text-slate-900 dark:text-white font-black text-sm">
                 {followStats?.following ?? 0}
               </strong>
-              <span className="text-slate-500 text-xs font-semibold">Đang theo dõi</span>
+              <span className="text-slate-500 font-semibold">Đang theo dõi</span>
             </button>
           </div>
         </div>
       </section>
 
-      {/* ── Main Content Grid (8 Cols Left + 4 Cols Right) ── */}
+      {/* ── Main Content Grid (8 Cols Left Feed/Tabs + 4 Cols Right Widgets) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Main Column */}
+        {/* Left Column: Tabs & Dynamic Content */}
         <div className="lg:col-span-8 space-y-5">
-          {/* Tabs Navigation */}
-          {isOwner && (
-            <div className="flex gap-2 p-1.5 bg-surface-muted rounded-2xl border border-surface-border">
-              <button
-                type="button"
-                onClick={() => setActiveTab('overview')}
-                className={`flex-1 py-2 px-3 text-xs sm:text-sm font-bold rounded-xl transition-all ${
-                  activeTab === 'overview'
-                    ? 'bg-surface-card text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                Hồ sơ tổng quan
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('edit')}
-                className={`flex-1 py-2 px-3 text-xs sm:text-sm font-bold rounded-xl transition-all ${
-                  activeTab === 'edit'
-                    ? 'bg-surface-card text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                Chỉnh sửa thông tin
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('security')}
-                className={`flex-1 py-2 px-3 text-xs sm:text-sm font-bold rounded-xl transition-all ${
-                  activeTab === 'security'
-                    ? 'bg-surface-card text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                Đổi mật khẩu
-              </button>
+          {/* Tabs Bar (Matching Grovelyn Image 5 & X Image 3) */}
+          <div className="flex gap-2 p-1.5 bg-surface-card rounded-2xl border border-surface-border shadow-2xs overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setActiveTab('posts')}
+              className={`py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'posts'
+                  ? 'bg-primary-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-surface-muted'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Bài đăng ({userPosts.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('documents')}
+              className={`py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'documents'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-surface-muted'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Tài liệu PDF ({userDocuments.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('about')}
+              className={`py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'about'
+                  ? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-surface-muted'
+              }`}
+            >
+              <User className="w-4 h-4" />
+              <span>Giới thiệu & Học vấn</span>
+            </button>
+          </div>
+
+          {/* TAB 1: User Posts Feed */}
+          {activeTab === 'posts' && (
+            <div className="space-y-4">
+              {isLoadingPosts ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <PostCardSkeleton key={i} />
+                  ))}
+                </div>
+              ) : userPosts.length === 0 ? (
+                <EmptyState
+                  icon={BookOpen}
+                  title="Chưa có bài viết nào"
+                  description={
+                    isOwner
+                      ? 'Bạn chưa đăng bài viết nào. Hãy chia sẻ câu hỏi hoặc kiến thức bổ ích đầu tiên nhé!'
+                      : 'Thành viên này chưa đăng bài viết nào trên cộng đồng.'
+                  }
+                  actionText={isOwner ? 'Đăng bài viết mới' : 'Khám phá bảng tin'}
+                  actionHref={isOwner ? '/posts/create' : '/'}
+                />
+              ) : (
+                userPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))
+              )}
             </div>
           )}
 
-          {/* Tab 1: Overview */}
-          {activeTab === 'overview' && (
+          {/* TAB 2: User Documents Feed */}
+          {activeTab === 'documents' && (
+            <div className="space-y-4">
+              {isLoadingPosts ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <PostCardSkeleton key={i} />
+                  ))}
+                </div>
+              ) : userDocuments.length === 0 ? (
+                <EmptyState
+                  icon={FileText}
+                  title="Chưa có tài liệu PDF nào"
+                  description={
+                    isOwner
+                      ? 'Bạn chưa chia sẻ tài liệu nào. Tải lên slide, đề cương hoặc giáo trình ôn thi ngay nào!'
+                      : 'Thành viên này chưa chia sẻ tài liệu PDF nào.'
+                  }
+                  actionText={isOwner ? 'Chia sẻ tài liệu PDF' : 'Khám phá bảng tin'}
+                  actionHref={isOwner ? '/posts/create?type=document' : '/'}
+                />
+              ) : (
+                userDocuments.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: About & Education */}
+          {activeTab === 'about' && (
             <div className="space-y-5">
               <div className="card p-6 space-y-4">
-                <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2 border-b border-surface-border pb-3">
                   <GraduationCap className="w-5 h-5 text-primary-600" />
-                  <span>Học vấn & Chuyên ngành</span>
+                  <span>Thông tin Học vấn & Chuyên ngành</span>
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                  <div className="p-3.5 rounded-xl bg-surface-muted/60 border border-surface-border">
-                    <span className="text-slate-400 block text-xs">Trường Đại học / Cao đẳng:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 mt-1 block">
+                  <div className="p-4 rounded-2xl bg-surface-muted/60 border border-surface-border space-y-1">
+                    <span className="text-slate-400 block text-xs">Trường Đại học / Cao đẳng</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block text-sm">
                       {profile.university || 'Chưa cập nhật'}
                     </span>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-surface-muted/60 border border-surface-border">
-                    <span className="text-slate-400 block text-xs">Chuyên ngành học tập:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 mt-1 block">
+                  <div className="p-4 rounded-2xl bg-surface-muted/60 border border-surface-border space-y-1">
+                    <span className="text-slate-400 block text-xs">Chuyên ngành học tập</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block text-sm">
                       {profile.major || 'Chưa cập nhật'}
                     </span>
                   </div>
@@ -561,24 +666,44 @@ export default function ProfilePage() {
               </div>
 
               <div className="card p-6 space-y-3">
-                <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-emerald-500" />
+                <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2 border-b border-surface-border pb-3">
+                  <BookOpen className="w-5 h-5 text-primary-600" />
                   <span>Tiểu sử cá nhân</span>
                 </h3>
-                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                  {profile.bio || 'Chưa có tiểu sử giới thiệu. Bạn có thể bấm Chỉnh sửa để thêm mục tiêu học tập.'}
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                  {profile.bio || 'Người dùng chưa viết phần giới thiệu bản thân.'}
                 </p>
               </div>
+
+              {isOwner && (
+                <div className="card p-6 space-y-3">
+                  <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2 border-b border-surface-border pb-3">
+                    <Sparkles className="w-5 h-5 text-amber-500" />
+                    <span>Số dư ví học tập</span>
+                  </h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-500">Số dư hiện tại dùng để giao dịch tài liệu:</p>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                        {Number(profile.wallet_balance || 0).toLocaleString('vi-VN')} đ
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Tab 2: Edit Form */}
-          {isOwner && activeTab === 'edit' && (
-            <section className="card p-6 sm:p-7 space-y-5" aria-labelledby="edit-profile-title">
-              <h2 id="edit-profile-title" className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 pb-3 border-b border-surface-border">
-                <Edit3 className="w-5 h-5 text-primary-600" />
-                <span>Cập nhật thông tin cá nhân</span>
-              </h2>
+          {/* TAB 4: Edit Profile Form (Preserving Playwright selectors!) */}
+          {activeTab === 'edit' && isOwner && (
+            <div className="card p-6 space-y-5">
+              <div className="border-b border-surface-border pb-3">
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-primary-600" />
+                  <span>Chỉnh sửa thông tin cá nhân</span>
+                </h3>
+                <p className="text-xs text-slate-500">Cập nhật hồ sơ hiển thị công khai trên mạng xã hội</p>
+              </div>
 
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div className="space-y-1.5">
@@ -588,112 +713,101 @@ export default function ProfilePage() {
                   <input
                     id="full_name"
                     type="text"
-                    maxLength={100}
                     required
                     value={editForm.full_name}
                     onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                    className="input rounded-xl"
-                    placeholder="Nhập họ và tên sinh viên"
+                    className="input text-sm py-2"
                   />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="avatar_url" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                    Đường dẫn ảnh đại diện (HTTPS)
-                  </label>
-                  <input
-                    id="avatar_url"
-                    type="url"
-                    maxLength={500}
-                    value={editForm.avatar_url}
-                    onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
-                    className="input rounded-xl"
-                    placeholder="https://example.com/avatar.jpg"
-                  />
-                  <p className="text-[11px] text-slate-400">
-                    Để trống nếu muốn dùng avatar chữ cái mặc định.
-                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label htmlFor="university" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                      Trường đại học / Cao đẳng
+                      Trường Đại học
                     </label>
                     <input
                       id="university"
                       type="text"
-                      maxLength={200}
                       value={editForm.university}
                       onChange={(e) => setEditForm({ ...editForm, university: e.target.value })}
-                      className="input rounded-xl"
-                      placeholder="VD: ĐH Văn Hiến, ĐH Bách Khoa"
+                      placeholder="ĐH Bách Khoa TP.HCM"
+                      className="input text-sm py-2"
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <label htmlFor="major" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                      Chuyên ngành học
+                      Ngành học
                     </label>
                     <input
                       id="major"
                       type="text"
-                      maxLength={200}
                       value={editForm.major}
                       onChange={(e) => setEditForm({ ...editForm, major: e.target.value })}
-                      className="input rounded-xl"
-                      placeholder="VD: Công nghệ phần mềm"
+                      placeholder="Khoa học Máy tính"
+                      className="input text-sm py-2"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="flex justify-between items-center">
-                    <label htmlFor="bio" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                      Tiểu sử cá nhân
-                    </label>
-                    <span className="text-[11px] text-slate-400">
-                      {editForm.bio.length}/1000 ký tự
-                    </span>
-                  </div>
+                  <label htmlFor="bio" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Tiểu sử
+                  </label>
                   <textarea
                     id="bio"
                     rows={4}
-                    maxLength={1000}
                     value={editForm.bio}
                     onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                    className="input rounded-xl resize-y"
-                    placeholder="Chia sẻ đôi nét về bản thân, sở thích hoặc định hướng nghề nghiệp..."
+                    placeholder="Giới thiệu về bản thân, sở thích nghiên cứu..."
+                    className="input text-sm py-2 resize-none"
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-surface-border">
+                <div className="space-y-1.5">
+                  <label htmlFor="avatar_url" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Link ảnh đại diện (HTTPS)
+                  </label>
+                  <input
+                    id="avatar_url"
+                    type="url"
+                    value={editForm.avatar_url}
+                    onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
+                    className="input text-sm py-2"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2.5 pt-3 border-t border-surface-border">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('overview')}
-                    className="btn-secondary text-xs sm:text-sm rounded-xl"
+                    onClick={() => setActiveTab('about')}
+                    className="btn-secondary text-xs py-2 px-4 rounded-xl"
                   >
-                    Hủy bỏ
+                    Hủy
                   </button>
                   <button
                     type="submit"
                     disabled={updateProfileMutation.isPending}
-                    className="btn-primary text-xs sm:text-sm rounded-xl"
+                    className="btn-primary text-xs py-2 px-6 rounded-xl font-bold shadow-md shadow-primary/25"
                   >
                     {updateProfileMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
                   </button>
                 </div>
               </form>
-            </section>
+            </div>
           )}
 
-          {/* Tab 3: Security */}
-          {isOwner && activeTab === 'security' && (
-            <section className="card p-6 sm:p-7 space-y-5" aria-labelledby="change-password-title">
-              <h2 id="change-password-title" className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 pb-3 border-b border-surface-border">
-                <Lock className="w-5 h-5 text-primary-600" />
-                <span>Đổi mật khẩu tài khoản</span>
-              </h2>
+          {/* TAB 5: Change Password Form (Preserving Playwright selectors!) */}
+          {activeTab === 'security' && isOwner && (
+            <div className="card p-6 space-y-5">
+              <div className="border-b border-surface-border pb-3">
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-primary-600" />
+                  <span>Đổi mật khẩu tài khoản</span>
+                </h3>
+                <p className="text-xs text-slate-500">Bảo vệ tài khoản với mật khẩu tối thiểu 6 ký tự</p>
+              </div>
 
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div className="space-y-1.5">
@@ -704,29 +818,26 @@ export default function ProfilePage() {
                     id="current_password"
                     type="password"
                     required
-                    autoComplete="current-password"
                     value={passwordForm.current_password}
                     onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
-                    className="input rounded-xl"
                     placeholder="••••••••"
+                    className="input text-sm py-2"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label htmlFor="new_password" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                    Mật khẩu mới (tối thiểu 6 ký tự) <span className="text-rose-500">*</span>
+                    Mật khẩu mới <span className="text-rose-500">*</span>
                   </label>
                   <input
                     id="new_password"
                     type="password"
                     required
                     minLength={6}
-                    maxLength={72}
-                    autoComplete="new-password"
                     value={passwordForm.new_password}
                     onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                    className="input rounded-xl"
                     placeholder="••••••••"
+                    className="input text-sm py-2"
                   />
                 </div>
 
@@ -739,49 +850,77 @@ export default function ProfilePage() {
                     type="password"
                     required
                     minLength={6}
-                    maxLength={72}
-                    autoComplete="new-password"
                     value={passwordForm.confirm_password}
                     onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
-                    className="input rounded-xl"
                     placeholder="••••••••"
+                    className="input text-sm py-2"
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-surface-border">
+                <div className="flex justify-end gap-2.5 pt-3 border-t border-surface-border">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('overview')}
-                    className="btn-secondary text-xs sm:text-sm rounded-xl"
+                    onClick={() => setActiveTab('about')}
+                    className="btn-secondary text-xs py-2 px-4 rounded-xl"
                   >
-                    Hủy bỏ
+                    Hủy
                   </button>
                   <button
                     type="submit"
                     disabled={changePasswordMutation.isPending}
-                    className="btn-primary text-xs sm:text-sm rounded-xl"
+                    className="btn-primary text-xs py-2 px-6 rounded-xl font-bold shadow-md shadow-primary/25"
                   >
-                    {changePasswordMutation.isPending ? 'Đang cập nhật...' : 'Đổi mật khẩu'}
+                    {changePasswordMutation.isPending ? 'Đang đổi...' : 'Đổi mật khẩu'}
                   </button>
                 </div>
               </form>
-            </section>
+            </div>
           )}
         </div>
 
-        {/* ── Right Column: Skills & Interests Bento Widgets (Grovelyn Image 2) ── */}
-        <aside className="lg:col-span-4 space-y-5">
-          {/* Kỹ năng & Công cụ */}
-          <div className="card p-5 space-y-3.5 bg-gradient-to-b from-surface-card to-surface-muted/50">
-            <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
-              <Code2 className="w-4 h-4 text-primary-500" />
-              <span>Kỹ năng & Môn học quan tâm</span>
+        {/* Right Column: Widgets (Inspired by Grovelyn Image 5) */}
+        <div className="lg:col-span-4 space-y-5">
+          {/* Widget 1: Đang làm gì (Image 5 Style) */}
+          <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <span>Đang làm gì</span>
+            </h4>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              Sinh viên ngành Kỹ thuật Phần mềm. Đang làm đồ án môn học, tích cực giải bài tập và học thêm về tối ưu hóa giao diện người dùng.
+            </p>
+          </div>
+
+          {/* Widget 2: Mình có thể góp ý về (Image 5 Style) */}
+          <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
+              <span>Mình có thể góp ý về</span>
+            </h4>
+            <div className="space-y-2 text-xs">
+              <div className="p-3 rounded-xl bg-primary-50 dark:bg-primary-950/40 border border-primary-200/60 dark:border-primary-800/60">
+                <p className="font-bold text-primary-700 dark:text-primary-300">Trải nghiệm người dùng (UX/UI)</p>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">Cách thiết kế card, bố cục responsive và màu sắc hài hòa.</p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60">
+                <p className="font-bold text-emerald-700 dark:text-emerald-300">Kiến trúc phần mềm & Cơ sở dữ liệu</p>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">Tối ưu truy vấn SQL, thiết kế bảng 3NF và phân tách mô hình.</p>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {['Java', 'React', 'Tailwind', 'Python', 'CSDL', 'OOP', 'Spring Boot', 'Git', 'Vite'].map((skill) => (
+          </div>
+
+          {/* Widget 3: Công cụ và kỹ năng (Image 5 Style) */}
+          <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <span>Công cụ & Kỹ năng</span>
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {['React', 'Node.js', 'MySQL', 'Tailwind CSS', 'Next.js', 'Python', 'Java', 'Git', 'Docker', 'UI/UX'].map((skill) => (
                 <span
                   key={skill}
-                  className="text-xs px-2.5 py-1 rounded-lg bg-surface-card border border-surface-border font-medium text-slate-700 dark:text-slate-300 shadow-2xs"
+                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-muted border border-surface-border text-slate-700 dark:text-slate-300 hover:border-primary-300 transition-colors"
                 >
                   {skill}
                 </span>
@@ -789,20 +928,20 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Mục tiêu học tập */}
-          <div className="card p-5 space-y-3 bg-gradient-to-br from-amber-500/5 via-surface-card to-orange-500/5 border-amber-500/20">
-            <div className="flex items-center gap-2 font-bold text-sm text-amber-800 dark:text-amber-300">
-              <Flame className="w-4 h-4 text-amber-500" />
+          {/* Widget 4: Đóng góp học tập */}
+          <div className="card p-5 space-y-2 bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-surface-card border border-amber-500/20">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs uppercase tracking-wider">
+              <Flame className="w-4 h-4" />
               <span>Chăm chỉ học tập</span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               Tích cực đóng góp tài liệu và giải đáp câu hỏi giúp hồ sơ của bạn nổi bật hơn trong cộng đồng Mini Study Network.
             </p>
           </div>
-        </aside>
+        </div>
       </div>
 
-      {/* ── Follow List Modal (EXT-02) ── */}
+      {/* Followers / Following Modal */}
       {followModalType && (
         <FollowUsersModal
           type={followModalType}

@@ -6,7 +6,7 @@ const { positiveId } = require('../utils/interaction-target');
 const { validateCreatePost, validateEditPost } = require('../utils/post-input');
 
 /**
- * GET /api/posts?page=1&limit=10&type=document&subject=cnpm&search=react
+ * GET /api/posts?page=1&limit=10&type=document&subject=cnpm&search=react&user_id=2
  */
 // BE-06: bounded and validated query parsing; malformed input is a 422, never a DB error.
 const positiveIntQuery = (value, label, fallback, maximum) => {
@@ -42,7 +42,7 @@ const escapeLike = (value) => value.replace(/[\\%_]/g, '\\$&');
 
 const getPosts = async (req, res, next) => {
   try {
-    const { type } = req.query;
+    const { type, user_id } = req.query;
     // Keep ADR-002/011: only free document metadata is public; other feeds require login.
     if (!req.user && type !== 'document') {
       throw createError('Yêu cầu đăng nhập để xem bài viết.', 401);
@@ -52,6 +52,7 @@ const getPosts = async (req, res, next) => {
       throw createError('Loại bài viết không hợp lệ.', 422);
     }
 
+    const userId = user_id !== undefined ? positiveId(user_id) : undefined;
     const page = positiveIntQuery(req.query.page, 'page', 1, 10000);
     const limit = positiveIntQuery(req.query.limit, 'limit', 10, 50);
     const subject = textQuery(req.query.subject, 'subject', 200);
@@ -64,6 +65,7 @@ const getPosts = async (req, res, next) => {
 
     // Free-first: no paid legacy posts (of any type), suppressed posts or file paths.
     const where = { status: 'active', price: 0 };
+    if (userId) where.user_id = userId;
     if (type) where.post_type = type;
     if (subject !== undefined) where.subject = { [Op.like]: '%' + escapeLike(subject) + '%' };
     if (search !== undefined) where.title = { [Op.like]: '%' + escapeLike(search) + '%' };

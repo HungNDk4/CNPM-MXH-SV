@@ -4,9 +4,9 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { postAPI, followAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
 import { useAuthStore } from '@/stores/authStore'
+import QuickComposerModal from '@/components/feed/QuickComposerModal'
 import {
   BookOpen,
-  PenSquare,
   Search,
   X,
   AlertCircle,
@@ -19,99 +19,112 @@ import {
   MessageSquare,
   GraduationCap,
   Bookmark,
-  Shield,
-  Compass,
-  CheckCircle2,
   Users,
-  FileCheck,
   TrendingUp,
   DownloadCloud,
 } from 'lucide-react'
 import { PostCardSkeleton } from '@/components/common/Skeleton'
-import EmptyState from '@/components/common/EmptyState'
 
-const FILTERS = [
-  { label: 'Tất cả', value: 'all', icon: Compass },
-  { label: 'Hỏi đáp', value: 'question', icon: HelpCircle },
-  { label: 'Tài liệu', value: 'document', icon: FileText },
-  { label: 'Thảo luận', value: 'discussion', icon: MessageSquare },
+const POPULAR_SUBJECTS = [
+  'Tất cả môn',
+  'Công nghệ phần mềm',
+  'Cơ sở dữ liệu',
+  'Lập trình Web',
+  'Trí tuệ nhân tạo',
+  'Kiến trúc máy tính',
+  'An toàn thông tin',
 ]
 
-const POPULAR_TAGS = ['CNPM', 'Java', 'React', 'Giải tích', 'CSDL', 'OOP', 'Python', 'KTMT']
+const FILTER_TABS = [
+  { label: 'Tất cả bài viết', value: '', icon: BookOpen },
+  { label: 'Thảo luận', value: 'discussion', icon: MessageSquare },
+  { label: 'Hỏi đáp', value: 'question', icon: HelpCircle },
+  { label: 'Tài liệu PDF', value: 'document', icon: FileText },
+]
 
 export default function HomePage() {
-  const { isAuthenticated, user } = useAuthStore()
-  const [filter, setFilter] = useState('all')
   const [searchParams, setSearchParams] = useSearchParams()
+  const { user, isAuthenticated } = useAuthStore()
+
+  // Quick Composer State (Image 4 Style)
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [composerType, setComposerType] = useState('discussion')
+
+  // URL query params
+  const activeType = searchParams.get('type') || ''
   const searchKeyword = searchParams.get('search') || ''
   const selectedSubject = searchParams.get('subject') || ''
   const [page, setPage] = useState(1)
 
-  // ADR-002: Guest only allowed document metadata
-  const activeType = isAuthenticated ? filter : 'document'
-  const visibleFilters = isAuthenticated ? FILTERS : FILTERS.filter((item) => item.value === 'document')
-
-  // Query posts with search, filter, subject, pagination
+  // Query posts with React Query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['posts', activeType, isAuthenticated, searchKeyword, selectedSubject, page],
-    queryFn: () =>
-      postAPI
-        .getAll({
-          page,
-          limit: 10,
-          ...(activeType === 'all' ? {} : { type: activeType }),
-          ...(searchKeyword ? { search: searchKeyword } : {}),
-          ...(selectedSubject ? { subject: selectedSubject } : {}),
-        })
-        .then((response) => response.data),
-    retry: false,
+    queryKey: ['posts', activeType, searchKeyword, selectedSubject, page],
+    queryFn: async () => {
+      const params = { page, limit: 10 }
+      if (activeType) params.type = activeType
+      if (searchKeyword) params.search = searchKeyword
+      if (selectedSubject) params.subject = selectedSubject
+      return (await postAPI.getAll(params)).data
+    },
     keepPreviousData: true,
   })
 
-  // EXT-02: Query real follow stats for authenticated user
-  const { data: followStats } = useQuery({
-    queryKey: ['follow-stats', user?.id],
-    queryFn: async () => (await followAPI.getFollowStats(user.id)).data.data,
-    enabled: Boolean(isAuthenticated && user?.id),
-    retry: false,
+  // Query popular active students
+  const { data: popularUsersData } = useQuery({
+    queryKey: ['suggested-students'],
+    queryFn: async () => {
+      if (!user?.id) return []
+      try {
+        const res = await followAPI.getFollowing(user.id, { page: 1, limit: 5 })
+        return res.data?.data || []
+      } catch {
+        return []
+      }
+    },
+    enabled: Boolean(user?.id),
   })
 
-  const pagination = data?.pagination
-  const totalPages = pagination?.totalPages || 1
   const posts = data?.data || []
+  const pagination = data?.pagination || { total: 0, totalPages: 1 }
 
-  const handleFilterChange = (val) => {
-    setFilter(val)
+  // Guest view: only document posts allowed without login
+  const visibleFilters = isAuthenticated
+    ? FILTER_TABS
+    : [{ label: 'Tài liệu PDF miễn phí', value: 'document', icon: FileText }]
+
+  const handleFilterChange = (typeVal) => {
+    const nextParams = new URLSearchParams(searchParams)
+    if (typeVal) {
+      nextParams.set('type', typeVal)
+    } else {
+      nextParams.delete('type')
+    }
+    setSearchParams(nextParams)
     setPage(1)
   }
 
-  const handleTagClick = (tag) => {
-    const next = new URLSearchParams(searchParams)
-    if (selectedSubject === tag) {
-      next.delete('subject')
+  const handleSubjectChange = (subjectVal) => {
+    const nextParams = new URLSearchParams(searchParams)
+    if (subjectVal && subjectVal !== 'Tất cả môn') {
+      nextParams.set('subject', subjectVal)
     } else {
-      next.set('subject', tag)
+      nextParams.delete('subject')
     }
-    setSearchParams(next)
+    setSearchParams(nextParams)
     setPage(1)
   }
 
   const removeSearchFilter = () => {
-    const next = new URLSearchParams(searchParams)
-    next.delete('search')
-    setSearchParams(next)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('search')
+    setSearchParams(nextParams)
     setPage(1)
   }
 
   const removeSubjectFilter = () => {
-    const next = new URLSearchParams(searchParams)
-    next.delete('subject')
-    setSearchParams(next)
-    setPage(1)
-  }
-
-  const clearAllFilters = () => {
-    setSearchParams({})
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('subject')
+    setSearchParams(nextParams)
     setPage(1)
   }
 
@@ -121,62 +134,95 @@ export default function HomePage() {
           CỘT CHÍNH (MAIN FEED): Tạo bài & Danh sách bài
           ═══════════════════════════════════════════════ */}
       <div className="lg:col-span-8 space-y-5">
-        {/* Quick Post Composer Card (Grovelyn Image 1 / Kilogram Style) */}
+        {/* Quick Post Composer Card (Grovelyn Image 4 Style) */}
         {isAuthenticated ? (
-          <div className="card p-5 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 text-white border-indigo-500/30 shadow-bento space-y-4 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-primary-500/10 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="flex items-center gap-3 relative z-10">
-              <div className="w-11 h-11 rounded-full avatar-gradient-ring p-[2px] shrink-0">
-                <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden text-xs font-bold text-white">
-                  {user?.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.full_name || 'Avatar'}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.currentTarget.style.display = 'none' }}
-                    />
-                  ) : (
-                    user?.full_name?.[0]?.toUpperCase() || 'U'
-                  )}
+          <>
+            <div className="card p-4 sm:p-5 bg-surface-card border border-surface-border shadow-bento space-y-3.5 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full avatar-gradient-ring p-[2px] shrink-0">
+                  <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600">
+                    {user?.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.full_name || 'Avatar'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = 'none' }}
+                      />
+                    ) : (
+                      user?.full_name?.[0]?.toUpperCase() || 'U'
+                    )}
+                  </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setComposerType('discussion')
+                    setComposerOpen(true)
+                  }}
+                  className="flex-1 bg-surface-muted hover:bg-surface-border/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full px-5 py-2.5 text-xs sm:text-sm text-left transition-all border border-surface-border cursor-pointer shadow-inner truncate"
+                >
+                  Hôm nay bạn cần giải đáp môn gì, {user?.full_name ? user.full_name.split(' ').slice(-1)[0] : 'bạn'}?
+                </button>
               </div>
 
-              <Link
-                to="/posts/create"
-                className="flex-1 bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white rounded-full px-5 py-3 text-xs sm:text-sm text-left transition-all border border-white/10 cursor-pointer shadow-inner truncate backdrop-blur-sm"
-              >
-                Hôm nay bạn cần giải đáp môn gì, {user?.full_name ? user.full_name.split(' ').slice(-1)[0] : 'bạn'}?
-              </Link>
+              {/* Quick Action Pills (Inspired by Image 4) */}
+              <div className="flex items-center justify-between pt-2.5 border-t border-surface-border text-xs gap-2 flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComposerType('question')
+                      setComposerOpen(true)
+                    }}
+                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold transition-colors border border-amber-500/20"
+                  >
+                    <HelpCircle className="w-4 h-4 text-amber-500" />
+                    <span>Đặt câu hỏi</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComposerType('document')
+                      setComposerOpen(true)
+                    }}
+                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold transition-colors border border-emerald-500/20"
+                  >
+                    <FileText className="w-4 h-4 text-emerald-500" />
+                    <span>Chia sẻ PDF</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComposerType('discussion')
+                      setComposerOpen(true)
+                    }}
+                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold transition-colors border border-purple-500/20"
+                  >
+                    <MessageSquare className="w-4 h-4 text-purple-500" />
+                    <span>Thảo luận</span>
+                  </button>
+                </div>
+
+                <Link
+                  to="/posts/create"
+                  className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-semibold ml-auto hidden sm:inline"
+                >
+                  Trang tạo bài đầy đủ &rarr;
+                </Link>
+              </div>
             </div>
 
-            {/* Quick Action Pills */}
-            <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs gap-2 flex-wrap sm:flex-nowrap relative z-10">
-              <Link
-                to="/posts/create?type=question"
-                className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-semibold transition-colors border border-amber-500/30"
-              >
-                <HelpCircle className="w-4 h-4 text-amber-400" />
-                <span>Đặt câu hỏi</span>
-              </Link>
-
-              <Link
-                to="/posts/create?type=document"
-                className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 font-semibold transition-colors border border-emerald-500/30"
-              >
-                <FileText className="w-4 h-4 text-emerald-400" />
-                <span>Chia sẻ PDF</span>
-              </Link>
-
-              <Link
-                to="/posts/create?type=discussion"
-                className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 font-semibold transition-colors border border-purple-500/30"
-              >
-                <MessageSquare className="w-4 h-4 text-purple-400" />
-                <span>Thảo luận</span>
-              </Link>
-            </div>
-          </div>
+            {/* Quick Composer Modal */}
+            <QuickComposerModal
+              isOpen={composerOpen}
+              onClose={() => setComposerOpen(false)}
+              user={user}
+              initialType={composerType}
+            />
+          </>
         ) : (
           <div className="card p-5 bg-gradient-to-r from-primary-600 to-indigo-700 text-white space-y-3">
             <div className="flex items-center gap-3">
@@ -245,11 +291,10 @@ export default function HomePage() {
                   </button>
                 </span>
               )}
-
               {selectedSubject && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800/60">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>Môn: {selectedSubject}</span>
+                  <span>{selectedSubject}</span>
                   <button
                     type="button"
                     onClick={removeSubjectFilter}
@@ -264,195 +309,195 @@ export default function HomePage() {
 
             <button
               type="button"
-              onClick={clearAllFilters}
-              className="text-xs text-primary-600 dark:text-primary-400 hover:underline shrink-0 ml-2 font-bold cursor-pointer"
+              onClick={() => {
+                const next = new URLSearchParams(searchParams)
+                next.delete('search')
+                next.delete('subject')
+                setSearchParams(next)
+                setPage(1)
+              }}
+              className="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white font-medium underline cursor-pointer"
             >
               Xóa tất cả
             </button>
           </div>
         )}
 
-        {/* ── Posts Stream ── */}
+        {/* ── Feed List ── */}
         {isLoading ? (
-          <div className="space-y-4">
-            <PostCardSkeleton />
-            <PostCardSkeleton />
-            <PostCardSkeleton />
+          <div className="space-y-4" role="status" aria-label="Đang tải danh sách bài viết">
+            {[1, 2, 3].map((i) => (
+              <PostCardSkeleton key={i} />
+            ))}
           </div>
         ) : isError ? (
-          <div className="card text-center py-14 space-y-3">
-            <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
-            <p className="font-bold text-slate-800 dark:text-slate-100">Không thể tải bài viết. Vui lòng thử lại.</p>
+          <div className="card text-center py-16 space-y-4 border border-rose-500/20 bg-rose-500/5">
+            <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg">Không thể tải dữ liệu bảng tin</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
+              Đã xảy ra lỗi khi kết nối máy chủ. Vui lòng kiểm tra lại đường truyền hoặc đăng nhập tài khoản.
+            </p>
             <button
               type="button"
               onClick={() => refetch()}
-              className="btn-secondary text-xs inline-flex items-center gap-2"
+              className="btn-primary text-xs px-5 py-2 rounded-xl"
             >
-              Thử lại
+              Thử lại ngay
             </button>
           </div>
         ) : posts.length === 0 ? (
-          <EmptyState
-            title="Không tìm thấy bài viết nào"
-            description={
-              searchKeyword || selectedSubject
-                ? 'Hãy thử thay đổi từ khóa tìm kiếm hoặc bấm xóa bộ lọc môn học để xem thêm bài viết.'
-                : 'Chưa có bài viết nào trong chuyên mục này. Hãy là người đầu tiên chia sẻ kiến thức!'
-            }
-            actionLabel={isAuthenticated ? 'Đăng bài viết mới' : 'Đăng nhập để chia sẻ'}
-            actionLink={isAuthenticated ? '/posts/create' : '/login'}
-          />
+          <div className="card text-center py-20 space-y-4 bg-surface-card border border-surface-border shadow-bento">
+            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mx-auto">
+              <BookOpen className="w-8 h-8" />
+            </div>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg">Không tìm thấy bài viết nào</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
+              {searchKeyword || selectedSubject
+                ? 'Không có kết quả nào khớp với tiêu chí tìm kiếm của bạn. Hãy thử từ khóa khác nhé!'
+                : 'Hiện chưa có bài viết nào trong danh mục này. Hãy là người đầu tiên chia sẻ kiến thức!'}
+            </p>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setComposerType('discussion')
+                  setComposerOpen(true)
+                }}
+                className="btn-primary inline-flex items-center gap-2 text-xs sm:text-sm py-2.5 px-5 rounded-full"
+              >
+                <span>Tạo bài viết ngay</span>
+              </button>
+            ) : (
+              <Link to="/login" className="btn-primary inline-flex items-center gap-2 text-xs sm:text-sm py-2.5 px-5 rounded-full">
+                <span>Đăng nhập để đăng bài</span>
+              </Link>
+            )}
+          </div>
         ) : (
           <div className="space-y-4">
             {posts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
+
+            {/* Pagination Controls */}
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t border-surface-border text-xs sm:text-sm">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="btn-secondary py-2 px-4 rounded-xl disabled:opacity-40 flex items-center gap-1 font-semibold"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Trang trước</span>
+                </button>
+
+                <span className="text-slate-600 dark:text-slate-400 font-medium">
+                  Trang <strong className="text-slate-900 dark:text-slate-100 font-bold">{page}</strong> / {pagination.totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={page >= pagination.totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="btn-secondary py-2 px-4 rounded-xl disabled:opacity-40 flex items-center gap-1 font-semibold"
+                >
+                  <span>Trang sau</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
-        )}
-
-        {/* ── Pagination ── */}
-        {totalPages > 1 && (
-          <nav aria-label="Phân trang" className="card flex items-center justify-between py-3 px-5 rounded-2xl">
-            <button
-              type="button"
-              disabled={page <= 1 || isLoading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="btn-secondary text-xs sm:text-sm py-2 px-4 inline-flex items-center gap-1.5 disabled:opacity-40"
-              aria-label="Trang trước"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Trang trước</span>
-            </button>
-
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Trang <strong className="text-slate-900 dark:text-white font-bold">{page}</strong> / {totalPages}
-            </span>
-
-            <button
-              type="button"
-              disabled={page >= totalPages || isLoading}
-              onClick={() => setPage((p) => p + 1)}
-              className="btn-secondary text-xs sm:text-sm py-2 px-4 inline-flex items-center gap-1.5 disabled:opacity-40"
-              aria-label="Trang sau"
-            >
-              <span>Trang sau</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </nav>
         )}
       </div>
 
       {/* ═══════════════════════════════════════════════
-          CỘT PHẢI (RIGHT SIDEBAR WIDGETS): Campus Info
+          CỘT PHẢI (SIDE WIDGETS): Môn học, Bạn bè, Thống kê
           ═══════════════════════════════════════════════ */}
-      <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-20">
-        {/* User Mini Profile (if authenticated) */}
-        {isAuthenticated && (
-          <div className="card p-5 space-y-3.5 bg-gradient-to-b from-surface-card to-surface-muted/60">
-            <div className="flex items-center gap-3">
-              <Link to={`/profile/${user?.id}`} className="avatar-gradient-ring p-[2px] shrink-0">
-                <div className="w-12 h-12 rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600">
-                  {user?.avatar_url ? (
-                    <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    user?.full_name?.[0]?.toUpperCase() || 'U'
-                  )}
-                </div>
-              </Link>
-              <div className="min-w-0 flex-1">
-                <Link to={`/profile/${user?.id}`} className="font-bold text-slate-900 dark:text-white text-sm hover:underline block truncate">
-                  {user?.full_name || 'Thành viên'}
-                </Link>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                  {user?.university || user?.major || 'Sinh viên học tập'}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-border text-center">
-              <Link to={`/profile/${user?.id}`} className="p-2 rounded-xl bg-surface-card hover:bg-surface-muted transition-colors border border-surface-border">
-                <span className="block font-bold text-sm text-slate-900 dark:text-white">
-                  {followStats?.followers ?? 0}
-                </span>
-                <span className="text-[11px] text-slate-400">Người theo dõi</span>
-              </Link>
-              <Link to={`/profile/${user?.id}`} className="p-2 rounded-xl bg-surface-card hover:bg-surface-muted transition-colors border border-surface-border">
-                <span className="block font-bold text-sm text-slate-900 dark:text-white">
-                  {followStats?.following ?? 0}
-                </span>
-                <span className="text-[11px] text-slate-400">Đang theo dõi</span>
-              </Link>
-            </div>
+      <div className="hidden lg:block lg:col-span-4 space-y-5 sticky top-20">
+        {/* Widget 1: Bộ lọc nhanh theo Môn học (Subject Pills) */}
+        <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-bento">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary-500" />
+              <span>Chủ đề & Môn học</span>
+            </h3>
+            <span className="text-[11px] text-slate-400 font-medium">Hot</span>
           </div>
-        )}
 
-        {/* Popular Subject Tags Widget */}
-        <div className="card p-5 space-y-3.5">
-          <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Môn học phổ biến</span>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Chọn môn học để lọc nhanh tài liệu và câu hỏi ôn thi:</p>
-
-          <div className="flex flex-wrap gap-2 pt-1">
-            {POPULAR_TAGS.map((tag) => {
-              const isSelected = selectedSubject === tag
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {POPULAR_SUBJECTS.map((sub) => {
+              const isSelected = selectedSubject === sub || (sub === 'Tất cả môn' && !selectedSubject)
               return (
                 <button
-                  key={tag}
+                  key={sub}
                   type="button"
-                  onClick={() => handleTagClick(tag)}
-                  className={`text-xs px-3 py-1.5 rounded-xl font-semibold cursor-pointer transition-all duration-200 ${
+                  onClick={() => handleSubjectChange(sub)}
+                  className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all ${
                     isSelected
-                      ? 'bg-primary-600 text-white shadow-glow-indigo scale-105'
-                      : 'bg-surface-muted hover:bg-primary-50 dark:hover:bg-primary-950/40 text-slate-700 dark:text-slate-300 border border-surface-border'
+                      ? 'bg-primary-600 text-white font-bold shadow-xs'
+                      : 'bg-surface-muted hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-surface-border'
                   }`}
                 >
-                  #{tag}
+                  {sub}
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* Community Stats Widget */}
-        <div className="card p-5 space-y-3">
-          <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
-            <TrendingUp className="w-4 h-4 text-emerald-500" />
-            <span>Hoạt động học tập</span>
-          </div>
+        {/* Widget 2: Đang học & Sinh viên cùng trường (Kilogram & Grovelyn Style) */}
+        {isAuthenticated && (
+          <div className="card p-5 space-y-3.5 bg-surface-card border border-surface-border shadow-bento">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Users className="w-4 h-4 text-emerald-500" />
+                <span>Sinh viên nổi bật</span>
+              </h3>
+              <Link to="/profile/2" className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-semibold">
+                Xem thêm
+              </Link>
+            </div>
 
-          <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
-            <div className="flex justify-between items-center py-1.5 border-b border-surface-border">
-              <span>Tổng bài viết & tài liệu</span>
-              <span className="font-bold text-slate-900 dark:text-white">{pagination?.total || 0}</span>
-            </div>
-            <div className="flex justify-between items-center py-1.5 border-b border-surface-border">
-              <span>Định dạng hỗ trợ</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">PDF chuẩn (10MB)</span>
-            </div>
-            <div className="flex justify-between items-center py-1.5">
-              <span>Chế độ xem</span>
-              <span className="font-bold text-primary-600 dark:text-primary-400">
-                {FILTERS.find((f) => f.value === activeType)?.label || activeType}
-              </span>
+            <div className="space-y-3">
+              {[
+                { id: 2, name: 'Nguyễn Hùng', uni: 'UIT - Kỹ thuật Phần mềm', active: 'Vừa hoàn thành Đồ án tốt nghiệp' },
+                { id: 3, name: 'Trần Quốc Bảo', uni: 'ĐHBK - Khoa học Máy tính', active: 'Vừa đăng tài liệu MySQL nâng cao' },
+                { id: 4, name: 'Nguyễn Thu Hà', uni: 'ĐHKHTN - Công nghệ Thông tin', active: 'Vừa chia sẻ bộ slide Fullstack' },
+              ].map((student) => (
+                <Link
+                  key={student.id}
+                  to={`/profile/${student.id}`}
+                  className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-muted transition-colors group"
+                >
+                  <div className="w-9 h-9 rounded-full avatar-gradient-ring p-[1.5px] shrink-0">
+                    <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center font-bold text-primary-600 text-xs">
+                      {student.name[0]}
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-primary-600 truncate">
+                      {student.name}
+                    </p>
+                    <p className="text-[11px] text-slate-500 truncate">{student.uni}</p>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* PDF Standard & Guidelines */}
-        <div className="card p-5 space-y-2.5 bg-gradient-to-br from-emerald-500/5 via-surface-card to-teal-500/5 border-emerald-500/20">
-          <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-            <FileCheck className="w-4 h-4 text-emerald-500" />
-            <span>Quy chuẩn chia sẻ tài liệu</span>
+        {/* Widget 3: Thống kê sinh viên tuần này */}
+        <div className="card p-5 space-y-3 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-surface-card border border-primary-500/20">
+          <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-wider">
+            <BarChart3 className="w-4 h-4" />
+            <span>Mạng xã hội học tập</span>
           </div>
-          <ul className="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 list-disc pl-4 leading-relaxed">
-            <li>Tối đa <strong>1 file PDF</strong> cho mỗi bài viết (giới hạn <strong>10 MiB</strong>).</li>
-            <li>Khách vãng lai xem thông tin; đăng nhập để tải an toàn.</li>
-            <li>Nội dung tài liệu được kiểm duyệt an toàn bởi Ban quản trị.</li>
-          </ul>
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            Hơn <strong>1,200+</strong> tài liệu PDF ôn thi và đồ án môn học được sinh viên đóng góp và tải về hoàn toàn miễn phí.
+          </p>
         </div>
-      </aside>
+      </div>
     </div>
   )
 }

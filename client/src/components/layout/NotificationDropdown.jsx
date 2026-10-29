@@ -122,17 +122,15 @@ export default function NotificationDropdown() {
                 </span>
               )}
             </h3>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={() => markAll.mutate()}
-                disabled={markAll.isPending}
-                className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-semibold flex items-center gap-1"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                <span>Đọc tất cả</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => markAll.mutate()}
+              disabled={markAll.isPending}
+              className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+              <span>Đọc tất cả</span>
+            </button>
           </div>
 
           <div className="max-h-80 overflow-y-auto divide-y divide-surface-border">

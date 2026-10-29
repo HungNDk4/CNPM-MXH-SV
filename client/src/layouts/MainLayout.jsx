@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet, Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
-import { notificationAPI } from '@/services/api'
+import { notificationAPI, authAPI } from '@/services/api'
 import SidebarDock from '@/components/layout/SidebarDock'
 import MobileBottomBar from '@/components/layout/MobileBottomBar'
 import NotificationDropdown from '@/components/layout/NotificationDropdown'
@@ -15,14 +15,23 @@ import {
   Sun,
   Moon,
   X,
+  LogOut,
 } from 'lucide-react'
 
 export default function MainLayout() {
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user, isAuthenticated, logout, refreshToken } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
+
+  const handleLogout = async () => {
+    try {
+      if (refreshToken) await authAPI.logout(refreshToken)
+    } catch { /* ignore */ }
+    logout()
+    navigate('/login')
+  }
 
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
   const [unreadCount, setUnreadCount] = useState(0)
@@ -190,8 +199,20 @@ export default function MainLayout() {
                   user={user}
                   theme={theme}
                   toggleTheme={toggleTheme}
-                  onLogout={logout}
+                  onLogout={handleLogout}
                 />
+
+                {/* Quick Logout Button (E2E Contract & Quick Action) */}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  aria-label="Đăng xuất"
+                  className="w-10 h-10 hidden sm:flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-surface-muted rounded-xl transition-all cursor-pointer"
+                  title="Đăng xuất"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="sr-only">Đăng xuất</span>
+                </button>
               </>
             ) : (
               <div className="flex items-center gap-2">

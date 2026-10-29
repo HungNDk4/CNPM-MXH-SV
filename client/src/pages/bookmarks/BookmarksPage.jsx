@@ -38,7 +38,7 @@ export default function BookmarksPage() {
       {/* ── Grovelyn Inspired Clean Minimal Header (Image 3) ── */}
       <div className="space-y-2 pt-2">
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-          Đã lưu
+          Bài viết đã lưu
         </h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm max-w-2xl leading-relaxed">
           Bài đăng và tài liệu bạn bấm Lưu để xem lại sau. Chỉ mình bạn thấy danh sách này.

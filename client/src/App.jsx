@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 
 // Layouts
@@ -15,6 +15,7 @@ import CreatePostPage from '@/pages/posts/CreatePostPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
 import BookmarksPage from '@/pages/bookmarks/BookmarksPage'
 import NotificationsPage from '@/pages/notifications/NotificationsPage'
+import SettingsPage from '@/pages/settings/SettingsPage'
 import AdminAuditPage from '@/pages/admin/AdminAuditPage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
 import NotFoundPage from '@/pages/NotFoundPage'
@@ -22,7 +23,8 @@ import NotFoundPage from '@/pages/NotFoundPage'
 // Route bảo vệ (cần đăng nhập)
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore()
-  return isAuthenticated ? children : <Navigate to="/login" replace />
+  const location = useLocation()
+  return isAuthenticated ? children : <Navigate to="/login" state={{ from: location }} replace />
 }
 
 // Route bảo vệ Admin
@@ -59,6 +61,12 @@ export default function App() {
         } />
         <Route path="/notifications" element={
           <ProtectedRoute><NotificationsPage /></ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute><SettingsPage /></ProtectedRoute>
+        } />
+        <Route path="/help" element={
+          <Navigate to="/settings?tab=help" replace />
         } />
         <Route path="/admin" element={
           <Navigate to="/admin/audit-logs" replace />

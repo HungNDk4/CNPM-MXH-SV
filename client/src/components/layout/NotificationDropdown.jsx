@@ -138,7 +138,7 @@ export default function NotificationDropdown() {
               <p className="p-6 text-xs text-slate-500 dark:text-slate-400 text-center">Đang tải thông báo...</p>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center space-y-2">
-                <div className="w-10 h-10 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                <div className="w-10 h-10 mx-auto rounded-full bg-surface-muted flex items-center justify-center text-content-muted">
                   <Bell className="w-5 h-5" />
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Bạn chưa có thông báo mới nào.</p>

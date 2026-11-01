@@ -103,10 +103,10 @@ export default function AdminAuditPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Quyền hạn tối cao
+          <div className="flex items-center gap-2 self-start sm:self-center bg-surface-card px-4 py-2 rounded-2xl border border-surface-border shadow-2xs">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#16a34a] dark:bg-[#22c55e] animate-pulse" />
+            <span className="text-xs font-semibold text-content">
+              Quyền hạn quản trị
             </span>
           </div>
         </div>

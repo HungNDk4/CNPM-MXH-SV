@@ -35,88 +35,48 @@ export default function BookmarksPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* ── Grovelyn Inspired Clean Minimal Header (Image 3) ── */}
-      <div className="space-y-2 pt-2">
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+      {/* ── Page Header (Synchronized Clean Style) ── */}
+      <div className="space-y-1.5 pt-2">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#06110a] dark:text-[#E7E7E7]">
           Bài viết đã lưu
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm max-w-2xl leading-relaxed">
+        <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] max-w-2xl leading-relaxed">
           Bài đăng và tài liệu bạn bấm Lưu để xem lại sau. Chỉ mình bạn thấy danh sách này.
         </p>
 
         {/* Category Tabs (Like Grovelyn: Bài đăng 0 / Dự án 3) */}
-        <div className="flex items-center gap-6 pt-4 border-b border-surface-border text-sm font-semibold">
-          <button
-            type="button"
-            onClick={() => setActiveTab('all')}
-            className={`pb-3 relative transition-colors ${
-              activeTab === 'all'
-                ? 'text-primary-600 dark:text-primary-400 font-bold'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>Tất cả</span>
-            <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-surface-muted text-slate-600 dark:text-slate-300">
-              {counts.all}
-            </span>
-            {activeTab === 'all' && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('document')}
-            className={`pb-3 relative transition-colors ${
-              activeTab === 'document'
-                ? 'text-primary-600 dark:text-primary-400 font-bold'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>Tài liệu PDF</span>
-            <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-surface-muted text-slate-600 dark:text-slate-300">
-              {counts.document}
-            </span>
-            {activeTab === 'document' && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('discussion')}
-            className={`pb-3 relative transition-colors ${
-              activeTab === 'discussion'
-                ? 'text-primary-600 dark:text-primary-400 font-bold'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>Thảo luận</span>
-            <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-surface-muted text-slate-600 dark:text-slate-300">
-              {counts.discussion}
-            </span>
-            {activeTab === 'discussion' && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('question')}
-            className={`pb-3 relative transition-colors ${
-              activeTab === 'question'
-                ? 'text-primary-600 dark:text-primary-400 font-bold'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>Hỏi đáp</span>
-            <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-surface-muted text-slate-600 dark:text-slate-300">
-              {counts.question}
-            </span>
-            {activeTab === 'question' && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full" />
-            )}
-          </button>
+        <div className="flex items-center gap-6 pt-4 border-b border-[#E2E7DE] dark:border-[#3E4042] text-sm font-semibold">
+          {[
+            { id: 'all', label: 'Tất cả', count: counts.all },
+            { id: 'document', label: 'Tài liệu PDF', count: counts.document },
+            { id: 'discussion', label: 'Thảo luận', count: counts.discussion },
+            { id: 'question', label: 'Hỏi đáp', count: counts.question },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => { setActiveTab(tab.id); setPage(1) }}
+              className={`pb-3 relative transition-colors flex items-center gap-1.5 cursor-pointer ${
+                activeTab === tab.id
+                  ? 'text-[#16a34a] dark:text-[#2ECC71] font-bold'
+                  : 'text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span
+                className={`text-[11px] tabular-nums font-extrabold px-1.5 py-0.5 rounded-full ${
+                  activeTab === tab.id
+                    ? 'bg-[#16a34a]/10 text-[#16a34a] dark:bg-[#22c55e]/20 dark:text-[#2ECC71]'
+                    : 'bg-[#F2F4EF] dark:bg-[#303132] text-[#56614f] dark:text-[#B0B3B8]'
+                }`}
+              >
+                {tab.count}
+              </span>
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#16a34a] dark:bg-[#22c55e] rounded-full" />
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -136,15 +96,16 @@ export default function BookmarksPage() {
           </button>
         </div>
       ) : posts.length === 0 ? (
-        /* Grovelyn Clean Empty State (Image 3) */
-        <div className="card p-12 text-center bg-surface-card border border-surface-border rounded-2xl shadow-2xs">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Chưa lưu bài đăng nào.{' '}
-            Bấm <strong>Lưu</strong> dưới một bài ở{' '}
+        <div className="card p-12 text-center bg-surface-card border border-surface-border rounded-2xl shadow-2xs space-y-2">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            Chưa có bài viết nào được lưu.
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Bấm <strong>Lưu bài</strong> dưới bất kỳ bài viết hoặc tài liệu nào ở{' '}
             <Link to="/" className="text-primary-600 dark:text-primary-400 font-bold hover:underline">
               Trang chủ
             </Link>{' '}
-            để xem lại sau.
+            để xem lại tại đây.
           </p>
         </div>
       ) : (

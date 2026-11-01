@@ -143,14 +143,32 @@ export default function InlineComposer({ user, onPostSuccess }) {
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  // 1. TRẠNG THÁI THU GỌN (COMPACT BAR BAN ĐẦU TRONG CỘT 2)
+  // 1. TRẠNG THÁI THU GỌN (GROVELYN SIGNATURE INK BANNER)
   // ═══════════════════════════════════════════════════════════════════════
   if (!isExpanded) {
+    const firstName = user?.full_name ? user.full_name.split(' ').slice(-1)[0] : 'bạn'
+
     return (
-      <div className="card p-4 sm:p-5 bg-surface-card border border-surface-border shadow-bento space-y-3.5 transition-colors">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full avatar-gradient-ring p-[2px] shrink-0">
-            <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600">
+      <div className="relative overflow-hidden rounded-[22px] bg-[#06110a] dark:bg-[#242526] p-4 sm:p-5 text-white shadow-sm border border-[#213328] dark:border-[#3E4042] transition-colors">
+        {/* Subtle decorative leaf SVG background */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 300 170"
+          preserveAspectRatio="xMidYMid slice"
+          className="pointer-events-none absolute inset-0 h-full w-full opacity-30 select-none"
+        >
+          <path d="M0 0c5.6 -4.7 13.2 -4.7 18.8 0c-5.6 4.7 -13.2 4.7 -18.8 0z" fill="#5bd13a" opacity="0.6" transform="translate(240 25) rotate(45)" />
+          <path d="M0 0c6.8 -5.5 16 -5.5 22.8 0c-6.8 5.5 -16 5.5 -22.8 0z" fill="#dcf6cf" opacity="0.5" transform="translate(260 70) rotate(-35)" />
+          <circle cx="215" cy="40" r="4" fill="#5bd13a" opacity="0.7" />
+          <circle cx="280" cy="115" r="3" fill="#dcf6cf" opacity="0.6" />
+          <circle cx="25" cy="130" r="3.5" fill="#5bd13a" opacity="0.5" />
+          <path d="M0 0c4.5 -3.8 10.5 -3.8 15 0c-4.5 3.8 -10.5 3.8 -15 0z" fill="#1d6b1d" opacity="0.5" transform="translate(15 90) rotate(120)" />
+        </svg>
+
+        <div className="relative flex items-center gap-3">
+          {/* User Avatar with status dot (Cân đối w-12 h-12 đồng bộ với ô nhập h-12) */}
+          <div className="relative shrink-0">
+            <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden font-bold text-white text-sm">
               {user?.avatar_url ? (
                 <img
                   src={user.avatar_url}
@@ -162,61 +180,56 @@ export default function InlineComposer({ user, onPostSuccess }) {
                 user?.full_name?.[0]?.toUpperCase() || 'U'
               )}
             </div>
+            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#5bd13a] border-2 border-[#06110a] dark:border-[#0A0A0A]" />
           </div>
 
           <button
             type="button"
             onClick={() => handleOpenWithType('discussion')}
-            className="flex-1 bg-surface-muted hover:bg-surface-border/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full px-5 py-2.5 text-xs sm:text-sm text-left transition-all border border-surface-border cursor-pointer shadow-inner truncate"
+            className="h-12 min-w-0 flex-1 truncate rounded-full bg-white/10 hover:bg-white/15 px-5 text-left text-sm sm:text-[15px] text-white/75 transition-colors cursor-pointer border border-white/10 font-medium"
           >
-            Hôm nay bạn cần giải đáp môn gì, {user?.full_name ? user.full_name.split(' ').slice(-1)[0] : 'bạn'}?
+            Hôm nay bạn cần giải đáp môn gì, {firstName}?
           </button>
         </div>
 
-        {/* Quick Action Pills */}
-        <div className="flex items-center justify-between pt-2.5 border-t border-surface-border text-xs gap-2 flex-wrap sm:flex-nowrap">
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => handleOpenWithType('question')}
-              className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold transition-colors border border-amber-500/20 cursor-pointer"
-            >
-              <HelpCircle className="w-4 h-4 text-amber-500" />
-              <span>Đặt câu hỏi</span>
-            </button>
+        {/* Quick Action Pills (Icon to rõ ràng w-5 h-5 đồng bộ) */}
+        <div className="relative mt-3.5 flex gap-2.5 overflow-x-auto [scrollbar-width:none]">
+          <button
+            type="button"
+            onClick={() => handleOpenWithType('question')}
+            className="inline-flex h-10 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full border border-white/15 bg-white/[.06] hover:bg-white/[.12] px-4 text-xs sm:text-sm font-bold text-white transition-colors cursor-pointer"
+          >
+            <HelpCircle className="w-5 h-5 text-amber-400 shrink-0" />
+            <span>Hỏi đáp bài tập</span>
+          </button>
 
-            <button
-              type="button"
-              onClick={() => handleOpenWithType('document')}
-              className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold transition-colors border border-emerald-500/20 cursor-pointer"
-            >
-              <FileText className="w-4 h-4 text-emerald-500" />
-              <span>Chia sẻ PDF</span>
-            </button>
+          <button
+            type="button"
+            onClick={() => handleOpenWithType('document')}
+            className="inline-flex h-10 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full border border-white/15 bg-white/[.06] hover:bg-white/[.12] px-4 text-xs sm:text-sm font-bold text-white transition-colors cursor-pointer"
+          >
+            <FileText className="w-5 h-5 text-[#5bd13a] shrink-0" />
+            <span>Chia sẻ tài liệu PDF</span>
+          </button>
 
-            <button
-              type="button"
-              onClick={() => handleOpenWithType('discussion')}
-              className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-green-500/10 hover:bg-green-500/20 text-green-700 dark:text-green-300 font-semibold transition-colors border border-green-500/20 cursor-pointer"
-            >
-              <MessageSquare className="w-4 h-4 text-green-500" />
-              <span>Thảo luận</span>
-            </button>
-          </div>
-
-          <span className="text-[11px] text-slate-400 hidden sm:inline">
-            Đăng trực tiếp tại đây
-          </span>
+          <button
+            type="button"
+            onClick={() => handleOpenWithType('discussion')}
+            className="inline-flex h-10 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full border border-white/15 bg-white/[.06] hover:bg-white/[.12] px-4 text-xs sm:text-sm font-bold text-white transition-colors cursor-pointer"
+          >
+            <MessageSquare className="w-5 h-5 text-sky-400 shrink-0" />
+            <span>Thảo luận chung</span>
+          </button>
         </div>
       </div>
     )
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  // 2. TRẠNG THÁI MỞ RỘNG (INLINE COMPOSER - LÀ 1 PHẦN CỦA CỘT 2, KHÔNG PHẢI POPUP)
+  // 2. TRẠNG THÁI MỞ RỘNG (INLINE COMPOSER EXPANDED)
   // ═══════════════════════════════════════════════════════════════════════
   return (
-    <div className="card p-5 sm:p-6 bg-surface-card border-2 border-primary-500/40 shadow-bento rounded-3xl space-y-4 animate-fade-in transition-all">
+    <div className="rounded-[22px] p-5 sm:p-6 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-sm space-y-4 animate-fade-in transition-all">
       {/* User Header */}
       <div className="flex items-center justify-between pb-3 border-b border-surface-border">
         <div className="flex items-center gap-3">
@@ -263,8 +276,8 @@ export default function InlineComposer({ user, onPostSuccess }) {
           onClick={() => setPostType('discussion')}
           className={`flex-1 py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             postType === 'discussion'
-              ? 'bg-primary-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] shadow-xs'
+              : 'text-content-muted hover:text-content'
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
@@ -276,8 +289,8 @@ export default function InlineComposer({ user, onPostSuccess }) {
           onClick={() => setPostType('question')}
           className={`flex-1 py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             postType === 'question'
-              ? 'bg-amber-500 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              ? 'bg-amber-600 dark:bg-amber-500 text-white dark:text-[#000000] shadow-xs'
+              : 'text-content-muted hover:text-content'
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5" />
@@ -289,8 +302,8 @@ export default function InlineComposer({ user, onPostSuccess }) {
           onClick={() => setPostType('document')}
           className={`flex-1 py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             postType === 'document'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] shadow-xs'
+              : 'text-content-muted hover:text-content'
           }`}
         >
           <FileText className="w-3.5 h-3.5" />

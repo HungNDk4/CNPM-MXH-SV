@@ -39,7 +39,7 @@ export default function Badge({
     md: 'text-xs px-2.5 py-1 gap-1.5',
   }
 
-  let colorClasses = config?.className || 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+  let colorClasses = config?.className || 'bg-surface-muted text-content-muted border border-surface-border'
   if (variant === 'free') {
     colorClasses = 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60'
   } else if (variant === 'paid') {

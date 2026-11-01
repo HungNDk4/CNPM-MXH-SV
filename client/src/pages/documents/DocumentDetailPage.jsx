@@ -109,7 +109,7 @@ export default function DocumentDetailPage() {
         <article className="lg:col-span-8 card p-6 sm:p-8 space-y-6">
           {/* Header Badges */}
           <div className="flex justify-between gap-3 items-center flex-wrap">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] border border-[#bbf7d0] dark:border-[#166534]">
               <FileText className="w-4 h-4 text-emerald-500" />
               <span>Tài liệu PDF sinh viên</span>
             </span>
@@ -182,20 +182,20 @@ export default function DocumentDetailPage() {
           {/* Download Action Section */}
           <div className="pt-6 border-t border-surface-border space-y-4">
             {isAuthenticated ? (
-              <div className="card p-5 bg-gradient-to-r from-emerald-500/10 via-surface-card to-teal-500/5 border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="card p-5 bg-surface-card border border-surface-border flex flex-col sm:flex-row items-center justify-between gap-4 shadow-card">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-glow-emerald shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-[#16a34a] dark:bg-[#22c55e] text-white dark:text-[#06110a] flex items-center justify-center shadow-2xs shrink-0">
                     <DownloadCloud className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">Tài liệu đã sẵn sàng</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">File định dạng PDF (tối đa 10 MB)</p>
+                    <h4 className="font-bold text-content text-sm">Tài liệu đã sẵn sàng</h4>
+                    <p className="text-xs text-content-muted">File định dạng PDF (tối đa 10 MB)</p>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  className="btn-primary bg-emerald-600 hover:bg-emerald-700 shadow-glow-emerald text-white px-6 py-3 text-sm font-bold rounded-xl inline-flex items-center gap-2 self-stretch sm:self-auto justify-center"
+                  className="btn-primary px-6 py-3 text-sm font-bold rounded-xl inline-flex items-center gap-2 self-stretch sm:self-auto justify-center"
                   onClick={download}
                   disabled={downloading}
                 >

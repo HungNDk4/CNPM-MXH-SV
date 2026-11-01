@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { authAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -20,7 +21,8 @@ export default function LoginPage() {
       const { data } = await authAPI.login(form)
       setAuth(data.data)
       toast.success(`Chào mừng trở lại, ${data.data.user.full_name}!`)
-      navigate('/')
+      const from = location.state?.from?.pathname || '/'
+      navigate(from, { replace: true })
     } catch (err) {
       toast.error(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu.')
     } finally {
@@ -53,7 +55,7 @@ export default function LoginPage() {
               value={form.email}
               onChange={handleChange}
               placeholder="ten@student.edu.vn hoặc email cá nhân"
-              className="w-full bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 shadow-2xs transition-all"
+              className="input pl-10 py-3 text-sm rounded-2xl"
               required
             />
             <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -74,7 +76,7 @@ export default function LoginPage() {
               value={form.password}
               onChange={handleChange}
               placeholder="••••••••"
-              className="w-full bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 shadow-2xs transition-all"
+              className="input pl-10 py-3 text-sm rounded-2xl"
               required
             />
             <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -103,7 +105,7 @@ export default function LoginPage() {
       <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 text-center">
         <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
           Chưa có tài khoản?{' '}
-          <Link to="/register" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 font-bold hover:underline transition-colors">
+          <Link to="/register" state={location.state} className="text-primary-600 dark:text-primary-400 hover:text-primary-700 font-bold hover:underline transition-colors">
             Đăng ký ngay
           </Link>
         </p>

@@ -5,6 +5,7 @@ import {
   Bell,
   PlusCircle,
   Shield,
+  User,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -12,13 +13,6 @@ const NAV_ITEMS = [
   { to: '/bookmarks', label: 'Đã lưu', icon: Bookmark, authRequired: true },
   { to: '/notifications', label: 'Thông báo', icon: Bell, authRequired: true },
   { to: '/posts/create', label: 'Đăng bài', icon: PlusCircle, authRequired: true },
-]
-
-const SHORTCUT_SUBJECTS = [
-  { label: 'CNPM', query: 'Công nghệ phần mềm', color: 'from-green-700 to-emerald-600', full: 'Công nghệ phần mềm' },
-  { label: 'CSDL', query: 'Cơ sở dữ liệu', color: 'from-teal-600 to-green-600', full: 'Cơ sở dữ liệu' },
-  { label: 'OOP',  query: 'Lập trình', color: 'from-sage-500 to-green-600', full: 'Lập trình OOP' },
-  { label: 'KTMT', query: 'Kiến trúc máy tính', color: 'from-amber-500 to-orange-600', full: 'Kiến trúc máy tính' },
 ]
 
 export default function SidebarDock({ isAuthenticated, user }) {
@@ -31,13 +25,51 @@ export default function SidebarDock({ isAuthenticated, user }) {
 
   return (
     <aside
-      className="hidden md:flex flex-col justify-between w-20 py-4 items-center h-[calc(100vh-4rem)] sticky top-16 bg-surface-card/60 backdrop-blur-md border-r border-surface-border/60 transition-colors duration-200 select-none z-30"
+      className="hidden md:flex flex-col justify-between w-24 py-4 items-center h-[calc(100vh-4rem)] sticky top-16 bg-[#F2F4EF] dark:bg-[#18191A] border-r border-[#E2E7DE] dark:border-[#3E4042] transition-colors duration-200 select-none z-30"
       aria-label="Thanh điều hướng nhanh"
     >
-      {/* Top Main Nav Icons */}
+      {/* Top Section: Avatar Profile Button & Main Nav Icons */}
       <div className="flex flex-col items-center gap-2 w-full px-2">
+        {/* User Profile Avatar Button (Grovelyn Image 1 Style - Top of Dock) */}
+        <div className="flex flex-col items-center w-full pb-2 mb-1 border-b border-[#E2E7DE] dark:border-[#3E4042]">
+          {isAuthenticated ? (
+            <Link
+              to={`/profile/${user?.id || ''}`}
+              className={`group relative flex items-center justify-center w-12 h-12 rounded-full transition-transform active:scale-95 ${
+                isCurrent('/profile')
+                  ? 'ring-2 ring-[#16a34a] dark:ring-[#2ECC71] ring-offset-2 ring-offset-[#F2F4EF] dark:ring-offset-[#18191A]'
+                  : 'hover:ring-2 hover:ring-[#16a34a]/40 dark:hover:ring-[#2ECC71]/40 ring-offset-2 ring-offset-[#F2F4EF] dark:ring-offset-[#18191A]'
+              }`}
+              title="Hồ sơ cá nhân"
+              aria-label="Hồ sơ cá nhân"
+            >
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.full_name || 'Hồ sơ'}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-[#16a34a] dark:bg-[#2ECC71] text-white dark:text-[#18191A] font-bold text-sm flex items-center justify-center shadow-2xs">
+                  {user?.full_name?.[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
+              {/* Online indicator badge */}
+              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#5bd13a] dark:bg-[#2ECC71] border-2 border-[#F2F4EF] dark:border-[#18191A]" />
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center justify-center w-12 h-12 rounded-full border border-dashed border-[#56614f]/40 dark:border-[#3E4042] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#16a34a] dark:hover:text-[#2ECC71] hover:border-[#16a34a] transition-colors"
+              title="Hồ sơ cá nhân (Đăng nhập)"
+              aria-label="Hồ sơ cá nhân"
+            >
+              <User className="w-5 h-5" />
+            </Link>
+          )}
+        </div>
+
         {NAV_ITEMS.map((item) => {
-          if (item.authRequired && !isAuthenticated) return null
           const active = isCurrent(item.to, item.exact)
           const Icon = item.icon
 
@@ -45,18 +77,19 @@ export default function SidebarDock({ isAuthenticated, user }) {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center gap-1 w-16 py-2.5 rounded-2xl transition-all duration-200 group relative ${
+              className={`flex flex-col items-center justify-center gap-1.5 w-20 h-[68px] rounded-2xl border transition-colors duration-150 group relative select-none ${
                 active
-                  ? 'bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 shadow-2xs font-bold border border-primary-200/50 dark:border-primary-800/40'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-surface-muted font-medium'
+                  ? 'bg-[#06110a] dark:bg-[#163D29] text-white dark:text-[#2ECC71] border-transparent dark:border-[#163D29] shadow-2xs'
+                  : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-[#E4E6EB] hover:bg-white dark:hover:bg-[#303132]'
               }`}
               title={item.label}
             >
-              <Icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${active ? 'stroke-[2.5]' : ''}`} />
-              <span className="text-[10px] leading-tight tracking-tight">{item.label}</span>
-              {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary-600 rounded-r-full" />
-              )}
+              <Icon
+                className={`w-5 h-5 shrink-0 ${
+                  active ? 'text-[#5bd13a] dark:text-[#2ECC71] stroke-[2.5]' : 'transition-colors'
+                }`}
+              />
+              <span className="text-[11px] leading-tight font-semibold tracking-tight">{item.label}</span>
             </Link>
           )
         })}
@@ -65,34 +98,17 @@ export default function SidebarDock({ isAuthenticated, user }) {
         {isAuthenticated && user?.role === 'admin' && (
           <Link
             to="/admin/audit-logs"
-            className={`flex flex-col items-center gap-1 w-16 py-2.5 rounded-2xl transition-all duration-200 group ${
+            className={`flex flex-col items-center justify-center gap-1.5 w-20 h-[68px] rounded-2xl border transition-colors duration-150 group relative select-none ${
               isCurrent('/admin/audit-logs')
-                ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 shadow-2xs font-bold'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-surface-muted font-medium'
+                ? 'bg-[#06110a] dark:bg-[#163D29] text-white dark:text-[#2ECC71] border-transparent dark:border-[#163D29] shadow-2xs'
+                : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-[#E4E6EB] hover:bg-white dark:hover:bg-[#303132]'
             }`}
             title="Quản trị kiểm duyệt"
           >
-            <Shield className="w-5 h-5 text-amber-500" />
-            <span className="text-[10px] leading-tight tracking-tight">Quản trị</span>
+            <Shield className={`w-5 h-5 shrink-0 ${isCurrent('/admin/audit-logs') ? 'text-[#5bd13a] dark:text-[#2ECC71] stroke-[2.5]' : 'text-amber-500'}`} />
+            <span className="text-[11px] leading-tight font-semibold tracking-tight">Quản trị</span>
           </Link>
         )}
-
-        {/* Divider */}
-        <div className="w-8 h-[1px] bg-surface-border my-1" />
-
-        {/* Subject Shortcuts */}
-        <div className="flex flex-col items-center gap-2">
-          {SHORTCUT_SUBJECTS.map((sub) => (
-            <Link
-              key={sub.label}
-              to={`/?subject=${encodeURIComponent(sub.query || sub.label)}`}
-              className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${sub.color} text-white font-mono text-[11px] font-bold flex items-center justify-center shadow-2xs hover:scale-110 hover:shadow-md transition-all duration-200`}
-              title={`Lọc môn học ${sub.full || sub.label}`}
-            >
-              {sub.label}
-            </Link>
-          ))}
-        </div>
       </div>
     </aside>
   )

@@ -26,16 +26,16 @@ import Badge from '@/components/common/Badge'
 const MAX_PDF_BYTES = 10 * 1024 * 1024
 
 const SUBJECT_OPTIONS = [
-  'C�ng ngh? ph?n m?m',
-  'Co s? d? li?u',
-  'L?p tr�nh Web',
-  'Tr� tu? nh�n t?o',
-  'Ki?n tr�c m�y t�nh',
-  'An to�n th�ng tin',
-  'C?u tr�c d? li?u & Gi?i thu?t',
-  'M?ng m�y t�nh',
-  'To�n cao c?p / Gi?i t�ch',
-  'Kh�c',
+  'Công nghệ phần mềm',
+  'Cơ sở dữ liệu',
+  'Lập trình Web',
+  'Trí tuệ nhân tạo',
+  'Kiến trúc máy tính',
+  'An toàn thông tin',
+  'Cấu trúc dữ liệu & Giải thuật',
+  'Mạng máy tính',
+  'Toán cao cấp / Giải tích',
+  'Khác',
 ]
 
 const POST_TYPES = [
@@ -140,19 +140,14 @@ export default function CreatePostPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* ── Page Header ── */}
-      <div className="flex items-center gap-3.5">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-green-700 via-green-600 to-emerald-600 text-white flex items-center justify-center shadow-glow-green">
-          <PenLine className="w-6 h-6" />
-        </div>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            Tạo bài viết &amp; Chia sẻ tài liệu
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Đặt câu hỏi bài tập, đóng góp tài liệu PDF 10MB hoặc mở chủ đề thảo luận học thuật.
-          </p>
-        </div>
+      {/* ── Page Header (Synchronized Clean Style) ── */}
+      <div className="space-y-1.5 pt-2 pb-1">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#06110a] dark:text-[#E7E7E7]">
+          Tạo bài viết &amp; Chia sẻ tài liệu
+        </h1>
+        <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] leading-relaxed">
+          Đặt câu hỏi bài tập, đóng góp tài liệu PDF 10MB hoặc mở chủ đề thảo luận học thuật.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -160,6 +155,33 @@ export default function CreatePostPage() {
             CỘT TRÁI (FORM SOẠN THẢO - GROVELYN NUMBERED SECTIONS): 7 Cols
             ═══════════════════════════════════════════════ */}
         <form onSubmit={handleSubmit} className="lg:col-span-7 card p-6 sm:p-7 space-y-6">
+          {/* Author Banner Card */}
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-surface-muted/60 border border-surface-border">
+            <div className="w-10 h-10 rounded-full avatar-gradient-ring p-[1.5px] shrink-0">
+              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600">
+                {user?.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.full_name || 'U'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                  />
+                ) : (
+                  user?.full_name?.[0]?.toUpperCase() || 'U'
+                )}
+              </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate">
+                {user?.full_name || 'Thành viên'}
+              </p>
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Chia sẻ với cộng đồng sinh viên {user?.university ? `· ${user.university}` : ''}</span>
+              </div>
+            </div>
+          </div>
+
           {/* Section 1: Đây là gì */}
           <div className="space-y-4 pb-4 border-b border-surface-border">
             <div className="flex items-baseline gap-2">
@@ -187,8 +209,8 @@ export default function CreatePostPage() {
                       aria-pressed={isSelected}
                       className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs sm:text-sm font-bold border transition-all duration-200 cursor-pointer shadow-2xs ${
                         isSelected
-                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-md scale-[1.02]'
-                          : 'bg-surface-card border-surface-border text-slate-600 dark:text-slate-300 hover:bg-surface-muted'
+                          ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] border-transparent shadow-xs'
+                          : 'bg-surface-card border-surface-border text-content-muted hover:bg-surface-muted hover:text-content'
                       }`}
                     >
                       <Icon className={`w-4 h-4 ${isSelected ? '' : color}`} />
@@ -217,20 +239,51 @@ export default function CreatePostPage() {
             </div>
 
             {/* Môn học */}
-            <div className="space-y-1.5">
-              <label htmlFor="post-subject" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-primary-500" />
-                <span>Môn học / Lĩnh vực</span>
-              </label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="post-subject" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-primary-500" />
+                  <span>Gắn với môn học / Chủ đề</span>
+                </label>
+                <span className="text-[11px] text-slate-400">Gợi ý chọn nhanh</span>
+              </div>
+
               <input
                 id="post-subject"
                 name="subject"
+                list="subject-options-list"
                 value={form.subject}
                 maxLength={200}
                 onChange={handleChange}
-                placeholder="Ví dụ: Công nghệ phần mềm, CSDL, Giải tích..."
-                className="input text-xs sm:text-sm rounded-xl"
+                placeholder="Chọn bên dưới hoặc nhập môn học (ví dụ: Công nghệ phần mềm, CSDL...)"
+                className="input text-xs sm:text-sm rounded-xl font-medium"
               />
+              <datalist id="subject-options-list">
+                {SUBJECT_OPTIONS.map((sub) => (
+                  <option key={sub} value={sub} />
+                ))}
+              </datalist>
+
+              {/* Quick Subject Chips */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {SUBJECT_OPTIONS.map((sub) => {
+                  const isPicked = form.subject === sub
+                  return (
+                    <button
+                      key={sub}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, subject: sub }))}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                        isPicked
+                          ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] font-bold shadow-2xs'
+                          : 'bg-surface-muted hover:bg-surface-elevated text-content-muted border border-surface-border'
+                      }`}
+                    >
+                      {sub}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
 
@@ -315,20 +368,48 @@ export default function CreatePostPage() {
 
             {/* Tags */}
             <div className="space-y-1.5">
-              <label htmlFor="post-tags" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-primary-500" />
-                <span>Tags (phân cách bằng dấu phẩy)</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="post-tags" className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-primary-500" />
+                  <span>Tags liên quan (phân cách bằng dấu phẩy)</span>
+                </label>
+                <span className="text-[11px] text-slate-400">Gợi ý tag</span>
+              </div>
               <input
                 id="post-tags"
                 name="tags"
                 value={form.tags}
                 onChange={handleChange}
-                placeholder="react, tailwind, ontap..."
+                placeholder="java, oop, cnpm, tailieu, ontap..."
                 className="input text-xs sm:text-sm rounded-xl"
               />
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {['tailieu', 'ontap', 'baitap', 'doan', 'slide', 'thidau'].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      const current = form.tags.split(',').map((x) => x.trim()).filter(Boolean)
+                      if (!current.includes(tag)) {
+                        setForm((prev) => ({
+                          ...prev,
+                          tags: current.length ? `${current.join(', ')}, ${tag}` : tag,
+                        }))
+                      }
+                    }}
+                    className="text-[11px] px-2 py-0.5 rounded-md bg-surface-muted hover:bg-[#dcfce7] hover:text-[#15803d] dark:hover:bg-[#14532d]/40 dark:hover:text-[#4ade80] text-content-muted border border-surface-border transition-colors cursor-pointer"
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
+
+          {/* Guideline Note */}
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 bg-surface-muted/50 p-3 rounded-xl border border-surface-border leading-relaxed">
+            Đăng nội dung học tập hoặc tài liệu bạn có quyền chia sẻ. Không quảng cáo thuần tuý, không đăng thông tin mật hoặc vi phạm bản quyền.
+          </p>
 
           {/* Form Action Buttons */}
           <div className="flex gap-3 pt-4 border-t border-surface-border">

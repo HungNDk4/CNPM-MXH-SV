@@ -15,7 +15,6 @@ import {
   Sun,
   Moon,
   X,
-  LogOut,
 } from 'lucide-react'
 
 export default function MainLayout() {
@@ -36,6 +35,18 @@ export default function MainLayout() {
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
   const [unreadCount, setUnreadCount] = useState(0)
 
+  // Global keyboard shortcut '/' to focus search input
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        e.preventDefault()
+        document.getElementById('global-search-input')?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   // Sync search input when url param changes
   useEffect(() => {
     setSearchInput(searchParams.get('search') || '')
@@ -51,8 +62,8 @@ export default function MainLayout() {
     let isMounted = true
     const fetchUnread = async () => {
       try {
-        const { data } = await notificationAPI.getUnreadCount()
-        if (isMounted) setUnreadCount(data.unread_count || 0)
+        const res = await notificationAPI.getUnreadCount()
+        if (isMounted) setUnreadCount(res.data?.data?.count || 0)
       } catch {
         // silent fail for polling
       }
@@ -83,24 +94,8 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col transition-colors duration-200 relative">
-      {/* ── Ambient Academic Campus Wash / Glow Layer (Light & Dark) ── */}
-      <div
-        className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-500 overflow-hidden"
-        aria-hidden="true"
-      >
-        {/* Light Mode Soft Ambient Grove Wash */}
-        <div className="dark:hidden absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-green-100/50 via-sage-50/40 to-transparent" />
-        <div className="dark:hidden absolute -top-40 -left-40 w-96 h-96 bg-green-200/30 rounded-full blur-3xl" />
-        <div className="dark:hidden absolute top-1/3 -right-40 w-96 h-96 bg-emerald-100/25 rounded-full blur-3xl" />
-
-        {/* Dark Mode Campus Grove Midnight — Deep forest atmosphere */}
-        <div className="hidden dark:block absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(22,163,74,0.14),transparent_70%)]" />
-        <div className="hidden dark:block absolute top-1/4 -left-32 w-80 h-80 bg-green-800/12 rounded-full blur-3xl" />
-        <div className="hidden dark:block absolute top-1/2 -right-32 w-80 h-80 bg-emerald-700/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* ── Top Header Navigation Bar (Sticky Glassmorphic) ── */}
-      <header className="sticky top-0 z-50 bg-surface-card border-b border-surface-border shadow-2xs transition-colors duration-200">
+      {/* ── Top Header Navigation Bar (Sticky Clean Surface) ── */}
+      <header className="sticky top-0 z-50 bg-surface-card border-b border-surface-border shadow-card transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
           {/* Brand Logo & Title */}
           <Link
@@ -124,29 +119,34 @@ export default function MainLayout() {
             </div>
           </Link>
 
-          {/* Center Global Search Pill */}
+          {/* Center Global Search Pill (Visible on both mobile & desktop between logo & user icon) */}
           <form
             onSubmit={handleSearchSubmit}
-            className="flex-1 max-w-lg relative mx-2 hidden sm:block"
+            className="flex-1 max-w-lg relative mx-2 block"
             role="search"
           >
             <input
+              id="global-search-input"
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Tìm kiếm bài viết, tài liệu..."
-              className="input pl-10 pr-9 py-2 text-xs sm:text-sm w-full rounded-full bg-surface-muted/70 border-surface-border focus:bg-surface-card shadow-2xs"
+              placeholder="Tìm kiếm..."
+              className="input pl-9 sm:pl-10 pr-8 sm:pr-10 py-1.5 sm:py-2 text-xs sm:text-sm w-full rounded-full bg-[#F2F4EF] dark:bg-[#18191A] border-[#E2E7DE] dark:border-[#3E4042] focus:bg-white dark:focus:bg-[#303132] shadow-2xs"
             />
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            {searchInput && (
+            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#56614f] dark:text-[#B0B3B8] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            {searchInput ? (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 aria-label="Xóa từ khóa"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
+            ) : (
+              <kbd className="hidden sm:inline-flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 h-5 min-w-[20px] px-1 text-[11px] font-semibold text-[#56614f] dark:text-[#B0B3B8] bg-white dark:bg-[#303132] border border-[#E2E7DE] dark:border-[#3E4042] rounded shadow-2xs pointer-events-none">
+                /
+              </kbd>
             )}
           </form>
 
@@ -159,28 +159,18 @@ export default function MainLayout() {
                 onClick={toggleTheme}
                 aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
                 title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-                className="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-surface-muted rounded-xl transition-all"
+                className="w-10 h-10 flex items-center justify-center text-content-muted hover:text-content hover:bg-surface-muted rounded-xl transition-all cursor-pointer border border-surface-border"
               >
                 {theme === 'dark' ? (
-                  <Sun className="w-5 h-5 text-amber-400" aria-hidden="true" />
+                  <Sun className="w-5 h-5 text-[#5bd13a]" aria-hidden="true" />
                 ) : (
-                  <Moon className="w-5 h-5 text-slate-600" aria-hidden="true" />
+                  <Moon className="w-5 h-5 text-[#69736B]" aria-hidden="true" />
                 )}
               </button>
             )}
 
             {isAuthenticated ? (
               <>
-                {/* Nút Tạo bài viết */}
-                <Link
-                  to="/posts/create"
-                  aria-label="Đăng bài"
-                  className="btn-primary text-xs sm:text-sm px-3.5 sm:px-4 py-2 min-h-10 hidden sm:inline-flex items-center gap-1.5 rounded-full"
-                >
-                  <Plus className="w-4 h-4" aria-hidden="true" />
-                  <span>Đăng bài</span>
-                </Link>
-
                 {/* Bookmark Shortcut */}
                 <Link
                   to="/bookmarks"
@@ -191,8 +181,10 @@ export default function MainLayout() {
                   <Bookmark className="w-5 h-5" />
                 </Link>
 
-                {/* Notification Dropdown Center */}
-                <NotificationDropdown />
+                {/* Notification Dropdown (Desktop & tablet; mobile uses bottom navigation bar) */}
+                <div className="hidden sm:block">
+                  <NotificationDropdown />
+                </div>
 
                 {/* User Menu Dropdown (Grovelyn Image 2 Style) */}
                 <UserMenuDropdown
@@ -201,18 +193,6 @@ export default function MainLayout() {
                   toggleTheme={toggleTheme}
                   onLogout={handleLogout}
                 />
-
-                {/* Quick Logout Button (E2E Contract & Quick Action) */}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  aria-label="Đăng xuất"
-                  className="w-10 h-10 hidden sm:flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-surface-muted rounded-xl transition-all cursor-pointer"
-                  title="Đăng xuất"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span className="sr-only">Đăng xuất</span>
-                </button>
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -242,8 +222,8 @@ export default function MainLayout() {
           user={user}
         />
 
-        {/* Content Outlet */}
-        <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 py-6 pb-20 md:pb-8 animate-fade-in">
+        {/* Content Outlet (Grovelyn Standard: max-w-7xl px-4 sm:px-6) */}
+        <main id="noi-dung" className="flex-1 w-full max-w-7xl mx-auto px-4 pb-24 pt-6 sm:px-6 md:pb-12 animate-fade-in">
           <Outlet />
         </main>
       </div>

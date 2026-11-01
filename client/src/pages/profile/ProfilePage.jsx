@@ -29,6 +29,7 @@ import {
   MapPin,
   ExternalLink,
   Laptop,
+  Settings,
 } from 'lucide-react'
 import Modal from '@/components/common/Modal'
 
@@ -187,7 +188,7 @@ export default function ProfilePage() {
   const userDocuments = userPosts.filter((p) => p.post_type === 'document')
 
   // ── Dynamic Logic Derived for Profile Widgets (Grovelyn & Kilogram style) ──
-  // 1. Công cụ & Kỹ năng: lấy từ tags của các bài viết thực tế của user, fallback theo major
+  // 1. Công cụ & Kỹ năng: lấy từ tags của các bài viết thực tế của user
   const derivedSkills = useMemo(() => {
     const rawTags = userPosts.flatMap((p) => {
       if (Array.isArray(p.tags)) return p.tags
@@ -203,46 +204,23 @@ export default function ProfilePage() {
     }).filter(Boolean)
 
     const uniqueTags = Array.from(new Set(rawTags))
-    if (uniqueTags.length > 0) return uniqueTags.slice(0, 10)
-
-    const m = (profile?.major || '').toLowerCase()
-    if (m.includes('máy tính') || m.includes('phần mềm') || m.includes('thông tin')) {
-      return ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Git', 'Linux']
-    }
-    if (m.includes('kinh tế') || m.includes('quản trị') || m.includes('marketing')) {
-      return ['Excel', 'PowerPoint', 'Data Analysis', 'Marketing', 'Teamwork', 'Git']
-    }
-    return ['Office', 'Git', 'Thuyết trình', 'Làm việc nhóm', 'Nghiên cứu tài liệu']
-  }, [userPosts, profile?.major])
+    return uniqueTags.slice(0, 10)
+  }, [userPosts])
 
   // 2. Mình có thể góp ý về: lấy từ các môn học (subject) mà user đã từng đăng bài
   const derivedAdviceTopics = useMemo(() => {
     const subjects = Array.from(new Set(userPosts.map((p) => p.subject).filter(Boolean)))
-    if (subjects.length >= 2) {
-      return [
-        { title: subjects[0], desc: `Kinh nghiệm làm bài tập và tài liệu ôn thi môn ${subjects[0]}.` },
-        { title: subjects[1], desc: `Tài liệu tóm tắt và giải đáp câu hỏi chuyên sâu về ${subjects[1]}.` },
-      ]
-    }
-    if (subjects.length === 1) {
-      return [
-        { title: subjects[0], desc: `Kinh nghiệm làm bài tập và tài liệu môn ${subjects[0]}.` },
-        { title: 'Kỹ năng học tập & Đồ án', desc: `Chia sẻ phương pháp tự học và hoàn thành đồ án môn học ${profile?.major || ''}.` },
-      ]
-    }
-    return [
-      { title: profile?.major ? `Chuyên ngành ${profile?.major}` : 'Kỹ năng học tập đại học', desc: 'Trao đổi phương pháp học tập, giải bài tập và làm việc nhóm.' },
-      { title: 'Tài liệu & Đồ án môn học', desc: 'Đóng góp slide bài giảng, đề cương và tài liệu ôn tập hữu ích.' },
-    ]
-  }, [userPosts, profile?.major])
+    return subjects.map((sub) => ({
+      title: sub,
+      desc: `Kinh nghiệm làm bài tập và tài liệu học tập môn ${sub}.`,
+    }))
+  }, [userPosts])
 
-  // 3. Chăm chỉ học tập: Thống kê định lượng thực tế từ backend
+  // 3. Hoạt động học tập: Thống kê định lượng thực tế từ bài viết đã đăng
   const learningStats = useMemo(() => {
-    const totalLikes = userPosts.reduce((acc, p) => acc + (Number(p.likes_count) || 0), 0)
     return {
       totalPosts: userPosts.length,
       totalDocuments: userDocuments.length,
-      totalLikes,
     }
   }, [userPosts, userDocuments])
 
@@ -386,6 +364,19 @@ export default function ProfilePage() {
     })
   }
 
+  // Handle Share Profile Link
+  const handleShareProfile = async () => {
+    const url = window.location.href
+    if (navigator?.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(url)
+        toast.success('Đã sao chép liên kết hồ sơ vào clipboard!')
+        return
+      } catch { /* fallback */ }
+    }
+    toast.success('Liên kết hồ sơ: ' + url)
+  }
+
   // Invalid ID check
   if (!validId) {
     return (
@@ -403,12 +394,12 @@ export default function ProfilePage() {
     return (
       <div className="max-w-5xl mx-auto space-y-6 animate-pulse" role="status">
         <div className="card p-6 space-y-4">
-          <div className="h-36 bg-slate-200 dark:bg-slate-700 rounded-2xl w-full" />
+          <div className="h-36 bg-surface-muted rounded-2xl w-full" />
           <div className="flex items-center gap-4 px-4">
-            <div className="w-24 h-24 rounded-full bg-slate-300 dark:bg-slate-600 border-4 border-surface-card -mt-12" />
+            <div className="w-24 h-24 rounded-full bg-surface-muted border-4 border-surface-card -mt-12" />
             <div className="space-y-2 flex-1">
-              <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
-              <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-1/4" />
+              <div className="h-6 bg-surface-muted rounded w-1/3" />
+              <div className="h-4 bg-surface-muted rounded w-1/4" />
             </div>
           </div>
         </div>
@@ -469,7 +460,7 @@ export default function ProfilePage() {
             {/* Avatar with Status Ring */}
             <div className="relative group">
               <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full avatar-gradient-ring p-1 shrink-0 shadow-xl bg-surface-card">
-                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-4xl font-black text-primary-600 border-4 border-surface-card">
+                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-4xl font-black text-[#16a34a] dark:text-[#2ECC71] border-4 border-surface-card">
                   {profile.avatar_url ? (
                     <img
                       src={profile.avatar_url}
@@ -483,9 +474,9 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Status Badge (Inspired by Image 5) */}
-              <span className="absolute bottom-1 right-1 bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-surface-card flex items-center gap-1 shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              {/* Status Badge */}
+              <span className="absolute bottom-1 right-1 bg-[#16a34a] dark:bg-[#22c55e] text-white dark:text-[#06110a] text-[10px] font-black px-2.5 py-0.5 rounded-full border-2 border-surface-card flex items-center gap-1 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-[#06110a] animate-pulse" />
                 Đang học
               </span>
             </div>
@@ -498,24 +489,35 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => setActiveTab('edit')}
                     className={`btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex items-center gap-2 ${
-                      activeTab === 'edit' ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 font-bold border-primary-300' : ''
+                      activeTab === 'edit' ? 'bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] font-bold border-[#bbf7d0] dark:border-[#166534]' : ''
                     }`}
                   >
                     <Edit3 className="w-4 h-4" />
-                    <span>Chỉnh sửa thông tin</span>
+                    <span>Chỉnh sửa hồ sơ</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('security')}
-                    className={`btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex items-center gap-2 ${
-                      activeTab === 'security' ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 font-bold border-primary-300' : ''
-                    }`}
+                    onClick={handleShareProfile}
+                    className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex items-center gap-2 cursor-pointer"
+                    title="Chia sẻ hồ sơ"
                   >
-                    <Lock className="w-4 h-4" />
-                    <span>Đổi mật khẩu</span>
+                    <Share2 className="w-4 h-4" />
+                    <span>Chia sẻ hồ sơ</span>
                   </button>
                 </>
+              )}
+
+              {!isOwner && (
+                <button
+                  type="button"
+                  onClick={handleShareProfile}
+                  className="btn-secondary text-xs sm:text-sm py-2 px-3.5 rounded-xl flex items-center gap-1.5 cursor-pointer"
+                  title="Chia sẻ hồ sơ"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Chia sẻ hồ sơ</span>
+                </button>
               )}
 
               {!isOwner && currentUser && (
@@ -526,7 +528,7 @@ export default function ProfilePage() {
                   className={`text-xs sm:text-sm py-2.5 px-6 rounded-full font-bold transition-all shadow-sm flex items-center gap-2 ${
                     followStats?.is_following
                       ? 'btn-secondary text-slate-700 dark:text-slate-200'
-                      : 'btn-primary shadow-glow-indigo'
+                      : 'btn-primary'
                   }`}
                 >
                   {followMutation.isPending ? (
@@ -564,7 +566,7 @@ export default function ProfilePage() {
 
             {(profile?.university || profile?.major) && (
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center sm:justify-start gap-1.5">
-                <GraduationCap className="w-4 h-4 text-primary-500 shrink-0" />
+                <GraduationCap className="w-4 h-4 text-[#16a34a] dark:text-[#2ECC71] shrink-0" />
                 <span>{profile?.university ? `${profile?.university}` : ''} {profile?.major ? `· ${profile?.major}` : ''}</span>
               </p>
             )}
@@ -632,8 +634,8 @@ export default function ProfilePage() {
               onClick={() => setActiveTab('posts')}
               className={`py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'posts'
-                  ? 'bg-primary-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-surface-muted'
+                  ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] shadow-2xs'
+                  : 'text-content-muted hover:text-content hover:bg-surface-muted'
               }`}
             >
               <BookOpen className="w-4 h-4" />
@@ -645,8 +647,8 @@ export default function ProfilePage() {
               onClick={() => setActiveTab('documents')}
               className={`py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'documents'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-surface-muted'
+                  ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] shadow-2xs'
+                  : 'text-content-muted hover:text-content hover:bg-surface-muted'
               }`}
             >
               <FileText className="w-4 h-4" />
@@ -658,12 +660,12 @@ export default function ProfilePage() {
               onClick={() => setActiveTab('about')}
               className={`py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
                 activeTab === 'about'
-                  ? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-surface-muted'
+                  ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] shadow-2xs'
+                  : 'text-content-muted hover:text-content hover:bg-surface-muted'
               }`}
             >
               <User className="w-4 h-4" />
-              <span>Giới thiệu & Học vấn</span>
+              <span>Giới thiệu &amp; Học vấn</span>
             </button>
           </div>
 
@@ -758,23 +760,6 @@ export default function ProfilePage() {
                   {profile?.bio || 'Người dùng chưa viết phần giới thiệu bản thân.'}
                 </p>
               </div>
-
-              {isOwner && (
-                <div className="card p-6 space-y-3">
-                  <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2 border-b border-surface-border pb-3">
-                    <Sparkles className="w-5 h-5 text-amber-500" />
-                    <span>Số dư ví học tập</span>
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-500">Số dư hiện tại dùng để giao dịch tài liệu:</p>
-                      <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                        {Number(profile.wallet_balance || 0).toLocaleString('vi-VN')} đ
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -975,69 +960,77 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          {/* Widget 2: Mình có thể góp ý về (Derived from subjects & major) */}
+          {/* Widget 2: Chủ đề môn học đã chia sẻ */}
           <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
             <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-              <span>Mình có thể góp ý về</span>
+              <span>Chủ đề trao đổi học tập</span>
             </h4>
-            <div className="space-y-2 text-xs">
-              {derivedAdviceTopics.map((topic, idx) => (
-                <div
-                  key={idx}
-                  className={`p-3 rounded-xl border ${
-                    idx === 0
-                      ? 'bg-primary-50 dark:bg-primary-950/40 border-primary-200/60 dark:border-primary-800/60 text-primary-700 dark:text-primary-300'
-                      : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'
-                  }`}
-                >
-                  <p className="font-bold">{topic.title}</p>
-                  <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">{topic.desc}</p>
-                </div>
-              ))}
-            </div>
+            {derivedAdviceTopics.length === 0 ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Thành viên chưa chia sẻ tài liệu hoặc thảo luận gắn với môn học cụ thể.
+              </p>
+            ) : (
+              <div className="space-y-2 text-xs">
+                {derivedAdviceTopics.map((topic, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-3 rounded-xl border ${
+                      idx === 0
+                        ? 'bg-primary-50 dark:bg-primary-950/40 border-primary-200/60 dark:border-primary-800/60 text-primary-700 dark:text-primary-300'
+                        : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'
+                    }`}
+                  >
+                    <p className="font-bold">{topic.title}</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">{topic.desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Widget 3: Công cụ và kỹ năng (Derived from post tags & major) */}
+          {/* Widget 3: Công cụ và kỹ năng */}
           <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
             <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-              <span>Công cụ & Kỹ năng</span>
+              <span>Thẻ môn học & Kỹ năng</span>
             </h4>
-            <div className="flex flex-wrap gap-1.5">
-              {derivedSkills.map((skill) => (
-                <span
-                  key={skill}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-muted border border-surface-border text-slate-700 dark:text-slate-300 hover:border-primary-300 transition-colors"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
+            {derivedSkills.length === 0 ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Chưa có thẻ kỹ năng nào được gắn vào bài viết của tác giả.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {derivedSkills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-muted border border-surface-border text-slate-700 dark:text-slate-300 hover:border-primary-300 transition-colors"
+                  >
+                    #{skill}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Widget 4: Chăm chỉ học tập (Real metrics from user posts & likes) */}
-          <div className="card p-5 space-y-3 bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-surface-card border border-amber-500/20">
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs uppercase tracking-wider">
+          {/* Widget 4: Đóng góp học tập */}
+          <div className="card p-5 space-y-3 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-surface-card border border-primary-500/20">
+            <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-wider">
               <Flame className="w-4 h-4" />
-              <span>Chăm chỉ học tập</span>
+              <span>Đóng góp học tập</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-              <div className="bg-surface-card/80 p-2 rounded-xl border border-surface-border">
-                <span className="block text-base font-black text-slate-900 dark:text-white">{learningStats.totalPosts}</span>
-                <span className="text-[10px] text-slate-500 font-medium">Bài viết</span>
+            <div className="grid grid-cols-2 gap-3 pt-1 text-center">
+              <div className="bg-surface-card/80 p-3 rounded-xl border border-surface-border">
+                <span className="block text-lg font-black text-slate-900 dark:text-white">{learningStats.totalPosts}</span>
+                <span className="text-xs text-slate-500 font-medium">Bài thảo luận</span>
               </div>
-              <div className="bg-surface-card/80 p-2 rounded-xl border border-surface-border">
-                <span className="block text-base font-black text-slate-900 dark:text-white">{learningStats.totalDocuments}</span>
-                <span className="text-[10px] text-slate-500 font-medium">Tài liệu PDF</span>
-              </div>
-              <div className="bg-surface-card/80 p-2 rounded-xl border border-surface-border">
-                <span className="block text-base font-black text-rose-500">{learningStats.totalLikes}</span>
-                <span className="text-[10px] text-slate-500 font-medium">Lượt thích</span>
+              <div className="bg-surface-card/80 p-3 rounded-xl border border-surface-border">
+                <span className="block text-lg font-black text-emerald-600 dark:text-emerald-400">{learningStats.totalDocuments}</span>
+                <span className="text-xs text-slate-500 font-medium">Tài liệu PDF</span>
               </div>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">
-              Thống kê hoạt động học tập thực tế và tương tác từ cộng đồng sinh viên.
+              Thống kê tổng hợp từ các bài viết và tài liệu công khai của thành viên.
             </p>
           </div>
         </div>

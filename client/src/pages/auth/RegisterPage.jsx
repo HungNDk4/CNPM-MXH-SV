@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { authAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -21,7 +22,8 @@ export default function RegisterPage() {
       const { data } = await authAPI.register(form)
       setAuth(data.data)
       toast.success('Đăng ký tài khoản thành công! Chào mừng bạn gia nhập 🎉')
-      navigate('/')
+      const from = location.state?.from?.pathname || '/'
+      navigate(from, { replace: true })
     } catch (err) {
       toast.error(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.')
     } finally {

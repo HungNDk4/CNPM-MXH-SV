@@ -24,27 +24,27 @@ const EVENT_CONFIG = {
   comment: {
     label: 'đã bình luận về bài viết của bạn',
     icon: MessageSquare,
-    badge: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
+    color: 'text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800/60',
   },
   reply: {
     label: 'đã trả lời bình luận của bạn',
     icon: CornerDownRight,
-    badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+    color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60',
   },
   like_post: {
     label: 'đã thích bài viết của bạn',
     icon: Heart,
-    badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    color: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60',
   },
   like_comment: {
     label: 'đã thích bình luận của bạn',
     icon: Heart,
-    badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    color: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60',
   },
   follow: {
     label: 'đã bắt đầu theo dõi bạn',
     icon: User,
-    badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800/60',
   },
 }
 
@@ -80,6 +80,8 @@ export default function NotificationsPage() {
     }
     if (item.post_id) {
       navigate(`/posts/${item.post_id}`)
+    } else if (item.event_type === 'follow' && item.actor_id) {
+      navigate(`/profile/${item.actor_id}`)
     }
   }
 
@@ -96,22 +98,17 @@ export default function NotificationsPage() {
     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* ── Left/Center Column: Notifications Feed ── */}
       <div className="lg:col-span-8 space-y-4">
-        {/* Header Banner */}
-        <div className="card p-5 bg-gradient-to-r from-green-500/10 via-surface-card to-emerald-500/10 border-primary-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-primary-600 text-white flex items-center justify-center shadow-glow-green">
-              <Bell className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                Trung tâm thông báo
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                {unreadCount > 0
-                  ? `Bạn có ${unreadCount} thông báo chưa đọc`
-                  : 'Bạn đã cập nhật tất cả thông báo'}
-              </p>
-            </div>
+        {/* Page Header (Synchronized Clean Style) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 pb-1">
+          <div className="space-y-1.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#06110a] dark:text-[#E7E7E7]">
+              Trung tâm thông báo
+            </h1>
+            <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] leading-relaxed">
+              {unreadCount > 0
+                ? `Bạn có ${unreadCount} thông báo chưa đọc`
+                : 'Bạn đã cập nhật tất cả thông báo'}
+            </p>
           </div>
 
           {unreadCount > 0 && (
@@ -119,9 +116,9 @@ export default function NotificationsPage() {
               type="button"
               onClick={() => markAll.mutate()}
               disabled={markAll.isPending}
-              className="btn-secondary text-xs px-3.5 py-2 inline-flex items-center gap-1.5 self-start sm:self-auto rounded-xl"
+              className="btn-secondary text-xs px-3.5 py-2 inline-flex items-center gap-1.5 self-start sm:self-auto rounded-xl shrink-0"
             >
-              <CheckCheck className="w-4 h-4 text-primary-600" />
+              <CheckCheck className="w-4 h-4 text-[#16a34a] dark:text-[#2ECC71]" />
               <span>Đánh dấu đã đọc tất cả</span>
             </button>
           )}
@@ -139,10 +136,10 @@ export default function NotificationsPage() {
               key={tab.id}
               type="button"
               onClick={() => setFilter(tab.id)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 border ${
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 border cursor-pointer ${
                 filter === tab.id
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-xs'
-                  : 'bg-surface-card text-slate-600 dark:text-slate-300 border-surface-border hover:bg-surface-muted'
+                  ? 'bg-[#06110a] dark:bg-[#22c55e] text-white dark:text-[#06110a] border-transparent font-bold shadow-xs'
+                  : 'bg-white dark:bg-[#303132] text-[#56614f] dark:text-[#B0B3B8] border-[#E2E7DE] dark:border-[#3E4042] hover:bg-[#F2F4EF] dark:hover:bg-[#262626] hover:text-[#06110a] dark:hover:text-white'
               }`}
             >
               {tab.label}
@@ -155,10 +152,10 @@ export default function NotificationsPage() {
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="card p-4 flex gap-4 animate-pulse">
-                <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                <div className="w-10 h-10 rounded-full bg-surface-muted shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3" />
-                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/4" />
+                  <div className="h-4 bg-surface-muted rounded w-2/3" />
+                  <div className="h-3 bg-surface-muted rounded w-1/4" />
                 </div>
               </div>
             ))}
@@ -179,7 +176,7 @@ export default function NotificationsPage() {
               const config = EVENT_CONFIG[item.event_type] || {
                 label: 'đã gửi thông báo cho bạn',
                 icon: Bell,
-                badge: 'bg-primary-500/10 text-primary-600 border-primary-500/20',
+                color: 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/60 border-primary-200 dark:border-primary-800/60',
               }
               const EventIcon = config.icon
 
@@ -187,37 +184,42 @@ export default function NotificationsPage() {
                 <div
                   key={item.id}
                   onClick={() => handleItemClick(item)}
-                  className={`card p-4 transition-all duration-200 flex items-start gap-3.5 cursor-pointer hover:shadow-bento-hover hover:-translate-y-0.5 ${
+                  className={`card p-4 transition-colors duration-150 flex items-start gap-3.5 cursor-pointer ${
                     !item.is_read
-                      ? 'bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200/60 dark:border-indigo-800/40'
-                      : 'hover:border-slate-300 dark:hover:border-slate-700'
+                      ? 'bg-[#dcfce7]/40 dark:bg-[#14532d]/25 border-[#bbf7d0] dark:border-[#166534]/50'
+                      : 'bg-surface-card border-surface-border hover:bg-slate-50/80 dark:hover:bg-[#303132]'
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs mt-0.5">
-                    <EventIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs mt-0.5 ${config.color}`}>
+                    <EventIcon className="w-5 h-5" />
                   </div>
 
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">
-                        <span className="font-bold text-primary-600 dark:text-primary-400 mr-1">
-                          {item.actor?.full_name || 'Thành viên'}
+                        <span className="font-bold text-slate-900 dark:text-white mr-1">
+                          {item.actor?.full_name || 'Một bạn học'}
                         </span>
                         <span>{config.label}</span>
                       </p>
                       {!item.is_read && (
-                        <span className="w-2.5 h-2.5 rounded-full bg-primary-600 dark:bg-primary-400 shrink-0 shadow-sm" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#16a34a] dark:bg-[#22c55e] shrink-0 shadow-sm" />
                       )}
                     </div>
 
                     <div className="flex items-center gap-3 text-xs text-slate-400">
                       <span>{new Date(item.created_at).toLocaleString('vi-VN')}</span>
-                      {item.post_id && (
-                        <span className="text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1 font-medium">
-                          <span>Xem chi tiết</span>
+                      {item.post_id ? (
+                        <span className="text-[#16a34a] dark:text-[#2ECC71] hover:underline flex items-center gap-1 font-semibold">
+                          <span>Xem bài viết</span>
                           <ArrowRight className="w-3 h-3" />
                         </span>
-                      )}
+                      ) : item.event_type === 'follow' && item.actor_id ? (
+                        <span className="text-[#16a34a] dark:text-[#2ECC71] hover:underline flex items-center gap-1 font-semibold">
+                          <span>Xem trang cá nhân</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -227,31 +229,31 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      {/* ── Right Column: Gamification & Profile Insight Widget (Grovelyn Image 3) ── */}
+      {/* ── Right Column: Gamification & Profile Insight Widget ── */}
       <div className="lg:col-span-4 space-y-5">
-        {/* Vườn học tập tuần này */}
-        <div className="card p-5 space-y-4 bg-gradient-to-b from-surface-card to-surface-muted/60 border-surface-border">
+        {/* Tổng quan tương tác học tập */}
+        <div className="card p-5 space-y-4 bg-surface-card border border-surface-border rounded-[20px] shadow-xs">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-[#16a34a] dark:text-[#2ECC71]">
               <TreePine className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm">Vườn học tập tuần này</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm">Tổng quan tương tác</h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Mỗi lượt tương tác học tập với bạn là một chiếc lá xanh
+                Ghi nhận các phản hồi và kết nối từ cộng đồng sinh viên
               </p>
             </div>
           </div>
 
           <div className="py-4 text-center space-y-2 bg-surface-card rounded-xl border border-surface-border">
-            <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-2xs">
+            <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-[#16a34a] dark:text-[#2ECC71] shadow-2xs">
               <Sparkles className="w-7 h-7" />
             </div>
             <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-              {notifications.length} <span className="text-xs font-sans font-semibold text-emerald-600 dark:text-emerald-400">tương tác</span>
+              {notifications.length} <span className="text-xs font-sans font-semibold text-[#16a34a] dark:text-[#2ECC71]">thông báo</span>
             </div>
             <p className="text-[11px] text-slate-500 px-4">
-              Bạn đang kết nối rất tích cực với bạn học trong tuần này!
+              Tổng số thông báo và hoạt động được đồng bộ về tài khoản của bạn.
             </p>
           </div>
 
@@ -287,9 +289,9 @@ export default function NotificationsPage() {
         </div>
 
         {/* Lời nhắc học tập */}
-        <div className="card p-5 space-y-3 bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-200/50 dark:border-indigo-800/40">
-          <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-bold text-sm">
-            <Calendar className="w-4 h-4" />
+        <div className="card p-5 space-y-3 bg-gradient-to-b from-surface-card to-surface-muted/40 border border-surface-border rounded-[20px] shadow-xs">
+          <div className="flex items-center gap-2 text-content font-bold text-sm">
+            <Calendar className="w-4 h-4 text-[#16a34a] dark:text-[#2ECC71]" />
             <span>Mẹo học tập hiệu quả</span>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -297,7 +299,7 @@ export default function NotificationsPage() {
           </p>
           <Link
             to="/"
-            className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-1"
+            className="text-xs font-semibold text-[#16a34a] dark:text-[#2ECC71] hover:underline inline-flex items-center gap-1"
           >
             <span>Duyệt câu hỏi mới</span>
             <ArrowRight className="w-3.5 h-3.5" />

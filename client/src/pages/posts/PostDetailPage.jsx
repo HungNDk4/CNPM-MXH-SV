@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { commentAPI, likeAPI, postAPI, bookmarkAPI } from '@/services/api'
+import { commentAPI, likeAPI, postAPI, bookmarkAPI, followAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import {
   ArrowLeft,
@@ -22,6 +22,10 @@ import {
   Lock,
   GraduationCap,
   Sparkles,
+  UserPlus,
+  ShieldCheck,
+  ArrowRight,
+  User,
 } from 'lucide-react'
 import Badge, { TYPE_BADGE_CONFIG } from '@/components/common/Badge'
 
@@ -35,12 +39,12 @@ const TYPE_CONFIG = {
   discussion: {
     label: 'Thảo luận',
     icon: MessageSquare,
-    badgeClass: 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200/80 dark:border-green-800/60',
+    badgeClass: 'bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] border border-[#bbf7d0] dark:border-[#166534]',
   },
   document: {
     label: 'Tài liệu',
     icon: FileText,
-    badgeClass: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60',
+    badgeClass: 'bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] border border-[#bbf7d0] dark:border-[#166534]',
   },
 }
 
@@ -145,6 +149,49 @@ function LikeButton({ targetType, targetId }) {
         {isLoading ? '…' : isError ? 'Chưa tải được số thích' : `${count ?? 0} lượt thích`}
       </span>
     </div>
+  )
+}
+
+function FollowButton({ authorId }) {
+  const qc = useQueryClient()
+  const { data: followStats, isLoading } = useQuery({
+    queryKey: ['follow-stats', authorId],
+    queryFn: async () => (await followAPI.getFollowStats(authorId)).data.data,
+    enabled: Boolean(authorId),
+  })
+
+  const toggleFollow = useMutation({
+    mutationFn: async () => {
+      if (followStats?.is_following) {
+        return (await followAPI.unfollow(authorId)).data
+      }
+      return (await followAPI.follow(authorId)).data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['follow-stats', authorId] })
+      toast.success(followStats?.is_following ? 'Đã bỏ theo dõi.' : 'Đã theo dõi tác giả!')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể cập nhật theo dõi.')
+    },
+  })
+
+  const isFollowing = followStats?.is_following
+
+  return (
+    <button
+      type="button"
+      onClick={() => toggleFollow.mutate()}
+      disabled={isLoading || toggleFollow.isPending}
+      className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
+        isFollowing
+          ? 'bg-surface-muted border border-surface-border text-content hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40'
+          : 'bg-[#16a34a] hover:bg-[#15803d] text-white dark:bg-[#22c55e] dark:hover:bg-[#4ade80] dark:text-[#06110a] shadow-xs'
+      }`}
+    >
+      <UserPlus className="w-3.5 h-3.5" />
+      <span>{toggleFollow.isPending ? 'Đang lưu...' : isFollowing ? 'Đang theo dõi' : 'Theo dõi bạn học'}</span>
+    </button>
   )
 }
 
@@ -503,9 +550,9 @@ export default function PostDetailPage() {
 
   if (isLoading) return (
     <section className="card max-w-3xl mx-auto space-y-4 animate-pulse p-6" role="status">
-      <p className="text-slate-500 text-sm">Đang tải bài viết...</p>
-      <div className="h-7 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-      <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-full" />
+      <p className="text-content-muted text-sm">Đang tải bài viết...</p>
+      <div className="h-7 bg-surface-muted rounded w-3/4" />
+      <div className="h-4 bg-surface-muted rounded w-full" />
     </section>
   )
 
@@ -537,11 +584,11 @@ export default function PostDetailPage() {
   const tags = Array.isArray(post.tags) ? post.tags.filter((tag) => typeof tag === 'string') : []
 
   return (
-    <main className="max-w-4xl mx-auto space-y-6">
+    <main className="max-w-6xl mx-auto space-y-6">
       {/* Navigation bar */}
       <nav aria-label="Điều hướng bài viết" className="flex items-center justify-between">
         <Link
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-content-muted hover:text-content transition-colors"
           to="/"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -549,213 +596,303 @@ export default function PostDetailPage() {
         </Link>
       </nav>
 
-      {/* Post or Edit Mode */}
-      {isEditing ? (
-        <article className="card p-6 sm:p-8 space-y-5 animate-fade-in" aria-label="Chỉnh sửa bài viết">
-          <div className="flex items-center justify-between pb-3 border-b border-surface-border">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Edit3 className="w-5 h-5 text-primary-600" />
-              <span>Chỉnh sửa bài viết</span>
-            </h2>
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="btn-secondary text-xs"
-            >
-              Hủy
-            </button>
-          </div>
-
-          <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label htmlFor="edit-title" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                Tiêu đề <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="edit-title"
-                type="text"
-                required
-                maxLength={300}
-                value={editForm.title}
-                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                className="input"
-                placeholder="Nhập tiêu đề..."
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="edit-subject" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                Môn học
-              </label>
-              <input
-                id="edit-subject"
-                type="text"
-                maxLength={200}
-                value={editForm.subject}
-                onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })}
-                className="input"
-                placeholder="Ví dụ: CSDL, Công nghệ phần mềm..."
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="edit-tags" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                Thẻ (phân cách bằng dấu phẩy)
-              </label>
-              <input
-                id="edit-tags"
-                type="text"
-                value={editForm.tags}
-                onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
-                className="input"
-                placeholder="react, tailwind, cnpm..."
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="edit-content" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                Nội dung bài viết
-              </label>
-              <textarea
-                id="edit-content"
-                rows={6}
-                maxLength={10000}
-                value={editForm.content}
-                onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
-                className="input resize-y"
-                placeholder="Chi tiết câu hỏi hoặc chủ đề thảo luận..."
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-surface-border">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="btn-secondary text-xs sm:text-sm"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                type="submit"
-                disabled={editPostMutation.isPending}
-                className="btn-primary text-xs sm:text-sm"
-              >
-                {editPostMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
-              </button>
-            </div>
-          </form>
-        </article>
-      ) : (
-        <article className="card p-6 sm:p-8 space-y-6">
-          {/* Top meta row */}
-          <div className="flex flex-wrap gap-3 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Badge type={post.post_type} />
-              <span className="text-slate-400 text-xs">·</span>
-              <span className="text-slate-500 dark:text-slate-400 text-xs">{stamp(post.created_at)}</span>
-            </div>
-
-            {/* FE-05: Owner/Admin actions */}
-            {canModify && (
-              <div className="flex items-center gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* ── CỘT TRÁI: BÀI VIẾT & BÌNH LUẬN (8 Cols) ── */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Post or Edit Mode */}
+          {isEditing ? (
+            <article className="card p-6 sm:p-8 space-y-5 animate-fade-in" aria-label="Chỉnh sửa bài viết">
+              <div className="flex items-center justify-between pb-3 border-b border-surface-border">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-primary-600" />
+                  <span>Chỉnh sửa bài viết</span>
+                </h2>
                 <button
                   type="button"
-                  onClick={startEdit}
-                  className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 rounded-xl hover:text-primary-600"
-                  aria-label="Sửa bài viết"
+                  onClick={() => setIsEditing(false)}
+                  className="btn-secondary text-xs"
                 >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>Sửa bài viết</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeletePost}
-                  disabled={deletePostMutation.isPending}
-                  className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                  aria-label="Xóa bài viết"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>{deletePostMutation.isPending ? 'Đang xóa...' : 'Xóa bài viết'}</span>
+                  Hủy
                 </button>
               </div>
-            )}
-          </div>
 
-          {/* Post Title (Heading hook for test) */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-snug break-words tracking-tight">
-            {post.title}
-          </h1>
-
-          {/* Author info header */}
-          <div className="flex items-center gap-3.5 py-4 border-y border-surface-border">
-            <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0">
-              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600">
-                {post.author?.avatar_url ? (
-                  <img
-                    src={post.author.avatar_url}
-                    alt={post.author.full_name || 'Tác giả'}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="edit-title" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Tiêu đề <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="edit-title"
+                    type="text"
+                    required
+                    maxLength={300}
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                    className="input"
+                    placeholder="Nhập tiêu đề..."
                   />
-                ) : (
-                  post.author?.full_name?.[0]?.toUpperCase() || 'S'
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="edit-subject" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Môn học
+                  </label>
+                  <input
+                    id="edit-subject"
+                    type="text"
+                    maxLength={200}
+                    value={editForm.subject}
+                    onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })}
+                    className="input"
+                    placeholder="Ví dụ: CSDL, Công nghệ phần mềm..."
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="edit-tags" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Thẻ (phân cách bằng dấu phẩy)
+                  </label>
+                  <input
+                    id="edit-tags"
+                    type="text"
+                    value={editForm.tags}
+                    onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
+                    className="input"
+                    placeholder="react, tailwind, cnpm..."
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="edit-content" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Nội dung bài viết
+                  </label>
+                  <textarea
+                    id="edit-content"
+                    rows={6}
+                    maxLength={10000}
+                    value={editForm.content}
+                    onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                    className="input resize-y"
+                    placeholder="Chi tiết câu hỏi hoặc chủ đề thảo luận..."
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-surface-border">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="btn-secondary text-xs sm:text-sm"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editPostMutation.isPending}
+                    className="btn-primary text-xs sm:text-sm"
+                  >
+                    {editPostMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  </button>
+                </div>
+              </form>
+            </article>
+          ) : (
+            <article className="card p-6 sm:p-8 space-y-6">
+              {/* Top meta row */}
+              <div className="flex flex-wrap gap-3 items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge type={post.post_type} />
+                  <span className="text-slate-400 text-xs">·</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-xs">{stamp(post.created_at)}</span>
+                </div>
+
+                {/* FE-05: Owner/Admin actions */}
+                {canModify && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={startEdit}
+                      className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 rounded-xl hover:text-primary-600"
+                      aria-label="Sửa bài viết"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Sửa bài viết</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeletePost}
+                      disabled={deletePostMutation.isPending}
+                      className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                      aria-label="Xóa bài viết"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>{deletePostMutation.isPending ? 'Đang xóa...' : 'Xóa bài viết'}</span>
+                    </button>
+                  </div>
                 )}
               </div>
-            </div>
-            <div className="min-w-0 flex-1">
-              {post.author?.id ? (
-                <Link to={'/profile/' + post.author.id} className="font-bold text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors break-words text-sm sm:text-base">
-                  {post.author.full_name || 'Sinh viên'}
-                </Link>
-              ) : (
-                <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Sinh viên</span>
+
+              {/* Post Title (Heading hook for test) */}
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-snug break-words tracking-tight">
+                {post.title}
+              </h1>
+
+              {/* Author info header */}
+              <div className="flex items-center gap-3.5 py-4 border-y border-surface-border">
+                <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0">
+                  <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600">
+                    {post.author?.avatar_url ? (
+                      <img
+                        src={post.author.avatar_url}
+                        alt={post.author.full_name || 'Tác giả'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = 'none' }}
+                      />
+                    ) : (
+                      post.author?.full_name?.[0]?.toUpperCase() || 'S'
+                    )}
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  {post.author?.id ? (
+                    <Link to={'/profile/' + post.author.id} className="font-bold text-slate-900 dark:text-white hover:text-[#16a34a] dark:hover:text-[#22c55e] transition-colors break-words text-sm sm:text-base">
+                      {post.author.full_name || 'Sinh viên'}
+                    </Link>
+                  ) : (
+                    <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Sinh viên</span>
+                  )}
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {post.author?.university || post.author?.major || 'Tác giả bài viết'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Subject tag */}
+              {post.subject && (
+                <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#15803d] dark:text-[#4ade80] bg-[#dcfce7] dark:bg-[#14532d]/40 px-3 py-1.5 rounded-full border border-[#bbf7d0] dark:border-[#166534]">
+                  <BookOpen className="w-4 h-4 text-emerald-500" />
+                  <span>Môn học: {post.subject}</span>
+                </div>
               )}
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {post.author?.university || post.author?.major || 'Tác giả bài viết'}
-              </p>
-            </div>
-          </div>
 
-          {/* Subject tag */}
-          {post.subject && (
-            <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/40 px-3 py-1.5 rounded-full border border-primary-200/60 dark:border-primary-800/60">
-              <BookOpen className="w-4 h-4 text-primary-500" />
-              <span>Môn học: {post.subject}</span>
-            </div>
-          )}
+              {/* Content */}
+              <div className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
+                {post.content || <span className="text-slate-400 italic">Bài viết chưa có nội dung.</span>}
+              </div>
 
-          {/* Content */}
-          <div className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
-            {post.content || <span className="text-slate-400 italic">Bài viết chưa có nội dung.</span>}
-          </div>
+              {/* Tags */}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2" aria-label="Thẻ bài viết">
+                  {tags.map((tag, i) => (
+                    <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 bg-surface-muted px-3 py-1 rounded-full border border-surface-border" key={tag + i}>
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
 
-          {/* Tags */}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-2" aria-label="Thẻ bài viết">
-              {tags.map((tag, i) => (
-                <span className="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 bg-surface-muted px-3 py-1 rounded-full border border-surface-border" key={tag + i}>
-                  #{tag}
+              {/* Post Footer Interaction */}
+              <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <LikeButton targetType="post" targetId={post.id} />
+                  <BookmarkButton postId={post.id} />
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+                  <Eye className="w-4 h-4" />
+                  <span>{post.view_count ?? 0} lượt xem</span>
                 </span>
-              ))}
+              </div>
+            </article>
+          )}
+
+          {/* Comments Section */}
+          <Comments postId={post.id} />
+        </div>
+
+        {/* ── CỘT PHẢI: TÁC GIẢ & MÔN HỌC (GROVELYN BENTO SIDEBAR: 4 Cols) ── */}
+        <aside className="lg:col-span-4 space-y-5 sticky top-20">
+          {/* Author Bento Card */}
+          <div className="card p-5 space-y-4 bg-surface-card border border-surface-border rounded-[20px] shadow-xs">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-content-muted">Tác giả bài viết</div>
+            <div className="flex items-center gap-3.5">
+              <div className="w-13 h-13 rounded-full avatar-gradient-ring p-[2px] shrink-0">
+                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71]">
+                  {post.author?.avatar_url ? (
+                    <img
+                      src={post.author.avatar_url}
+                      alt={post.author.full_name || 'Tác giả'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  ) : (
+                    post.author?.full_name?.[0]?.toUpperCase() || 'U'
+                  )}
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <Link
+                  to={post.author?.id ? `/profile/${post.author.id}` : '#'}
+                  className="font-bold text-sm sm:text-base text-content hover:text-[#16a34a] dark:hover:text-[#22c55e] transition-colors block truncate"
+                >
+                  {post.author?.full_name || 'Sinh viên'}
+                </Link>
+                <p className="text-xs text-content-muted truncate">
+                  {post.author?.university || post.author?.major || 'Cộng đồng Mini Study'}
+                </p>
+              </div>
+            </div>
+
+            {/* Follow Button (if not self and authenticated) */}
+            {authenticated && post.author?.id && user?.id !== post.author?.id && (
+              <FollowButton authorId={post.author.id} />
+            )}
+
+            <div className="pt-2 border-t border-surface-border flex items-center justify-between text-xs text-content-muted">
+              <span>Hồ sơ học tập</span>
+              {post.author?.id ? (
+                <Link
+                  to={`/profile/${post.author.id}`}
+                  className="text-[#16a34a] dark:text-[#2ECC71] hover:underline font-bold inline-flex items-center gap-1"
+                >
+                  <span>Xem chi tiết</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Subject / Course Bento Card */}
+          {post.subject && (
+            <div className="card p-5 space-y-3 bg-surface-card border border-surface-border rounded-[20px] shadow-xs">
+              <div className="flex items-center gap-2 font-bold text-sm text-content">
+                <BookOpen className="w-4 h-4 text-[#16a34a] dark:text-[#2ECC71]" />
+                <span>Chủ đề môn học</span>
+              </div>
+              <p className="text-xs text-content-muted leading-relaxed">
+                Bài viết này thuộc môn <strong className="text-content font-bold">{post.subject}</strong>. Bạn có thể lọc bài viết theo môn này ngoài bảng tin để xem thêm.
+              </p>
+              <Link
+                to={`/?subject=${encodeURIComponent(post.subject)}`}
+                className="btn-secondary text-xs py-2 px-3.5 rounded-xl inline-flex items-center gap-1.5 w-full justify-center"
+              >
+                <span>Xem bài viết cùng môn học</span>
+              </Link>
             </div>
           )}
 
-          {/* Post Footer Interaction */}
-          <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <LikeButton targetType="post" targetId={post.id} />
-              <BookmarkButton postId={post.id} />
+          {/* Academic Integrity Rule Card */}
+          <div className="card p-5 space-y-3 bg-gradient-to-b from-surface-card to-surface-muted/40 border border-surface-border rounded-[20px] shadow-xs">
+            <div className="flex items-center gap-2 font-bold text-sm text-content">
+              <ShieldCheck className="w-4 h-4 text-[#16a34a] dark:text-[#2ECC71]" />
+              <span>Quy tắc thảo luận học thuật</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-              <Eye className="w-4 h-4" />
-              <span>{post.view_count ?? 0} lượt xem</span>
-            </span>
+            <ul className="text-xs text-content-muted space-y-2 list-disc pl-4 leading-relaxed">
+              <li>Tôn trọng người hỏi và người đóng góp câu trả lời.</li>
+              <li>Gợi ý hướng giải quyết thay vì giải bài hộ hoàn toàn.</li>
+              <li>Không chia sẻ tài liệu mật hoặc đề thi chưa được phép công bố.</li>
+            </ul>
           </div>
-        </article>
-      )}
-
-      {/* Comments Section */}
-      <Comments postId={post.id} />
+        </aside>
+      </div>
     </main>
   )
 }

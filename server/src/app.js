@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -25,7 +26,7 @@ app.use(cors({
 // ─── Rate Limiting ───────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  max: 100,
+  max: process.env.NODE_ENV === 'production' ? 100 : 10000,
   message: { success: false, message: 'Quá nhiều request, vui lòng thử lại sau.' },
 });
 app.use('/api/', limiter);
@@ -41,6 +42,12 @@ if (process.env.NODE_ENV !== 'test') {
 
 // ─── Static Files (uploads) ──────────────────────────────────────
 // No public static mount for protected PDFs (SEC-01).
+// Public post illustrations only (SEC-01 safe: images only, no PDFs).
+app.use('/uploads/post-images', express.static(path.join(__dirname, '../uploads/post-images'), {
+  dotfiles: 'ignore',
+  index: false,
+  maxAge: '1d',
+}));
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

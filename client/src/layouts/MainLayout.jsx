@@ -7,6 +7,7 @@ import SidebarDock from '@/components/layout/SidebarDock'
 import MobileBottomBar from '@/components/layout/MobileBottomBar'
 import NotificationDropdown from '@/components/layout/NotificationDropdown'
 import UserMenuDropdown from '@/components/layout/UserMenuDropdown'
+import BrandLogo from '@/components/common/BrandLogo'
 import {
   GraduationCap,
   Search,
@@ -103,20 +104,7 @@ export default function MainLayout() {
             className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
             title="Mini Study Network"
           >
-            <div className="w-10 h-10 rounded-2xl bg-primary-600 flex items-center justify-center text-white">
-              <GraduationCap className="w-5 h-5" />
-            </div>
-            <div className="hidden sm:block text-left">
-              <div className="font-extrabold text-base tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-1.5 leading-none">
-                <span>Mini Study</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300">
-                  Network
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-1">
-                Mạng học tập sinh viên
-              </p>
-            </div>
+            <BrandLogo size={38} showText={true} />
           </Link>
 
           {/* Center Global Search Pill (Visible on both mobile & desktop between logo & user icon) */}

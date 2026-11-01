@@ -10,10 +10,21 @@ export const authAPI = {
 
 export const postAPI = {
   getAll:   (params) => api.get('/posts', { params }),
+  getPosts: (params) => api.get('/posts', { params }),
   getById:  (id)     => api.get(`/posts/${id}`),
-  create:   (data)   => api.post('/posts', data),
+  getTrendingTopics: () => api.get('/posts/trending-topics'),
+  create:   (data)   => {
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      return api.post('/posts', data, { headers: { 'Content-Type': undefined } })
+    }
+    return api.post('/posts', data)
+  },
+  uploadImages: (postId, formData) => api.post(`/posts/${postId}/images`, formData, {
+    headers: { 'Content-Type': undefined }
+  }),
   update:   (id, data) => api.put(`/posts/${id}`, data),
   delete:   (id)     => api.delete(`/posts/${id}`),
+  deletePost: (id)   => api.delete(`/posts/${id}`),
 }
 
 export const commentAPI = {
@@ -34,6 +45,7 @@ export const orderAPI = {
 
 export const userAPI = {
   getProfile:      (id)   => api.get(`/users/${id}`),
+  getMyProfile:    (id)   => api.get(`/users/${id}`),
   updateProfile:   (data) => api.put('/users/profile', data),
   changePassword:  (data) => api.put('/users/change-password', data),
 }

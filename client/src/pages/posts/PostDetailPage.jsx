@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -58,10 +58,16 @@ const stamp = (value) => {
   })
 }
 
-function BookmarkButton({ postId }) {
+function BookmarkButton({ postId, initialBookmarked = false }) {
   const qc = useQueryClient()
   const authenticated = useAuthStore((state) => state.isAuthenticated)
-  const [bookmarked, setBookmarked] = useState(false)
+  const [bookmarked, setBookmarked] = useState(Boolean(initialBookmarked))
+
+  useEffect(() => {
+    if (typeof initialBookmarked === 'boolean') {
+      setBookmarked(initialBookmarked)
+    }
+  }, [initialBookmarked])
 
   const toggle = useMutation({
     mutationFn: () => (bookmarked ? bookmarkAPI.remove(postId) : bookmarkAPI.save(postId)),
@@ -69,6 +75,8 @@ function BookmarkButton({ postId }) {
       const isSaved = res.data.data.bookmarked
       setBookmarked(isSaved)
       qc.invalidateQueries({ queryKey: ['bookmarks'] })
+      qc.invalidateQueries({ queryKey: ['posts'] })
+      qc.invalidateQueries({ queryKey: ['post-detail', String(postId)] })
       toast.success(isSaved ? 'Đã lưu bài viết!' : 'Đã bỏ lưu bài viết.')
     },
     onError: (err) => {
@@ -83,7 +91,7 @@ function BookmarkButton({ postId }) {
       type="button"
       onClick={() => toggle.mutate()}
       disabled={toggle.isPending}
-      className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm flex items-center gap-2 rounded-xl transition-all ${
+      className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm flex items-center gap-2 rounded-xl transition-all cursor-pointer ${
         bookmarked
           ? 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40'
           : ''
@@ -100,14 +108,21 @@ function BookmarkButton({ postId }) {
   )
 }
 
-function LikeButton({ targetType, targetId }) {
+function LikeButton({ targetType, targetId, initialLiked = false, initialCount }) {
   const qc = useQueryClient()
-  const [liked, setLiked] = useState(null)
+  const [liked, setLiked] = useState(Boolean(initialLiked))
   const key = ['fe01-likes', targetType, targetId]
+
+  useEffect(() => {
+    if (typeof initialLiked === 'boolean') {
+      setLiked(initialLiked)
+    }
+  }, [initialLiked])
 
   const { data: count, isLoading, isError } = useQuery({
     queryKey: key,
     queryFn: async () => (await likeAPI.count(targetType, targetId)).data.data.count,
+    initialData: typeof initialCount === 'number' ? initialCount : undefined,
     enabled: Boolean(targetId),
     retry: false,
   })
@@ -115,32 +130,39 @@ function LikeButton({ targetType, targetId }) {
   const toggle = useMutation({
     mutationFn: () => likeAPI.toggle(targetType, targetId),
     onSuccess: (response) => {
-      setLiked(Boolean(response.data.liked))
+      const isNowLiked = Boolean(response.data.liked)
+      setLiked(isNowLiked)
       qc.invalidateQueries({ queryKey: key })
+      if (targetType === 'post') {
+        qc.invalidateQueries({ queryKey: ['posts'] })
+        qc.invalidateQueries({ queryKey: ['post-detail', String(targetId)] })
+        qc.invalidateQueries({ queryKey: ['post-like-count', targetId] })
+      }
     },
     onError: (error) => toast.error(error.response?.data?.message || 'Không thể cập nhật lượt thích.'),
   })
 
-  const label = liked === null ? 'Thích / Bỏ thích' : liked ? 'Đã thích' : 'Thích'
+  const label = liked ? 'Đã thích' : 'Thích'
   const item = targetType === 'post' ? 'bài viết' : 'bình luận'
 
   return (
     <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm">
       <button
         type="button"
-        className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 rounded-xl transition-all ${
+        className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 rounded-xl transition-all cursor-pointer ${
           liked
             ? 'text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40'
-            : 'text-slate-700 dark:text-slate-200'
+            : 'text-slate-700 dark:text-slate-200 hover:text-rose-600'
         }`}
-        aria-label={'Thích hoặc bỏ thích ' + item}
-        aria-pressed={liked === null ? 'mixed' : liked}
-        title={liked === null ? 'Chưa có dữ liệu về trạng thái thích ban đầu của tài khoản' : undefined}
+        aria-label={(liked ? 'Bỏ thích ' : 'Thích ') + item}
+        aria-pressed={liked}
         onClick={() => toggle.mutate()}
         disabled={toggle.isPending}
       >
         <Heart
-          className={`w-4 h-4 transition-transform ${liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400'}`}
+          className={`w-4 h-4 transition-transform active:scale-125 ${
+            liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400'
+          }`}
           aria-hidden="true"
         />
         <span className="font-semibold">{toggle.isPending ? 'Đang lưu...' : label}</span>
@@ -360,7 +382,7 @@ function Comments({ postId }) {
   })
 
   const create = useMutation({
-    mutationFn: ({ content, parent_id }) => commentAPI.create(postId, { content, parent_id }),
+    mutationFn: ({ content, parent_id }) => commentAPI.create({ post_id: postId, content, parent_id }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key })
       toast.success('Bình luận đã được gửi.')
@@ -437,7 +459,7 @@ function Comments({ postId }) {
           <p className="text-xs">Chưa có bình luận nào. Hãy là người đầu tiên trao đổi!</p>
         </div>
       ) : (
-        <ul className="space-y-4 pt-2">
+        <ul className="space-y-4 pt-2" aria-label="Danh sách bình luận">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}
@@ -761,7 +783,9 @@ export default function PostDetailPage() {
                     <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Sinh viên</span>
                   )}
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {post.author?.university || post.author?.major || 'Tác giả bài viết'}
+                    {post.author?.university && post.author?.major
+                      ? `${post.author.university} · ${post.author.major}`
+                      : post.author?.university || post.author?.major || 'Tác giả bài viết'}
                   </p>
                 </div>
               </div>
@@ -793,8 +817,8 @@ export default function PostDetailPage() {
               {/* Post Footer Interaction */}
               <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <LikeButton targetType="post" targetId={post.id} />
-                  <BookmarkButton postId={post.id} />
+                  <LikeButton targetType="post" targetId={post.id} initialLiked={post.is_liked} initialCount={post.like_count} />
+                  <BookmarkButton postId={post.id} initialBookmarked={post.is_bookmarked} />
                 </div>
                 <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-medium">
                   <Eye className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { postAPI, followAPI } from '@/services/api'
@@ -88,15 +88,62 @@ export default function HomePage() {
     staleTime: 60000,
   })
 
-  // Dynamic counts for Level 2 filter pills
+  // Persistent category counts cache so tab switching never resets other pills to 0
+  const cachedCountsRef = useRef({ all: 0, document: 0, question: 0, discussion: 0 });
+
+  // Global category counts query so pills remain stable across tab switches
+  const { data: allCategoryData } = useQuery({
+    queryKey: ['posts-category-counts', searchKeyword, selectedSubject, isAuthenticated],
+    queryFn: async () => {
+      const params = { page: 1, limit: 100 };
+      if (searchKeyword) params.search = searchKeyword;
+      if (selectedSubject) params.subject = selectedSubject;
+      if (!isAuthenticated) params.type = 'document';
+      return (await postAPI.getAll(params)).data;
+    },
+    staleTime: 60000,
+    keepPreviousData: true,
+  });
+
+  // Query real trending topics from DB
+  const { data: trendingData } = useQuery({
+    queryKey: ['trending-topics'],
+    queryFn: async () => {
+      try {
+        const res = await postAPI.getTrendingTopics();
+        return res.data?.data || [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 60000,
+  });
+
+  const trendingTopics = Array.isArray(trendingData) && trendingData.length > 0 ? trendingData : [];
+
+  // Dynamic counts for Level 2 filter pills (preserves counts across tab switches)
   const counts = useMemo(() => {
+    const list = allCategoryData?.data || (effectiveType === '' ? posts : null);
+    if (list && list.length > 0) {
+      const newCounts = {
+        all: allCategoryData?.pagination?.total ?? list.length,
+        document: list.filter((p) => p.post_type === 'document').length,
+        question: list.filter((p) => p.post_type === 'question').length,
+        discussion: list.filter((p) => p.post_type === 'discussion').length,
+      };
+      cachedCountsRef.current = newCounts;
+      return newCounts;
+    }
+    if (cachedCountsRef.current.all > 0) {
+      return cachedCountsRef.current;
+    }
     return {
       all: posts.length,
       document: posts.filter((p) => p.post_type === 'document').length,
       question: posts.filter((p) => p.post_type === 'question').length,
       discussion: posts.filter((p) => p.post_type === 'discussion').length,
-    }
-  }, [posts])
+    };
+  }, [allCategoryData, posts, effectiveType]);
 
   // Processed posts with stream filtering and sorting
   const displayPosts = useMemo(() => {
@@ -248,13 +295,13 @@ export default function HomePage() {
         <div className="space-y-2 pt-0.5">
           {/* ── TẦNG 1: FEED STREAM TABS & SẮP XẾP (GROVELYN COMMUNITY FEED STYLE) ── */}
           <div className="flex items-center justify-between border-b border-[#E2E7DE] dark:border-[#3E4042] pb-0">
-            <div role="tablist" aria-label="Bảng tin" className="flex min-w-0 gap-5 sm:gap-7 overflow-x-auto [scrollbar-width:none]">
+            <div role="tablist" aria-label="Bảng tin" className="flex min-w-0 gap-3 sm:gap-7 overflow-x-auto [scrollbar-width:none] flex-1 mr-2">
               <button
                 type="button"
                 role="tab"
                 aria-selected={streamTab === 'for-you'}
                 onClick={() => setStreamTab('for-you')}
-                className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-[15px] sm:text-[16px] font-bold transition-all cursor-pointer ${
+                className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                   streamTab === 'for-you'
                     ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
                     : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
@@ -270,7 +317,7 @@ export default function HomePage() {
                     role="tab"
                     aria-selected={streamTab === 'following'}
                     onClick={() => setStreamTab('following')}
-                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-[15px] sm:text-[16px] font-bold transition-all cursor-pointer ${
+                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                       streamTab === 'following'
                         ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
                         : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
@@ -284,7 +331,7 @@ export default function HomePage() {
                     role="tab"
                     aria-selected={streamTab === 'groups'}
                     onClick={() => setStreamTab('groups')}
-                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-[15px] sm:text-[16px] font-bold transition-all cursor-pointer ${
+                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                       streamTab === 'groups'
                         ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
                         : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
@@ -563,30 +610,31 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-2.5">
-            {[
-              { topic: 'Đồ án tốt nghiệp', count: 5, query: 'Đồ án tốt nghiệp' },
-              { topic: 'Kiến trúc', count: 5, query: 'Kiến trúc máy tính' },
-              { topic: 'Công nghệ thông tin', count: 4, query: 'Công nghệ phần mềm' },
-              { topic: 'Kỹ thuật phần mềm', count: 3, query: 'Kỹ thuật phần mềm' },
-            ].map((item) => (
-              <div
-                key={item.topic}
-                onClick={() => handleSubjectChange(item.query)}
-                className="flex items-center gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-[#F2F4EF] dark:hover:bg-[#171717] transition-colors cursor-pointer group"
-              >
-                <div className="w-9 h-9 rounded-xl bg-[#EAF5EC] dark:bg-[#163D29] text-[#16a34a] dark:text-[#2ECC71] flex items-center justify-center font-bold text-sm shrink-0 border border-[#bbf7d0]/40 dark:border-[#3E4042]">
-                  #
+            {trendingTopics.length === 0 ? (
+              <p className="text-xs text-[#56614f] dark:text-[#B0B3B8] py-2 text-center">
+                Chưa có chủ đề nổi bật nào.
+              </p>
+            ) : (
+              trendingTopics.map((item) => (
+                <div
+                  key={item.topic}
+                  onClick={() => handleSubjectChange(item.query)}
+                  className="flex items-center gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-[#F2F4EF] dark:hover:bg-[#171717] transition-colors cursor-pointer group"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#EAF5EC] dark:bg-[#163D29] text-[#16a34a] dark:text-[#2ECC71] flex items-center justify-center font-bold text-sm shrink-0 border border-[#bbf7d0]/40 dark:border-[#3E4042]">
+                    #
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-bold text-[#06110a] dark:text-white group-hover:underline truncate">
+                      {item.topic}
+                    </p>
+                    <p className="text-xs text-[#56614f] dark:text-[#B0B3B8]">
+                      {item.count} bài viết
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-bold text-[#06110a] dark:text-white group-hover:underline truncate">
-                    {item.topic}
-                  </p>
-                  <p className="text-xs text-[#56614f] dark:text-[#B0B3B8]">
-                    {item.count} bài và bình luận
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -648,7 +696,7 @@ export default function HomePage() {
             <span>Mạng xã hội học tập</span>
           </div>
           <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] leading-relaxed">
-            Hơn <strong className="text-[#06110a] dark:text-white font-bold">1,200+</strong> tài liệu PDF ôn thi và đồ án môn học được sinh viên đóng góp và tải về hoàn toàn miễn phí.
+            Hơn <strong className="text-[#06110a] dark:text-white font-bold">{counts.document || 0}</strong> tài liệu PDF ôn thi và đồ án môn học được sinh viên đóng góp và tải về hoàn toàn miễn phí.
           </p>
         </div>
       </aside>

@@ -5,7 +5,7 @@
 const { createError } = require('../middlewares/error.middleware');
 
 const CREATE_FIELDS = new Set([
-  'title', 'content', 'post_type', 'subject', 'tags', 'price',
+  'title', 'content', 'post_type', 'subject', 'tags', 'price', 'images',
 ]);
 const EDIT_FIELDS = new Set(['title', 'content', 'subject', 'tags', 'status']);
 const MAX_CONTENT = 10000;
@@ -34,7 +34,15 @@ function optionalText(value, field, max) {
   return result || null;
 }
 function tags(value) {
-  if (value === null) return null;
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) value = parsed;
+    } catch {
+      value = value.split(',').map(t => t.trim()).filter(Boolean);
+    }
+  }
   if (!Array.isArray(value) || value.length > MAX_TAGS ||
       value.some(tag => typeof tag !== 'string' ||
         !tag.trim() || tag.trim().length > MAX_TAG)) {

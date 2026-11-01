@@ -20,6 +20,7 @@ import {
   Sparkles,
   FileCheck,
   X,
+  Image as ImageIcon,
 } from 'lucide-react'
 import Badge from '@/components/common/Badge'
 
@@ -53,6 +54,8 @@ export default function CreatePostPage() {
 
   const [loading, setLoading] = useState(false)
   const [pdfFile, setPdfFile] = useState(null)
+  const [imageFiles, setImageFiles] = useState([])
+  const [previewImages, setPreviewImages] = useState([])
   const [dragActive, setDragActive] = useState(false)
   const [form, setForm] = useState({
     title: '',
@@ -116,6 +119,15 @@ export default function CreatePostPage() {
         multipart.append('tags', JSON.stringify(tags))
         multipart.append('file', pdfFile)
         response = await documentAPI.upload(multipart)
+      } else if (imageFiles.length > 0) {
+        const multipart = new FormData()
+        multipart.append('title', form.title.trim())
+        multipart.append('content', form.content)
+        multipart.append('post_type', form.post_type)
+        if (form.subject) multipart.append('subject', form.subject)
+        multipart.append('tags', JSON.stringify(tags))
+        imageFiles.forEach((file) => multipart.append('images', file))
+        response = await postAPI.create(multipart)
       } else {
         response = await postAPI.create({
           title: form.title.trim(),
@@ -366,6 +378,65 @@ export default function CreatePostPage() {
               </div>
             )}
 
+            {/* Image Attachment Box (For Question & Discussion Type - UI Ready Preview) */}
+            {form.post_type !== 'document' && (
+              <div className="space-y-3 p-4 bg-surface-muted/40 rounded-2xl border border-dashed border-surface-border">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-sky-500" />
+                    <span>Hình ảnh đính kèm (Tối đa 4 ảnh)</span>
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-card border border-surface-border hover:bg-surface-muted text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer shadow-2xs transition-colors">
+                    <Upload className="w-3.5 h-3.5 text-sky-500" />
+                    <span>Chọn ảnh minh họa</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        const raw = Array.from(e.target.files || [])
+                        const valid = raw.filter((f) => {
+                          if (f.size > 5 * 1024 * 1024) {
+                            toast.error(`Ảnh ${f.name} vượt quá 5 MB.`)
+                            return false
+                          }
+                          return true
+                        }).slice(0, 4)
+                        setImageFiles(valid)
+                        const urls = valid.map((f) => URL.createObjectURL(f))
+                        setPreviewImages(urls)
+                      }}
+                    />
+                  </label>
+                  <span className="text-[11px] text-slate-400">Hỗ trợ PNG, JPG, WebP (Tối đa 5 MB/ảnh)</span>
+                </div>
+
+                {previewImages.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 pt-1">
+                    {previewImages.map((src, i) => (
+                      <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-surface-border bg-black/5">
+                        <img src={src} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImageFiles((prev) => prev.filter((_, idx) => idx !== i))
+                            setPreviewImages((prev) => prev.filter((_, idx) => idx !== i))
+                          }}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center text-[10px] cursor-pointer"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Tags */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -495,6 +566,16 @@ export default function CreatePostPage() {
                     <span className="truncate">{pdfFile ? pdfFile.name : 'Chưa đính kèm file PDF'}</span>
                   </div>
                   <span className="badge-free text-[10px]">Miễn phí</span>
+                </div>
+              )}
+
+              {previewImages.length > 0 && (
+                <div className="grid grid-cols-2 gap-1.5 rounded-xl overflow-hidden border border-surface-border">
+                  {previewImages.map((img, i) => (
+                    <div key={i} className="relative aspect-video bg-surface-muted overflow-hidden">
+                      <img src={img} alt="Live Preview" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
                 </div>
               )}
 

@@ -9,6 +9,7 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { useThemeStore } from '@/stores/themeStore'
+import BrandLogo from '@/components/common/BrandLogo'
 
 export default function AuthLayout() {
   const { theme, toggleTheme } = useThemeStore()
@@ -20,14 +21,7 @@ export default function AuthLayout() {
         {/* Top Brand & Back to feed */}
         <div className="flex items-center justify-between relative z-10">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-[#16a34a] flex items-center justify-center text-white">
-              <GraduationCap className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-extrabold text-white text-lg tracking-tight block">
-                Mini Study Network
-              </span>
-            </div>
+            <BrandLogo size={42} showText={true} textClassName="[&_span]:text-white [&_p]:text-neutral-400" />
           </Link>
 
           <Link

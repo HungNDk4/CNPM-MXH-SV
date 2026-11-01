@@ -150,7 +150,7 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
 
             {/* Bài đăng và hoạt động */}
             <Link
-              to="/settings?tab=posts"
+              to="/my-posts"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-content hover:bg-surface-muted transition-colors font-medium"
             >

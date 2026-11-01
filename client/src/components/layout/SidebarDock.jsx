@@ -28,47 +28,8 @@ export default function SidebarDock({ isAuthenticated, user }) {
       className="hidden md:flex flex-col justify-between w-24 py-4 items-center h-[calc(100vh-4rem)] sticky top-16 bg-[#F2F4EF] dark:bg-[#18191A] border-r border-[#E2E7DE] dark:border-[#3E4042] transition-colors duration-200 select-none z-30"
       aria-label="Thanh điều hướng nhanh"
     >
-      {/* Top Section: Avatar Profile Button & Main Nav Icons */}
+      {/* Top Section: Main Nav Icons */}
       <div className="flex flex-col items-center gap-2 w-full px-2">
-        {/* User Profile Avatar Button (Grovelyn Image 1 Style - Top of Dock) */}
-        <div className="flex flex-col items-center w-full pb-2 mb-1 border-b border-[#E2E7DE] dark:border-[#3E4042]">
-          {isAuthenticated ? (
-            <Link
-              to={`/profile/${user?.id || ''}`}
-              className={`group relative flex items-center justify-center w-12 h-12 rounded-full transition-transform active:scale-95 ${
-                isCurrent('/profile')
-                  ? 'ring-2 ring-[#16a34a] dark:ring-[#2ECC71] ring-offset-2 ring-offset-[#F2F4EF] dark:ring-offset-[#18191A]'
-                  : 'hover:ring-2 hover:ring-[#16a34a]/40 dark:hover:ring-[#2ECC71]/40 ring-offset-2 ring-offset-[#F2F4EF] dark:ring-offset-[#18191A]'
-              }`}
-              title="Hồ sơ cá nhân"
-              aria-label="Hồ sơ cá nhân"
-            >
-              {user?.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt={user.full_name || 'Hồ sơ'}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full rounded-full bg-[#16a34a] dark:bg-[#2ECC71] text-white dark:text-[#18191A] font-bold text-sm flex items-center justify-center shadow-2xs">
-                  {user?.full_name?.[0]?.toUpperCase() || 'U'}
-                </div>
-              )}
-              {/* Online indicator badge */}
-              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#5bd13a] dark:bg-[#2ECC71] border-2 border-[#F2F4EF] dark:border-[#18191A]" />
-            </Link>
-          ) : (
-            <Link
-              to="/login"
-              className="flex items-center justify-center w-12 h-12 rounded-full border border-dashed border-[#56614f]/40 dark:border-[#3E4042] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#16a34a] dark:hover:text-[#2ECC71] hover:border-[#16a34a] transition-colors"
-              title="Hồ sơ cá nhân (Đăng nhập)"
-              aria-label="Hồ sơ cá nhân"
-            >
-              <User className="w-5 h-5" />
-            </Link>
-          )}
-        </div>
-
         {NAV_ITEMS.map((item) => {
           const active = isCurrent(item.to, item.exact)
           const Icon = item.icon
@@ -107,6 +68,43 @@ export default function SidebarDock({ isAuthenticated, user }) {
           >
             <Shield className={`w-5 h-5 shrink-0 ${isCurrent('/admin/audit-logs') ? 'text-[#5bd13a] dark:text-[#2ECC71] stroke-[2.5]' : 'text-amber-500'}`} />
             <span className="text-[11px] leading-tight font-semibold tracking-tight">Quản trị</span>
+          </Link>
+        )}
+      </div>
+
+      {/* Bottom Section: User Profile Avatar Button (Positioned at bottom of dock) */}
+      <div className="flex flex-col items-center w-full px-2 pt-2 border-t border-[#E2E7DE] dark:border-[#3E4042]">
+        {isAuthenticated ? (
+          <Link
+            to={`/profile/${user?.id || ''}`}
+            className={`group relative flex items-center justify-center w-12 h-12 rounded-full transition-transform active:scale-95 ${
+              isCurrent('/profile')
+                ? 'ring-2 ring-[#16a34a] dark:ring-[#2ECC71] ring-offset-2 ring-offset-[#F2F4EF] dark:ring-offset-[#18191A]'
+                : 'hover:ring-2 hover:ring-[#16a34a]/40 dark:hover:ring-[#2ECC71]/40 ring-offset-2 ring-offset-[#F2F4EF] dark:ring-offset-[#18191A]'
+            }`}
+            title="Hồ sơ cá nhân"
+            aria-label="Hồ sơ cá nhân"
+          >
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt={user.full_name || 'Hồ sơ'}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full rounded-full bg-[#16a34a] dark:bg-[#2ECC71] text-white dark:text-[#18191A] font-bold text-sm flex items-center justify-center shadow-2xs">
+                {user?.full_name?.[0]?.toUpperCase() || 'U'}
+              </div>
+            )}
+          </Link>
+        ) : (
+          <Link
+            to="/login"
+            className="flex items-center justify-center w-12 h-12 rounded-full border border-dashed border-[#56614f]/40 dark:border-[#3E4042] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#16a34a] dark:hover:text-[#2ECC71] hover:border-[#16a34a] transition-colors"
+            title="Hồ sơ cá nhân (Đăng nhập)"
+            aria-label="Hồ sơ cá nhân"
+          >
+            <User className="w-5 h-5" />
           </Link>
         )}
       </div>

@@ -12,6 +12,7 @@ const getInitialTheme = () => {
 
 export const useThemeStore = create((set, get) => ({
   theme: getInitialTheme(),
+  isDark: getInitialTheme() === 'dark',
   initTheme: () => {
     const current = get().theme
     if (current === 'dark') {
@@ -19,6 +20,7 @@ export const useThemeStore = create((set, get) => ({
     } else {
       document.documentElement.classList.remove('dark')
     }
+    set({ isDark: current === 'dark' })
   },
   toggleTheme: () => {
     const next = get().theme === 'dark' ? 'light' : 'dark'
@@ -32,7 +34,7 @@ export const useThemeStore = create((set, get) => ({
     } else {
       document.documentElement.classList.remove('dark')
     }
-    set({ theme: next })
+    set({ theme: next, isDark: next === 'dark' })
   },
   setTheme: (theme) => {
     if (theme !== 'dark' && theme !== 'light') return
@@ -46,6 +48,6 @@ export const useThemeStore = create((set, get) => ({
     } else {
       document.documentElement.classList.remove('dark')
     }
-    set({ theme })
+    set({ theme, isDark: theme === 'dark' })
   },
 }))

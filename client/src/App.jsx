@@ -12,6 +12,7 @@ import RegisterPage from '@/pages/auth/RegisterPage'
 import PostDetailPage from '@/pages/posts/PostDetailPage'
 import DocumentDetailPage from '@/pages/documents/DocumentDetailPage'
 import CreatePostPage from '@/pages/posts/CreatePostPage'
+import MyPostsPage from '@/pages/posts/MyPostsPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
 import BookmarksPage from '@/pages/bookmarks/BookmarksPage'
 import NotificationsPage from '@/pages/notifications/NotificationsPage'
@@ -55,6 +56,12 @@ export default function App() {
         {/* Protected */}
         <Route path="/posts/create" element={
           <ProtectedRoute><CreatePostPage /></ProtectedRoute>
+        } />
+        <Route path="/my-posts" element={
+          <ProtectedRoute><MyPostsPage /></ProtectedRoute>
+        } />
+        <Route path="/posts/manage" element={
+          <Navigate to="/my-posts" replace />
         } />
         <Route path="/bookmarks" element={
           <ProtectedRoute><BookmarksPage /></ProtectedRoute>

@@ -3,6 +3,7 @@ const Post          = require('./Post');
 const Comment       = require('./Comment');
 const Order         = require('./Order');
 const DocumentFile  = require('./DocumentFile');
+const PostImage     = require('./PostImage');
 const Bookmark      = require('./Bookmark');
 const Follow        = require('./Follow');
 const ModerationAuditLog = require('./ModerationAuditLog');
@@ -51,6 +52,10 @@ const DocumentAccess = sequelize.define('DocumentAccess', {
 Post.hasOne(DocumentFile, { foreignKey: 'post_id', as: 'privateFile' });
 DocumentFile.belongsTo(Post, { foreignKey: 'post_id', as: 'post' });
 
+// PostImage: public illustrations (max 4 per post)
+Post.hasMany(PostImage, { foreignKey: 'post_id', as: 'images' });
+PostImage.belongsTo(Post, { foreignKey: 'post_id', as: 'post' });
+
 // ── RefreshToken model ───────────────────────────────────────────
 const RefreshToken = sequelize.define('RefreshToken', {
   id:         { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
@@ -95,4 +100,4 @@ DocumentAccess.belongsTo(Order, { foreignKey: 'order_id' });
 User.hasMany(RefreshToken, { foreignKey: 'user_id' });
 RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 
-module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile, Bookmark, Follow, ModerationAuditLog, Notification };
+module.exports = { sequelize, User, Post, Comment, Like, Order, DocumentAccess, RefreshToken, DocumentFile, PostImage, Bookmark, Follow, ModerationAuditLog, Notification };

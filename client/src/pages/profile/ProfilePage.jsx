@@ -170,15 +170,15 @@ export default function ProfilePage() {
     enabled: validId && Boolean(currentUser),
   })
 
-  // Query User's Posts from API (If guest, request type: 'document' per ADR-002 / ADR-011)
+  // Query User's Posts from API (Optimized with server-side author_id filter)
   const { data: userPostsData, isLoading: isLoadingPosts } = useQuery({
     queryKey: ['profile-posts', id, Boolean(currentUser)],
     queryFn: async () => {
-      const params = { limit: 50 }
+      const params = { limit: 50, author_id: id }
       if (!currentUser) params.type = 'document'
       const res = await postAPI.getAll(params)
       const list = res?.data?.data || []
-      return { data: list.filter((p) => Number(p.user_id) === Number(id) || Number(p.author?.id) === Number(id)) }
+      return { data: list }
     },
     enabled: validId,
     retry: 1,

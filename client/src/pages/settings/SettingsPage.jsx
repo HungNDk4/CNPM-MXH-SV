@@ -2,23 +2,19 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { userAPI, authAPI, postAPI } from '@/services/api'
+import { userAPI, authAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import {
   User,
   ShieldCheck,
-  FileEdit,
   HelpCircle,
   Lock,
   ChevronDown,
   ChevronUp,
   Check,
-  Sparkles,
   ExternalLink,
-  Trash2,
   Send,
-  Eye,
   Sun,
   Moon,
   Globe,
@@ -93,7 +89,7 @@ const PRESET_AVATARS = [
   {
     id: 'human-hacker',
     name: 'Chuyên gia IT',
-    url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jack&clothingGraphic=react',
+    url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jack&',
   },
   {
     id: 'human-scholar',
@@ -106,15 +102,24 @@ export default function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'account'
   const { user, setUser } = useAuthStore()
-  const { isDark, toggleTheme } = useThemeStore()
+  const { theme, isDark, toggleTheme } = useThemeStore()
+  const activeIsDark = theme ? theme === 'dark' : Boolean(isDark)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
-  // Profile data fetch
+  // Redirect old ?tab=posts to dedicated /my-posts page
+  useEffect(() => {
+    if (searchParams.get('tab') === 'posts') {
+      navigate('/my-posts', { replace: true })
+    }
+  }, [searchParams, navigate])
+
+  // Profile data fetch using real user profile API
   const { data: profileData, isLoading: isProfileLoading } = useQuery({
     queryKey: ['my-profile', user?.id],
     queryFn: async () => {
-      const res = await userAPI.getMyProfile()
+      if (!user?.id) return null
+      const res = await userAPI.getProfile(user.id)
       return res.data?.data || res.data
     },
     enabled: !!user?.id,
@@ -243,28 +248,6 @@ export default function SettingsPage() {
     })
   }
 
-  // Posts management query
-  const { data: myPostsData, isLoading: isPostsLoading } = useQuery({
-    queryKey: ['my-posts-management', user?.id],
-    queryFn: async () => {
-      const res = await postAPI.getPosts({ author_id: user?.id, limit: 30 })
-      return res.data?.data?.posts || res.data?.posts || []
-    },
-    enabled: activeTab === 'posts' && !!user?.id,
-  })
-
-  const deletePostMutation = useMutation({
-    mutationFn: (id) => postAPI.deletePost(id),
-    onSuccess: () => {
-      toast.success('Đã xóa bài viết!')
-      queryClient.invalidateQueries({ queryKey: ['my-posts-management'] })
-      queryClient.invalidateQueries({ queryKey: ['posts'] })
-    },
-    onError: (err) => {
-      toast.error(err.response?.data?.message || 'Xóa bài viết thất bại!')
-    },
-  })
-
   // FAQ accordion state
   const [expandedFaq, setExpandedFaq] = useState(null)
   const [feedbackText, setFeedbackText] = useState('')
@@ -283,7 +266,6 @@ export default function SettingsPage() {
   const navItems = [
     { id: 'account', label: 'Tài khoản', icon: User, desc: 'Ảnh đại diện, ảnh bìa, thông tin & giao diện' },
     { id: 'security', label: 'Mật khẩu & bảo mật', icon: ShieldCheck, desc: 'Đổi mật khẩu và an toàn tài khoản' },
-    { id: 'posts', label: 'Bài đăng & hoạt động', icon: FileEdit, desc: 'Quản lý, chỉnh sửa hoặc gỡ bài viết' },
     { id: 'help', label: 'Trợ giúp & phản hồi', icon: HelpCircle, desc: 'Giải đáp thắc mắc và góp ý' },
   ]
 
@@ -645,40 +627,39 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="mt-5 space-y-5">
-                  {/* Theme Switcher */}
+                  {/* Theme Switcher - Sleek Sliding Toggle */}
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-sm font-bold text-slate-800 dark:text-[#E4E6EB]">Chế độ giao diện</h4>
-                      <p className="text-xs text-slate-500 dark:text-[#B0B3B8]">Chuyển đổi giữa giao diện Sáng và Tối (Facebook Dark Mode)</p>
+                      <p className="text-xs text-slate-500 dark:text-[#B0B3B8]">
+                        {activeIsDark ? 'Đang bật Giao diện Tối Charcoal' : 'Đang bật Giao diện Sáng học thuật'}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-[#303132] p-1 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold text-slate-700 dark:text-[#E4E6EB]">
+                        {activeIsDark ? 'Tối' : 'Sáng'}
+                      </span>
                       <button
                         type="button"
-                        onClick={() => {
-                          if (isDark) toggleTheme()
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          !isDark
-                            ? 'bg-white text-slate-900 shadow-xs'
-                            : 'text-slate-500 dark:text-[#B0B3B8] hover:text-slate-900 dark:hover:text-[#E4E6EB]'
+                        role="switch"
+                        aria-checked={activeIsDark}
+                        onClick={toggleTheme}
+                        className={`relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full p-1 transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#16a34a] shadow-inner select-none ${
+                          activeIsDark ? 'bg-[#16a34a] dark:bg-[#22c55e]' : 'bg-slate-300 dark:bg-[#3E4042]'
                         }`}
+                        aria-label="Chuyển đổi giao diện Sáng / Tối"
                       >
-                        <Sun className="w-3.5 h-3.5 text-amber-500" />
-                        Sáng
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!isDark) toggleTheme()
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          isDark
-                            ? 'bg-[#242526] text-[#2ECC71] shadow-xs'
-                            : 'text-slate-500 dark:text-[#B0B3B8] hover:text-slate-900 dark:hover:text-[#E4E6EB]'
-                        }`}
-                      >
-                        <Moon className="w-3.5 h-3.5 text-[#2ECC71]" />
-                        Tối
+                        <span
+                          className={`pointer-events-none inline-flex h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ease-in-out items-center justify-center ${
+                            activeIsDark ? 'translate-x-6 text-[#16a34a]' : 'translate-x-0 text-amber-500'
+                          }`}
+                        >
+                          {activeIsDark ? (
+                            <Moon className="w-3.5 h-3.5 fill-[#16a34a] text-[#16a34a]" />
+                          ) : (
+                            <Sun className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                          )}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -776,85 +757,6 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </form>
-            </div>
-          )}
-
-          {/* TAB 3: BÀI ĐĂNG & HOẠT ĐỘNG */}
-          {activeTab === 'posts' && (
-            <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200 dark:border-[#3E4042] p-6 shadow-sm">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#3E4042]">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Bài đăng & hoạt động</h2>
-                  <p className="text-xs text-slate-500 dark:text-[#B0B3B8] mt-0.5">
-                    Xem danh sách các bài đã đăng, mở xem chi tiết hoặc xóa bài viết.
-                  </p>
-                </div>
-                <Link
-                  to="/create"
-                  className="px-3.5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Đăng bài mới
-                </Link>
-              </div>
-
-              <div className="mt-6">
-                {isPostsLoading ? (
-                  <div className="py-12 text-center text-slate-400 dark:text-[#B0B3B8] text-sm">Đang tải danh sách bài đăng...</div>
-                ) : !myPostsData || myPostsData.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <FileEdit className="w-10 h-10 text-slate-300 dark:text-[#B0B3B8]/40 mx-auto mb-2" />
-                    <p className="text-slate-600 dark:text-[#B0B3B8] font-medium text-sm">Bạn chưa có bài đăng nào.</p>
-                    <Link to="/create" className="text-xs text-primary-600 dark:text-[#2ECC71] hover:underline font-semibold mt-1 inline-block">
-                      Tạo bài viết đầu tiên ngay
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-slate-100 dark:divide-[#3E4042]">
-                    {myPostsData.map((p) => (
-                      <div key={p.id} className="py-4 flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <Link
-                            to={`/posts/${p.id}`}
-                            className="text-sm font-bold text-slate-900 dark:text-[#E4E6EB] hover:text-primary-600 dark:hover:text-[#2ECC71] line-clamp-1 transition-colors"
-                          >
-                            {p.title}
-                          </Link>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 dark:text-[#B0B3B8]">
-                            <span>{new Date(p.created_at).toLocaleDateString('vi-VN')}</span>
-                            <span>•</span>
-                            <span>{p.likes_count || 0} thích</span>
-                            <span>•</span>
-                            <span>{p.comments_count || 0} bình luận</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Link
-                            to={`/posts/${p.id}`}
-                            className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-[#B0B3B8] dark:hover:text-[#E4E6EB] hover:bg-slate-100 dark:hover:bg-[#303132] transition-colors"
-                            title="Xem bài"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) {
-                                deletePostMutation.mutate(p.id)
-                              }
-                            }}
-                            className="p-2 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                            title="Xóa bài"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           )}
 

@@ -360,7 +360,7 @@ function Comments({ postId }) {
   })
 
   const create = useMutation({
-    mutationFn: ({ content, parent_id }) => commentAPI.create(postId, { content, parent_id }),
+    mutationFn: ({ content, parent_id }) => commentAPI.create({ post_id: postId, content, parent_id }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key })
       toast.success('Bình luận đã được gửi.')

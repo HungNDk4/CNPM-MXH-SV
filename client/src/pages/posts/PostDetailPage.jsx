@@ -437,7 +437,7 @@ function Comments({ postId }) {
           <p className="text-xs">Chưa có bình luận nào. Hãy là người đầu tiên trao đổi!</p>
         </div>
       ) : (
-        <ul className="space-y-4 pt-2">
+        <ul className="space-y-4 pt-2" aria-label="Danh sách bình luận">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}

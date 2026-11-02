@@ -17,6 +17,7 @@ import BookmarksPage from '@/pages/bookmarks/BookmarksPage'
 import NotificationsPage from '@/pages/notifications/NotificationsPage'
 import SettingsPage from '@/pages/settings/SettingsPage'
 import AdminAuditPage from '@/pages/admin/AdminAuditPage'
+import AdminContentPage from '@/pages/admin/AdminContentPage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
@@ -70,6 +71,9 @@ export default function App() {
         } />
         <Route path="/admin" element={
           <Navigate to="/admin/audit-logs" replace />
+        } />
+        <Route path="/admin/content" element={
+          <AdminRoute><AdminContentPage /></AdminRoute>
         } />
         <Route path="/admin/audit-logs" element={
           <AdminRoute><AdminAuditPage /></AdminRoute>

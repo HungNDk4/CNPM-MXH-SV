@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { userAPI, authAPI, postAPI } from '@/services/api'
+import { userAPI, postAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import {
@@ -31,11 +31,11 @@ import {
 const FAQ_ITEMS = [
   {
     q: 'Mỗi người được lưu bao nhiêu dung lượng?',
-    a: 'Mỗi tài khoản có 100 MB cho tệp tài liệu và đồ án PDF. Ảnh bìa và ảnh đại diện không tính vào dung lượng này.',
+    a: 'Mỗi lần upload một tệp PDF tối đa 10 MiB. Hệ thống chưa công bố hạn mức tổng dung lượng theo tài khoản.',
   },
   {
     q: 'Dự án và tài liệu riêng tư thì ai xem được?',
-    a: 'Chỉ có bạn và những thành viên được cấp quyền mới có thể xem. Tài liệu công khai sẽ xuất hiện trên bảng tin học tập cộng đồng.',
+    a: 'Người chưa đăng nhập có thể xem metadata tài liệu miễn phí; việc tải PDF yêu cầu đăng nhập. Bài hỏi đáp và thảo luận dành cho thành viên.',
   },
   {
     q: 'Làm sao mời bạn bè tham gia?',
@@ -105,7 +105,7 @@ const PRESET_AVATARS = [
 export default function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'account'
-  const { user, setUser } = useAuthStore()
+  const { user, updateUser } = useAuthStore()
   const { isDark, toggleTheme } = useThemeStore()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -114,7 +114,7 @@ export default function SettingsPage() {
   const { data: profileData, isLoading: isProfileLoading } = useQuery({
     queryKey: ['my-profile', user?.id],
     queryFn: async () => {
-      const res = await userAPI.getMyProfile()
+      const res = await userAPI.getProfile(user.id)
       return res.data?.data || res.data
     },
     enabled: !!user?.id,
@@ -145,9 +145,7 @@ export default function SettingsPage() {
       const curAvatar = profileData.avatar_url || user?.avatar_url || ''
       setAvatarPreview(curAvatar)
       setCustomAvatarInput(curAvatar)
-      const curBanner = profileData.cover_url || ''
-      setBannerPreview(curBanner)
-      setCustomBannerInput(curBanner)
+      // Banner customization is preview-only; no server field is available.
     }
   }, [profileData, user])
 
@@ -159,9 +157,7 @@ export default function SettingsPage() {
       toast.success('Đã cập nhật hồ sơ thành công!')
       queryClient.invalidateQueries({ queryKey: ['my-profile'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
-      if (setUser && updated) {
-        setUser({ ...user, ...updated })
-      }
+      if (updated) updateUser(updated)
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || 'Cập nhật thất bại, vui lòng thử lại!')
@@ -176,19 +172,6 @@ export default function SettingsPage() {
       {
         onSuccess: () => {
           toast.success('Đã lưu ảnh đại diện!')
-        },
-      }
-    )
-  }
-
-  // Save Banner mutation
-  const handleSaveBanner = (newUrl) => {
-    const finalUrl = newUrl !== undefined ? newUrl : bannerPreview
-    updateProfileMutation.mutate(
-      { cover_url: finalUrl },
-      {
-        onSuccess: () => {
-          toast.success('Đã lưu ảnh bìa mới!')
         },
       }
     )
@@ -211,7 +194,7 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
 
   const changePasswordMutation = useMutation({
-    mutationFn: (data) => authAPI.changePassword(data),
+    mutationFn: (data) => userAPI.changePassword(data),
     onSuccess: () => {
       toast.success('Đổi mật khẩu thành công!')
       setCurrentPassword('')
@@ -247,14 +230,14 @@ export default function SettingsPage() {
   const { data: myPostsData, isLoading: isPostsLoading } = useQuery({
     queryKey: ['my-posts-management', user?.id],
     queryFn: async () => {
-      const res = await postAPI.getPosts({ author_id: user?.id, limit: 30 })
-      return res.data?.data?.posts || res.data?.posts || []
+      const res = await postAPI.getAll({ page: 1, limit: 50 })
+      return (res.data?.data || []).filter((post) => Number(post.user_id) === Number(user.id))
     },
     enabled: activeTab === 'posts' && !!user?.id,
   })
 
   const deletePostMutation = useMutation({
-    mutationFn: (id) => postAPI.deletePost(id),
+    mutationFn: (id) => postAPI.delete(id),
     onSuccess: () => {
       toast.success('Đã xóa bài viết!')
       queryClient.invalidateQueries({ queryKey: ['my-posts-management'] })
@@ -535,15 +518,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={() => handleSaveBanner(bannerPreview)}
-                    disabled={updateProfileMutation.isPending}
-                    className="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    {updateProfileMutation.isPending ? 'Đang lưu...' : 'Lưu ảnh bìa'}
-                  </button>
+                  <p role="note" className="text-xs text-slate-500 dark:text-[#B0B3B8]">Ảnh bìa chỉ xem trước trong phiên này; chưa hỗ trợ lưu lên máy chủ.</p>
                 </div>
               </div>
 
@@ -786,11 +761,11 @@ export default function SettingsPage() {
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Bài đăng & hoạt động</h2>
                   <p className="text-xs text-slate-500 dark:text-[#B0B3B8] mt-0.5">
-                    Xem danh sách các bài đã đăng, mở xem chi tiết hoặc xóa bài viết.
+                    Xem bài của bạn trong 50 bài đăng mới nhất, mở chi tiết hoặc xóa bài viết.
                   </p>
                 </div>
                 <Link
-                  to="/create"
+                  to="/posts/create"
                   className="px-3.5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
@@ -804,8 +779,8 @@ export default function SettingsPage() {
                 ) : !myPostsData || myPostsData.length === 0 ? (
                   <div className="py-12 text-center">
                     <FileEdit className="w-10 h-10 text-slate-300 dark:text-[#B0B3B8]/40 mx-auto mb-2" />
-                    <p className="text-slate-600 dark:text-[#B0B3B8] font-medium text-sm">Bạn chưa có bài đăng nào.</p>
-                    <Link to="/create" className="text-xs text-primary-600 dark:text-[#2ECC71] hover:underline font-semibold mt-1 inline-block">
+                    <p className="text-slate-600 dark:text-[#B0B3B8] font-medium text-sm">Không có bài đăng của bạn trong 50 bài gần nhất.</p>
+                    <Link to="/posts/create" className="text-xs text-primary-600 dark:text-[#2ECC71] hover:underline font-semibold mt-1 inline-block">
                       Tạo bài viết đầu tiên ngay
                     </Link>
                   </div>
@@ -823,9 +798,9 @@ export default function SettingsPage() {
                           <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 dark:text-[#B0B3B8]">
                             <span>{new Date(p.created_at).toLocaleDateString('vi-VN')}</span>
                             <span>•</span>
-                            <span>{p.likes_count || 0} thích</span>
+                            <span>{p.like_count || 0} thích</span>
                             <span>•</span>
-                            <span>{p.comments_count || 0} bình luận</span>
+                            <span>{p.comment_count || 0} bình luận</span>
                           </div>
                         </div>
 

@@ -119,10 +119,10 @@ export default function MainLayout() {
             </div>
           </Link>
 
-          {/* Center Global Search Pill (Visible on both mobile & desktop between logo & user icon) */}
+          {/* Search stays on member mobile; hide on narrow guest header to prevent overflow. */}
           <form
             onSubmit={handleSearchSubmit}
-            className="flex-1 max-w-lg relative mx-2 block"
+            className={`flex-1 min-w-0 max-w-lg relative mx-0 sm:mx-2 ${isAuthenticated ? 'block' : 'hidden sm:block'}`}
             role="search"
           >
             <input

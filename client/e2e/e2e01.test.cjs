@@ -271,6 +271,7 @@ test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, a
     });
 
     await check('Logout + login through actual React forms', async () => {
+      await page.getByRole('button', { name: 'Menu tài khoản' }).click();
       await page.getByRole('button', { name: 'Đăng xuất' }).click();
       await page.waitForURL(u => u.pathname === '/login');
       const auth = await loginInBrowser(page, A);

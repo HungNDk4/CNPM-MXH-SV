@@ -34,4 +34,18 @@ export const useThemeStore = create((set, get) => ({
     }
     set({ theme: next })
   },
+  setTheme: (theme) => {
+    if (theme !== 'dark' && theme !== 'light') return
+    try {
+      localStorage.setItem('theme', theme)
+    } catch {
+      /* ignore */
+    }
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    set({ theme })
+  },
 }))

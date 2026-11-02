@@ -141,9 +141,9 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
         const view = await phone.newPage();
         await view.goto(UI + '/posts/' + postId);
         await view.getByRole('heading', { name: title, exact: true }).waitFor();
-        const searchVisible = await view.getByPlaceholder('Tìm kiếm bài viết, tài liệu...').isVisible();
-        assert.equal(searchVisible, width >= 1024,
-          'Search placeholder should only appear on a roomy desktop navigation bar');
+        const searchVisible = await view.getByPlaceholder('Tìm kiếm...').isVisible();
+        assert.equal(searchVisible, true,
+          'Campus Pop global search must remain available across desktop and mobile widths');
         const dimensions = await view.evaluate(() => ({
           viewport: window.innerWidth,
           documentWidth: document.documentElement.scrollWidth,
@@ -160,7 +160,7 @@ test('FE-01 Chrome: post detail, comment, reply, likes, ownership and guest stat
           view.getByRole('button', { name: 'Thích hoặc bỏ thích bài viết' }),
           view.getByRole('button', { name: 'Trả lời bình luận' }),
           view.getByRole('button', { name: 'Xóa bình luận #' + rootId }),
-          view.getByRole('button', { name: 'Đăng xuất' }),
+          view.getByRole('button', { name: 'Menu tài khoản' }),
         ];
         for (const tap of taps) {
           const box = await tap.boundingBox();

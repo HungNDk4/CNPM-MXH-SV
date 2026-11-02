@@ -23,9 +23,20 @@ app.use(cors({
 }));
 
 // ─── Rate Limiting ───────────────────────────────────────────────
+// Preserve production limit. More requests are allowed ONLY on the
+// explicitly disposable GitHub Actions Chromium harness (single localhost IP).
+const isolatedChromiumCI =
+  process.env.GITHUB_ACTIONS === 'true' &&
+  Boolean(process.env.RUNNER_TEMP) &&
+  process.env.NODE_ENV === 'test' &&
+  process.env.E2E_DISPOSABLE_DB === 'true' &&
+  process.env.DB_AUTO_SYNC === 'false' &&
+  process.env.DB_HOST === '127.0.0.1' &&
+  process.env.DB_NAME === 'mini_study_network' &&
+  process.env.FE74_CI_RATE_LIMIT === 'EXPLICIT_DISPOSABLE_E2E_ONLY';
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  max: 100,
+  max: isolatedChromiumCI ? 1000 : 100,
   message: { success: false, message: 'Quá nhiều request, vui lòng thử lại sau.' },
 });
 app.use('/api/', limiter);

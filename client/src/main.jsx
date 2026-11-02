@@ -5,8 +5,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import App from './App.jsx'
 import './index.css'
+import { useThemeStore } from '@/stores/themeStore'
+
+// Initialize theme on app boot
+useThemeStore.getState().initTheme()
 
 const queryClient = new QueryClient({
+
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,   // 5 phút
@@ -24,9 +29,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           position="top-right"
           toastOptions={{
             style: {
-              background: '#1e293b',
-              color: '#f1f5f9',
-              border: '1px solid #334155',
+              background: 'var(--bg-card)',
+              color: 'var(--text-main)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: '12px',
             },
           }}

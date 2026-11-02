@@ -1,4 +1,11 @@
 # CURRENT STATE — Read this before taking action
+## 2026-10-21 E2E-01 — latest GitHub verification (read first)
+
+- Integration baseline `integration/team-dev-20261020` confirmed at `7bbe302623191d5f28e967424ae529df307a13e7`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. On integration, PDF security/API/React PRs #20/#21/#23/#24/#25/#26/#27/#29 have been merged; historical older rows/paragraphs below are not current source assertions.
+- QA-03/E2E-01: remote-only branch `test/e2e01-fullstack-20261021`, Draft PR #30 targeting integration. Existing fullstack GitHub Actions `39592227079` at `31a5467`: **7/7 jobs SUCCESS**, including **real Chromium browser ↔ Vite proxy ↔ Express ↔ disposable MySQL 8 ↔ filesystem** with 12 logged browser/API checks, including expired Blob auto-refresh.
+- Disposable migration `20261021_document_files.sql` verified on MySQL 8. PDF upload/download, guest metadata, cross-user free download, 401/403/404 access checks, invalid/10MiB+1/inclusive 10MiB, hide/delete, register/login/refresh passed; browser download bytes equal source PDF. Full evidence: `docs/testing/E2E01_INTEGRATION_REPORT.md`.
+- **Not verified:** either student's local physical worktree/Windows setup, mobile/responsive browser, persistent cloud storage, public HTTPS app, redeploy durability. E2E automation uses a CI runner, NOT the user's PC. Do not merge to `main` without human reviews. New safety-only test guard/docs commit after `c117d6b7` requires fresh CI recheck.
+
 **As-of:** 2026-10-18 (snapshot from linked GitHub evidence at creation; verify real-time refs when starting). **Approval status:** DRAFT / awaiting two-member review.
 
 ## Project and people
@@ -50,3 +57,22 @@
 
 ## Operational warning
 This is a snapshot, not the source of truth for task status or branch state. Do not create worktrees, claim local paths, update payments, or modify main without specific verified context.
+
+## 2026-10-20 LIVE CHECKPOINT — Overrides dated setup/role paragraphs above (DO NOT assume task done)
+- User confirmed **Human A Core Backend**; second teammate **proposed** Frontend + Analysis/Design; Human B acceptance of exact tasks still PENDING. WBS stream A/B labels are independent of Human A/B identities.
+- User Ubuntu WSL 26.04.1 / Node 24.22 / npm 11.19 / MySQL 8.4.11/7 imported tables: Express health HTTP 200, React/Vite UI loaded, **Auth/Post smoke test 7/7 PASS** (register, login, /me, create post, read post, feed, refresh, logout), MySQL SELECT confirms stored post ID 1 on 2026-10-20. Not equivalent to 2-user authorization/security/PDF E2E.
+- Remote main remains `0993a421...`, stacked Draft PR #1–#10 are NOT MERGED. User WSL working branch `chore/ubuntu-dev-setup-20261019` at `f4a4c86` clean, tracked remote; `server/.env` ignored by git. Do not reset or force move it.
+- Team preview integration branch `integration/team-dev-20261020` forked from PR #10 HEAD `b840f16...`, contains docs & setup to start two independent feature branches; preview is NOT main approval/merge. Initial base CI 6/6 PASS GitHub Actions run 39448540132; sprint docs HEAD CI needs recheck.
+- GitHub Issues for first iteration: TEAM contract [#11](https://github.com/HungNDk4/CNPM-MXH-SV/issues/11), CORE legacy paid shutdown [#12](https://github.com/HungNDk4/CNPM-MXH-SV/issues/12), CORE safe DTO [#13](https://github.com/HungNDk4/CNPM-MXH-SV/issues/13), CORE 2-account negative tests [#14](https://github.com/HungNDk4/CNPM-MXH-SV/issues/14), FE PostDetail [#15](https://github.com/HungNDk4/CNPM-MXH-SV/issues/15), FE Profile [#16](https://github.com/HungNDk4/CNPM-MXH-SV/issues/16), FE SRS/UC/Wireframe [#17](https://github.com/HungNDk4/CNPM-MXH-SV/issues/17), TEAM two-machine setup [#18](https://github.com/HungNDk4/CNPM-MXH-SV/issues/18). All issues created with GitHub assignees empty; accepting tasks happens later.
+- Source still contains payment/order endpoints, public `/uploads`, Multer 1.x; public full app deployment blocked by P0 security. Vercel live PoC = **health-only**, not the full app.
+- **New read-first for concurrent work:** [TEAM_SPRINT01_20261020.md](TEAM_SPRINT01_20261020.md). Canonical board task statuses remain unchanged; issue links added only.
+
+## 2026-10-21 G03 / Issue #11 — contract candidate, not approval
+- DS-03 is now REVIEW for [API Contract v1 candidate](../API_CONTRACT.md), DRAFT v0.1, plus [synthetic mocks](../fixtures/api-contract-v1.json). Source baseline: integration `dffe5ae41f14983a5cad2c77a0e465726a3cbbcc`; branch `docs/api-contract-v1-20261021`. Exact published head/PR is recorded in the Issue #11 handoff; do not infer a later head from this snapshot.
+- Both Human A and Human B must accept the same revision and R1..R5 review choices. Neither approval exists yet. No product/source/schema/env change; Issue #13 implementation NOT STARTED pending that gate. ADR-002 remains OPEN.
+- At inspection, #20 `8a4a3b6` and #21 `96d6efc` are still Draft/open/unmerged; integration still mounts legacy payments, whereas #20/#21 do not. #21 is based on #20. Their existing PASS evidence is preserved in the contract; it is not evidence for candidate safe DTOs/PDF access. Prefer #20's human-reviewed merge before #13 app.js work; otherwise select a dependency branch with one editor or wait.
+- Static project-control, 22 synthetic example/13-route fixture validation and diff whitespace checks PASS. No new API/MySQL/Frontend rebuild or manual WSL checkpoint. Next: both-human contract review, then recheck integration/PR dependencies before starting #13. Older source/setup/task-status notes above remain historical, not overrides of this scoped checkpoint.
+
+### E2E-01 additional local execution evidence
+- Native isolated MySQL 8.4.13 / Node 24.19: existing backend regression 5 runner tests PASS (QA-01 15/15, DOC-03 9/9); offline checks 9/9. Exact fixture cleanup verified; temporary DB process stopped. No production data or .env touched.
+- Local build/browser assertions remain BLOCKED before Vite loads by Windows profile ancestor ACL; source/test head 4dde753 has 7/7 CI SUCCESS in run 39593775029, including all 12 browser checkpoints. Full local acceptance PARTIAL; human PR review/merge pending. Canonical report section 6 carries environment and overlap details.

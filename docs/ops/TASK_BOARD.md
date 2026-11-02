@@ -8,7 +8,7 @@ Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend
 | OPS-01 | P0 | Audit source and current repository | AI | DONE | None | source read at 0993a421; conversation review |
 | OPS-02 | P0 | Foundation docs, workflow and CI | AI + Human A review | REVIEW | None | PR #1 draft; 87eb985e; CI PASS |
 | OPS-03 | P0 | Create cross-session control + worktree playbook | AI + Human A review | REVIEW | OPS-02 branch | Draft PR #2; docs/build/syntax CI PASS; human review pending |
-| OPS-04 | P0 | Review PR stack, agree 2-person module ownership, merge | Human A + Human B | BLOCKED | OPS-02/03 | Await human approval |
+| OPS-04 | P0 | Review PR stack, agree 2-person module ownership, merge | Human A + Human B | BLOCKED | OPS-02/03 | Await human approval; [issue #18](https://github.com/HungNDk4/CNPM-MXH-SV/issues/18) |
 | AN-00 | P1 | Human A confirms free-first MVP; VNPay Sandbox extension | Human A | DONE | None | User confirmed Option B 2026-10-17; ADR-003/004; details SRS still DRAFT |
 | AN-06 | P1 | Human A confirms Guest document metadata browse; authenticated PDF download only | Human A | DONE | DOC-01 | User confirmed access policy 2026-10-18; ADR-011 + DOCUMENT_ACCESS_POLICY (QA NOT RUN) |
 | AN-07 | P1 | Human A confirms max 10 MiB PDF, exactly 1 PDF per document post | Human A | DONE | DOC-01 | ADR-012 on 2026-10-18; T-UP-LIM cases specified, runtime QA NOT RUN |
@@ -21,27 +21,27 @@ Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend
 | DEP-A01 | P0 | Isolated Vercel HTTPS/Node health page reachable without login | Human A + AI | REVIEW | DEP-01B offline CI PASS; user browser verification | **Vercel READY** project `mini-study-network-dep01`; user Chrome Incognito screenshot 2026-10-19 shows webpage + API success without login. Production alias was assigned, despite staging intent. Different-network and repeated uptime checks NOT RUN |
 | DEP-A02 | P0 | Disposable TiDB MySQL-compatible + Sequelize v6 connectivity PoC | Human A + AI | BLOCKED | TiDB connector or verified account/credentials under secure setup | No TiDB resource created; no DB E2E |
 | DEP-02 | P0 | Publish tested online demo and verify persistence across redeploy | UNASSIGNED | BLOCKED | DEP-01 approval, SEC-01/03/04, G4/G5 | Public HTTPS/DB/PDF/runtime proof required, NOT RUN |
-| AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review |
-| AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft |
+| AN-01 | P1 | Actors/personas, scope and stakeholder assumptions | Human A + AI | TODO | G0 | SRS draft; needs review; [issue #17](https://github.com/HungNDk4/CNPM-MXH-SV/issues/17) |
+| AN-02 | P1 | FR/NFR measurable acceptance and business rules | Human A + AI | TODO | AN-01 | SRS draft; [issue #17](https://github.com/HungNDk4/CNPM-MXH-SV/issues/17) |
 | AN-03 | P1 | Permission matrix, account/student verification decisions | Human A + AI | TODO | AN-02 | Decisions pending |
-| AN-04 | P1 | Use Case diagram & detailed use case specs | Human A + AI | TODO | AN-02/03 | templates ready |
+| AN-04 | P1 | Use Case diagram & detailed use case specs | Human A + AI | TODO | AN-02/03 | templates ready; [issue #17](https://github.com/HungNDk4/CNPM-MXH-SV/issues/17) |
 | AN-05 | P1 | Requirements traceability and sign-off | Human A + Human B | TODO | AN-04 | FR matrix draft |
 | DS-01 | P1 | Context, component, deployment diagram | AI + Human A review | TODO | G1 | architecture draft |
 | DS-02 | P1 | ERD, cardinality, SQL/ORM reconciliation | AI + Human A review | TODO | G1 | database/schema.sql |
-| DS-03 | P1 | API/DTO/access-control contract | AI + Human B review | TODO | G1 | API contract draft |
-| DS-04 | P1 | UI sitemap, user flows and wireframes | AI + Human A review | TODO | G1 | source UI |
+| DS-03 | P1 | API/DTO/access-control contract | AI + Human B review | REVIEW | G1; both-human G03 acceptance pending | [Issue #11](https://github.com/HungNDk4/CNPM-MXH-SV/issues/11): API Contract v1 candidate DRAFT v0.1 + synthetic mocks on docs/api-contract-v1-20261021 from integration dffe5ae; static checks PASS; neither human has approved; #13 implementation NOT STARTED |
+| DS-04 | P1 | UI sitemap, user flows and wireframes | AI + Human A review | TODO | G1 | source UI; [issue #17](https://github.com/HungNDk4/CNPM-MXH-SV/issues/17) |
 | DS-05 | P1 | Sequence/activity diagrams for critical flows | AI + Human A review | TODO | DS-01/02/03 | Not started |
 | DS-06 | P0 | Threat model, design gate | AI + two humans review | TODO | DS-02/03/05 | P0 vulnerabilities |
-| SEC-01 | P0 | No leak of paid-document file URL | UNASSIGNED | BLOCKED | DS-03 + access decision | Bug identified; no code fix |
+| SEC-01 | P0 | No leak of paid-document file URL | UNASSIGNED | BLOCKED | DS-03 + access decision | Bug identified; no code fix; [issue #13](https://github.com/HungNDk4/CNPM-MXH-SV/issues/13) |
 | SEC-02 | P2 | Full VNPay idempotent callbacks, payment QA for extension | UNASSIGNED | DEFERRED | Explicit reopening of payment scope | Payment source unsafe; routes MUST first be gated by SEC-03 |
-| SEC-03 | P0 | Hard-disable/gate paid APIs, paid document paths and callbacks with negative tests before MVP demo | UNASSIGNED | TODO | AN-00 + security review | Scope Option B, code not yet gated |
+| SEC-03 | P0 | Hard-disable/gate paid APIs, paid document paths and callbacks with negative tests before MVP demo | UNASSIGNED | TODO | AN-00 + security review | Scope Option B, code not yet gated; [issue #12](https://github.com/HungNDk4/CNPM-MXH-SV/issues/12) |
 | BE-01 | P1 | Public guest GET feed, optional auth | UNASSIGNED | TODO | DS-03 | route currently blocks guest |
 | BE-02 | P1 | Schema consistency + migration plan | UNASSIGNED | TODO | DS-02 | ORM drift |
-| QA-01 | P0 | Auth/privacy tests + verify paid endpoints DENIED in MVP | UNASSIGNED | TODO | DS-03/SEC-01/SEC-03 | CI only syntax/build now |
-| FE-01 | P1 | Post detail + threaded comments | UNASSIGNED | TODO | DS-03/04 + BE-01 | FE page stub |
+| QA-01 | P0 | Auth/privacy tests + verify paid endpoints DENIED in MVP | UNASSIGNED | TODO | DS-03/SEC-01/SEC-03 | CI only syntax/build now; [issue #14](https://github.com/HungNDk4/CNPM-MXH-SV/issues/14) |
+| FE-01 | P1 | Post detail + threaded comments | UNASSIGNED | TODO | DS-03/04 + BE-01 | FE page stub; [issue #15](https://github.com/HungNDk4/CNPM-MXH-SV/issues/15) |
 | FE-02 | P1 | Like/unlike FE with correct API states | UNASSIGNED | TODO | DS-03/04 | BE route exists |
 | FE-03 | P1 | Search/filter/pagination UI | UNASSIGNED | TODO | BE-01/DS-04 | UI placeholders |
-| FE-04 | P1 | Profile/edit/password screens | UNASSIGNED | TODO | DS-03/04 | FE page stub |
+| FE-04 | P1 | Profile/edit/password screens | UNASSIGNED | TODO | DS-03/04 | FE page stub; [issue #16](https://github.com/HungNDk4/CNPM-MXH-SV/issues/16) |
 | FE-05 | P1 | Edit/delete post UI with ownership | UNASSIGNED | TODO | DS-03/04 | BE routes exist |
 | BE-03 | P1 | Admin hide/delete after PDF publication | UNASSIGNED | TODO | AN-03/DS-03/ADR-013 | Admin post-moderation confirmed; report/appeal UX remains PROPOSED |
 | DOC-01 | P1 | Human A selects direct PDF upload for free documents | Human A | DONE | AN-00 | User confirmed B 2026-10-17; ADR-010; detailed spec awaiting review |
@@ -52,7 +52,7 @@ Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend
 | PAY-01 | P2 | Order/history/payment state UI | UNASSIGNED | DEFERRED | New explicit scope decision | VNPay Sandbox extension only |
 | PAY-02 | P2 | Sandbox full flow/negative/idempotency tests | UNASSIGNED | DEFERRED | SEC-02 + scope reopened | NOT TESTED; out of MVP |
 | QA-02 | P1 | Disposable MySQL integration suite | UNASSIGNED | REVIEW | G4 / Ubuntu CI | Ubuntu 24.04 + real MySQL 8 auth, refresh-token uniqueness/rotation, post CRUD smoke PASS run 39288366164; full integration suite still NOT RUN |
-| QA-03 | P1 | Browser E2E smoke and responsive test | UNASSIGNED | TODO | G4 | No tests |
+| QA-03 | P1 | E2E-01 full-stack browser smoke (responsive/manual hardware follow-up) | AI + Human A review | REVIEW | Preview integration + DOC-03/04 | Draft PR #30; Chromium/Vite/Express/MySQL 8/private PDF 12 scenario checks PASS at 31a5467, Actions 39592227079 (7/7 jobs); device/responsive/local Windows NOT RUN |
 | QA-04 | P1 | Security/regression review | UNASSIGNED | TODO | G4/G5 | No tests |
 | OPS-05 | P1 | Deployment/setup rehearsal | Human B + AI | TODO | G4 | README draft |
 | QA-05 | P1 | Triage defects and release freeze | Two humans | TODO | QA-02/03/04 | No release |

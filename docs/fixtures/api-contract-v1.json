@@ -1,0 +1,584 @@
+{
+  "contract": "API Contract v1",
+  "revision": "DRAFT v0.1",
+  "approval": {
+    "humanA": "PENDING",
+    "humanB": "PENDING"
+  },
+  "source_baseline": "dffe5ae41f14983a5cad2c77a0e465726a3cbbcc",
+  "synthetic": true,
+  "notes": [
+    "Examples are documentation mocks, not runtime evidence or usable credentials.",
+    "IMPLEMENTED means source-confirmed normal response, not that fixture requests were executed.",
+    "All Post data examples use PROPOSED / OPEN SafePost; actual source still serializes sensitive fields.",
+    "Guest PDF metadata is an approved product requirement; this candidate envelope/routing/DTO is still awaiting both-human contract acceptance.",
+    "Profile update has variable fields; this example includes bio only because request updates bio."
+  ],
+  "examples": [
+    {
+      "name": "register",
+      "status": "IMPLEMENTED",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "request": {
+        "body": {
+          "full_name": "Sinh viên mẫu A",
+          "email": "student-a@example.test",
+          "password": "<synthetic-password-A>",
+          "university": "Trường mẫu"
+        }
+      },
+      "http_status": 201,
+      "response": {
+        "success": true,
+        "message": "Đăng ký thành công!",
+        "data": {
+          "user": {
+            "id": 101,
+            "full_name": "Sinh viên mẫu A",
+            "email": "student-a@example.test",
+            "role": "student"
+          },
+          "accessToken": "<mock-access-A-not-a-jwt>",
+          "refreshToken": "<mock-refresh-A-not-a-jwt>"
+        }
+      }
+    },
+    {
+      "name": "login",
+      "status": "IMPLEMENTED",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "request": {
+        "body": {
+          "email": "student-a@example.test",
+          "password": "<synthetic-password-A>"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "message": "Đăng nhập thành công!",
+        "data": {
+          "user": {
+            "id": 101,
+            "full_name": "Sinh viên mẫu A",
+            "email": "student-a@example.test",
+            "role": "student",
+            "avatar_url": null
+          },
+          "accessToken": "<mock-access-A-not-a-jwt>",
+          "refreshToken": "<mock-refresh-A-not-a-jwt>"
+        }
+      }
+    },
+    {
+      "name": "refresh",
+      "status": "IMPLEMENTED",
+      "method": "POST",
+      "path": "/api/auth/refresh",
+      "request": {
+        "body": {
+          "refreshToken": "<mock-refresh-A-not-a-jwt>"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "data": {
+          "accessToken": "<mock-access-A-v2-not-a-jwt>",
+          "refreshToken": "<mock-refresh-A-v2-not-a-jwt>"
+        }
+      }
+    },
+    {
+      "name": "logout",
+      "status": "IMPLEMENTED",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "request": {
+        "body": {
+          "refreshToken": "<mock-refresh-A-v2-not-a-jwt>"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "message": "Đăng xuất thành công."
+      }
+    },
+    {
+      "name": "me",
+      "status": "IMPLEMENTED",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "data": {
+          "id": 101,
+          "email": "student-a@example.test",
+          "full_name": "Sinh viên mẫu A",
+          "role": "student",
+          "is_active": true,
+          "avatar_url": null
+        }
+      }
+    },
+    {
+      "name": "feed-safe-candidate",
+      "status": "PROPOSED / OPEN",
+      "method": "GET",
+      "path": "/api/posts",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        },
+        "query": {
+          "page": 1,
+          "limit": 10,
+          "type": "question",
+          "search": "mẫu",
+          "subject": "CNPM"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "data": [
+          {
+            "id": 501,
+            "user_id": 101,
+            "title": "Câu hỏi mẫu",
+            "content": "Nội dung giả lập cho review.",
+            "post_type": "question",
+            "subject": "CNPM",
+            "tags": [
+              "ôn tập"
+            ],
+            "price": "0.00",
+            "view_count": 0,
+            "status": "active",
+            "created_at": "2026-10-21T00:00:00.000Z",
+            "updated_at": "2026-10-21T00:00:00.000Z",
+            "author": {
+              "id": 101,
+              "full_name": "Sinh viên mẫu A",
+              "avatar_url": null,
+              "university": "Trường mẫu"
+            }
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "page": 1,
+          "limit": 10,
+          "totalPages": 1
+        }
+      }
+    },
+    {
+      "name": "detail-safe-candidate",
+      "status": "PROPOSED / OPEN",
+      "method": "GET",
+      "path": "/api/posts/501",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "data": {
+          "id": 501,
+          "user_id": 101,
+          "title": "Câu hỏi mẫu",
+          "content": "Nội dung giả lập cho review.",
+          "post_type": "question",
+          "subject": "CNPM",
+          "tags": [
+            "ôn tập"
+          ],
+          "price": "0.00",
+          "view_count": 0,
+          "status": "active",
+          "created_at": "2026-10-21T00:00:00.000Z",
+          "updated_at": "2026-10-21T00:00:00.000Z",
+          "author": {
+            "id": 101,
+            "full_name": "Sinh viên mẫu A",
+            "avatar_url": null,
+            "university": null
+          }
+        }
+      }
+    },
+    {
+      "name": "create-safe-candidate",
+      "status": "PROPOSED / OPEN",
+      "method": "POST",
+      "path": "/api/posts",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        },
+        "body": {
+          "title": "Câu hỏi mẫu",
+          "content": "Nội dung giả lập cho review.",
+          "post_type": "question",
+          "subject": "CNPM",
+          "tags": [
+            "ôn tập"
+          ]
+        }
+      },
+      "http_status": 201,
+      "response": {
+        "success": true,
+        "message": "Đăng bài thành công.",
+        "data": {
+          "id": 501,
+          "user_id": 101,
+          "title": "Câu hỏi mẫu",
+          "content": "Nội dung giả lập cho review.",
+          "post_type": "question",
+          "subject": "CNPM",
+          "tags": [
+            "ôn tập"
+          ],
+          "price": "0.00",
+          "view_count": 0,
+          "status": "active",
+          "created_at": "2026-10-21T00:00:00.000Z",
+          "updated_at": "2026-10-21T00:00:00.000Z",
+          "author": null
+        }
+      }
+    },
+    {
+      "name": "update-safe-candidate",
+      "status": "PROPOSED / OPEN",
+      "method": "PUT",
+      "path": "/api/posts/501",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        },
+        "body": {
+          "title": "Câu hỏi mẫu đã sửa"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "message": "Cập nhật thành công.",
+        "data": {
+          "id": 501,
+          "user_id": 101,
+          "title": "Câu hỏi mẫu đã sửa",
+          "content": "Nội dung giả lập cho review.",
+          "post_type": "question",
+          "subject": "CNPM",
+          "tags": [
+            "ôn tập"
+          ],
+          "price": "0.00",
+          "view_count": 0,
+          "status": "active",
+          "created_at": "2026-10-21T00:00:00.000Z",
+          "updated_at": "2026-10-21T00:00:00.000Z",
+          "author": null
+        }
+      }
+    },
+    {
+      "name": "delete",
+      "status": "IMPLEMENTED",
+      "method": "DELETE",
+      "path": "/api/posts/501",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "message": "Xóa bài viết thành công."
+      }
+    },
+    {
+      "name": "public-profile",
+      "status": "IMPLEMENTED",
+      "method": "GET",
+      "path": "/api/users/101",
+      "request": {},
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "data": {
+          "id": 101,
+          "full_name": "Sinh viên mẫu A",
+          "avatar_url": null,
+          "bio": null,
+          "university": "Trường mẫu",
+          "major": null,
+          "created_at": "2026-10-21T00:00:00.000Z"
+        }
+      }
+    },
+    {
+      "name": "update-profile-sparse",
+      "status": "IMPLEMENTED",
+      "method": "PUT",
+      "path": "/api/users/profile",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        },
+        "body": {
+          "full_name": "Sinh viên mẫu A đã sửa",
+          "bio": "Hồ sơ mẫu"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "message": "Cập nhật profile thành công.",
+        "data": {
+          "id": 101,
+          "email": "student-a@example.test",
+          "full_name": "Sinh viên mẫu A đã sửa",
+          "role": "student",
+          "is_active": true,
+          "avatar_url": null,
+          "bio": "Hồ sơ mẫu",
+          "updated_at": "2026-10-21T00:00:00.000Z"
+        }
+      }
+    },
+    {
+      "name": "change-password",
+      "status": "IMPLEMENTED",
+      "method": "PUT",
+      "path": "/api/users/change-password",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        },
+        "body": {
+          "current_password": "<synthetic-password-A>",
+          "new_password": "<synthetic-password-A-next>"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "message": "Đổi mật khẩu thành công."
+      }
+    },
+    {
+      "name": "duplicate-email",
+      "status": "IMPLEMENTED",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "request": {
+        "body": {
+          "full_name": "Sinh viên mẫu A",
+          "email": "student-a@example.test",
+          "password": "<synthetic-password-A>"
+        }
+      },
+      "http_status": 409,
+      "response": {
+        "success": false,
+        "message": "Email đã được sử dụng."
+      }
+    },
+    {
+      "name": "validation-route",
+      "status": "IMPLEMENTED",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "request": {
+        "body": {
+          "full_name": "Mẫu",
+          "email": "invalid-email",
+          "password": "<synthetic-password-A>"
+        }
+      },
+      "http_status": 422,
+      "response": {
+        "success": false,
+        "message": "Dữ liệu đầu vào không hợp lệ.",
+        "errors": [
+          {
+            "field": "email",
+            "message": "Email không hợp lệ."
+          }
+        ]
+      }
+    },
+    {
+      "name": "access-expired",
+      "status": "IMPLEMENTED",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-expired-not-a-jwt>"
+        }
+      },
+      "http_status": 401,
+      "response": {
+        "success": false,
+        "message": "Token đã hết hạn. Vui lòng làm mới token.",
+        "code": "TOKEN_EXPIRED"
+      }
+    },
+    {
+      "name": "access-invalid",
+      "status": "IMPLEMENTED",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer invalid.jwt.token"
+        }
+      },
+      "http_status": 401,
+      "response": {
+        "success": false,
+        "message": "Token không hợp lệ.",
+        "code": "TOKEN_INVALID"
+      }
+    },
+    {
+      "name": "nonowner-forbidden",
+      "status": "IMPLEMENTED",
+      "method": "PUT",
+      "path": "/api/posts/501",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-B-not-a-jwt>"
+        },
+        "body": {
+          "title": "Sửa từ B"
+        }
+      },
+      "http_status": 403,
+      "response": {
+        "success": false,
+        "message": "Không có quyền sửa bài."
+      }
+    },
+    {
+      "name": "deleted-detail",
+      "status": "IMPLEMENTED",
+      "method": "GET",
+      "path": "/api/posts/501",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        }
+      },
+      "http_status": 404,
+      "response": {
+        "success": false,
+        "message": "Bài viết không tồn tại."
+      }
+    },
+    {
+      "name": "guest-current-feed",
+      "status": "IMPLEMENTED",
+      "method": "GET",
+      "path": "/api/posts",
+      "request": {},
+      "http_status": 401,
+      "response": {
+        "success": false,
+        "message": "Không có token xác thực. Vui lòng đăng nhập."
+      }
+    },
+    {
+      "name": "guest-pdf-metadata-candidate",
+      "status": "PROPOSED / OPEN",
+      "method": "GET",
+      "path": "/api/posts",
+      "request": {
+        "query": {
+          "type": "document",
+          "page": 1,
+          "limit": 10
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "data": [
+          {
+            "id": 502,
+            "user_id": 101,
+            "title": "Tài liệu PDF mẫu",
+            "content": "Chỉ metadata giả lập; chưa có API tải file.",
+            "post_type": "document",
+            "subject": "CNPM",
+            "tags": [
+              "ôn tập"
+            ],
+            "price": "0.00",
+            "view_count": 0,
+            "status": "active",
+            "created_at": "2026-10-21T00:00:00.000Z",
+            "updated_at": "2026-10-21T00:00:00.000Z",
+            "author": {
+              "id": 101,
+              "full_name": "Sinh viên mẫu A",
+              "avatar_url": null,
+              "university": "Trường mẫu"
+            }
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "page": 1,
+          "limit": 10,
+          "totalPages": 1
+        }
+      }
+    },
+    {
+      "name": "empty-feed-candidate",
+      "status": "PROPOSED / OPEN",
+      "method": "GET",
+      "path": "/api/posts",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer <mock-access-A-not-a-jwt>"
+        },
+        "query": {
+          "page": 1,
+          "limit": 10,
+          "type": "question"
+        }
+      },
+      "http_status": 200,
+      "response": {
+        "success": true,
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "page": 1,
+          "limit": 10,
+          "totalPages": 0
+        }
+      }
+    }
+  ]
+}

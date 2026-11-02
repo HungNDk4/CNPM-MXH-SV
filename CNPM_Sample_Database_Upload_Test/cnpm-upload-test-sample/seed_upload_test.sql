@@ -25,7 +25,7 @@ SELECT
 FROM posts p
 ORDER BY p.id;
 
--- 4. After uploading a PDF through the UI (CreatePostPage / API POST /api/documents/upload),
+-- 4. After uploading a PDF through the UI (CreatePostPage / API POST /api/documents),
 -- Run this query to inspect document_files metadata:
 SELECT 
   p.id AS post_id, 

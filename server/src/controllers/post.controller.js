@@ -174,10 +174,23 @@ const deletePost = async (req, res, next) => {
     const id = positiveId(req.params.id);
     const post = await Post.findByPk(id);
     if (!post) throw createError('Bài viết không tồn tại.', 404);
-    if (post.user_id !== req.user.id && req.user.role !== 'admin') {
+    // Admin moderation MUST go through PATCH /:id/moderation, which atomically
+    // writes a moderation_audit_logs row. Never provide an unaudited shortcut.
+    if (req.user.role === 'admin') {
+      throw createError('Quản trị viên phải dùng chức năng kiểm duyệt để ghi nhật ký.', 403);
+    }
+    if (post.user_id !== req.user.id) {
       throw createError('Không có quyền xóa.', 403);
     }
-    await Post.update({ status: 'deleted' }, { where: { id } });
+    if (post.status !== 'active') {
+      throw createError('Bài viết đã thay đổi trạng thái.', 409);
+    }
+    // CAS: a concurrent Admin hide/delete wins over the owner's delete.
+    // This also prevents the owner from overwriting a moderated status.
+    const [affected] = await Post.update({ status: 'deleted' }, {
+      where: { id, user_id: req.user.id, status: 'active' },
+    });
+    if (affected !== 1) throw createError('Trạng thái bài viết đã thay đổi.', 409);
     res.json({ success: true, message: 'Xóa bài viết thành công.' });
   } catch (error) { next(error); }
 };

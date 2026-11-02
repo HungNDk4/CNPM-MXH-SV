@@ -186,7 +186,7 @@ test('EXT-03: Admin audit events match only committed moderation transitions', {
       assert.equal(rollbackPost.pagination.total, 1);
       for (const row of all.data) {
         assert.deepEqual(Object.keys(row).sort(),
-          ['id','actor_admin_id','post_id','previous_status','new_status','created_at'].sort());
+          ['id','actor_admin_id','post_id','previous_status','new_status','reason','created_at'].sort());
       }
       assert.ok(filtered.data.every(row => row.actor_admin_id === admin.id));
       for (const secret of ['file_url', 'storage_key', 'email', 'password_hash', 'wallet_balance']) {

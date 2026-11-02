@@ -210,7 +210,7 @@ test('FE66 P2: Notifications + Follow + Bookmarks + Admin Audit contracts', { ti
       const filtered=await expect('GET','/api/posts/moderation/audit-logs?post_id=' + post1.id,moderator);
       pageShape(filtered,2,1,10);
       assert.deepEqual(Object.keys(filtered.data[0]).sort(),
-        ['id','actor_admin_id','post_id','previous_status','new_status','created_at'].sort());
+        ['id','actor_admin_id','post_id','previous_status','new_status','reason','created_at'].sort());
       assert.equal(filtered.data[0].actor_admin_id,moderator.id);
       const nonexistent=await expect('GET','/api/posts/moderation/audit-logs?post_id=99999999',moderator);
       pageShape(nonexistent,0,1,10);
@@ -263,6 +263,63 @@ test('FE66 P2: Notifications + Follow + Bookmarks + Admin Audit contracts', { ti
         moderator, { status: 'deleted' });
       assert.equal((await Post.findByPk(adminOwned.id)).status, 'deleted');
       assert.equal(await ModerationAuditLog.count({ where: { post_id: adminOwned.id } }), 1);
+    });
+    await check('ADM-01 admin content discovery, filters, safe DTO and reason audit', async () => {
+      const path = '/api/posts/moderation/posts';
+      const [[column]] = await sequelize.query(
+        "SELECT COUNT(*) AS n FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='moderation_audit_logs' AND COLUMN_NAME='reason'");
+      assert.equal(Number(column.n), 1, 'ADM-01 schema requires nullable reason');
+      await expect('GET', path, null, undefined, 401);
+      await expect('GET', path, studentA, undefined, 403);
+      await expect('GET', path + '/' + post1.id, studentB, undefined, 403);
+      const all = await expect('GET', path + '?page=1&limit=10', moderator);
+      assert.equal(all.pagination.total, await Post.count());
+      assert.ok(all.data.length >= 6);
+      assert.deepEqual(Object.keys(all.data[0]).sort(),
+        ['id','user_id','title','post_type','subject','status','created_at','author'].sort());
+      assert.deepEqual(Object.keys(all.data[0].author).sort(), ['id','full_name'].sort());
+      assert.ok(!JSON.stringify(all).includes('storage_key') &&
+                !JSON.stringify(all).includes('file_url') &&
+                !JSON.stringify(all).includes('password_hash'));
+      const hidden = await expect('GET', path + '?status=hidden', moderator);
+      assert.ok(hidden.data.length >= 2 && hidden.data.every(p=>p.status==='hidden'));
+      const deleted = await expect('GET', path + '?status=deleted', moderator);
+      assert.ok(deleted.data.length >= 2 && deleted.data.every(p=>p.status==='deleted'));
+      const byAdmin = await expect('GET', path + '?author_id=' + moderator.id, moderator);
+      assert.equal(byAdmin.pagination.total, 1);
+      assert.equal(byAdmin.data[0].author.id, moderator.id);
+      const paged = await expect('GET', path + '?page=2&limit=1', moderator);
+      pageShape(paged, all.pagination.total, 2, 1);
+      const searched = await expect('GET', path + '?search=SEC-ADMIN', moderator);
+      assert.ok(searched.data.length >= 2);
+      const detail = await expect('GET', path + '/' + post1.id, moderator);
+      assert.equal(detail.data.status, 'deleted');
+      assert.equal(detail.data.post_type, 'question');
+      assert.ok(!Object.hasOwn(detail.data, 'file_url'));
+      await expect('GET', path + '?status=bad', moderator, undefined, 422);
+      await expect('GET', path + '?type=bad', moderator, undefined, 422);
+      await expect('GET', path + '?limit=100', moderator, undefined, 422);
+      await expect('GET', path + '?author_id=-1', moderator, undefined, 422);
+      await expect('GET', path + '/bad', moderator, undefined, 422);
+      await expect('GET', path + '/99999999', moderator, undefined, 404);
+
+      const reasonPost = await createPost('ADM01 reason capture');
+      const api = '/api/posts/' + reasonPost.id + '/moderation';
+      for (const invalid of [null, '', 'bad', 'x'.repeat(501)]) {
+        await expect('PATCH', api, moderator, { status:'hidden', reason:invalid }, 422);
+      }
+      assert.equal((await Post.findByPk(reasonPost.id)).status, 'active');
+      assert.equal(await ModerationAuditLog.count({where:{post_id:reasonPost.id}}),0);
+      const reason = 'Tài liệu có nội dung không phù hợp';
+      await expect('PATCH', api, moderator, {status:'hidden', reason:'  '+reason+'  '});
+      const audit = await ModerationAuditLog.findOne({where:{post_id:reasonPost.id}});
+      assert.equal(audit.reason, reason);
+      const history = await expect('GET',
+        '/api/posts/moderation/audit-logs?post_id=' + reasonPost.id, moderator);
+      assert.equal(history.data[0].reason,reason);
+      await expect('PATCH',api,moderator,{status:'hidden',reason},200);
+      assert.equal(await ModerationAuditLog.count({where:{post_id:reasonPost.id}}),1,
+        'idempotent moderation must never duplicate audit');
     });
     console.log('FE66 P2 contract regression PASS: ' + steps + ' scenario groups on actual Express + MySQL 8');
   } finally {

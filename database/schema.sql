@@ -182,6 +182,7 @@ CREATE TABLE IF NOT EXISTS moderation_audit_logs (
   post_id           INT UNSIGNED NOT NULL,
   previous_status   ENUM('active','hidden','deleted') NOT NULL,
   new_status        ENUM('hidden','deleted') NOT NULL,
+  reason            VARCHAR(500) NULL,
   created_at        DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   INDEX idx_moderation_audit_recent (created_at, id),
   INDEX idx_moderation_audit_post_recent (post_id, created_at, id)

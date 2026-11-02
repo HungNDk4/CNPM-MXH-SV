@@ -215,6 +215,55 @@ test('FE66 P2: Notifications + Follow + Bookmarks + Admin Audit contracts', { ti
       const nonexistent=await expect('GET','/api/posts/moderation/audit-logs?post_id=99999999',moderator);
       pageShape(nonexistent,0,1,10);
     });
+    await check('SEC-ADMIN deny unaudited status writes and preserve owner delete', async () => {
+      const target = await createPost('SEC-ADMIN audit bypass target');
+      const owned = await createPost('SEC-ADMIN owner deletion');
+      const adminOwned = await Post.create({
+        user_id: moderator.id, title: 'SEC-ADMIN admin own post',
+        content: 'Isolated audit bypass fixture', post_type: 'question',
+        status: 'active', price: 0,
+      });
+      ids.posts.push(adminOwned.id);
+
+      // A status field is never accepted on generic content-edit endpoint,
+      // regardless of role or whether the payload includes other valid fields.
+      for (const actor of [studentA, moderator]) {
+        for (const status of ['active', 'hidden', 'deleted']) {
+          await expect('PUT', '/api/posts/' + target.id, actor,
+            { title: 'attempted generic moderation', status }, 422);
+        }
+      }
+      await expect('DELETE', '/api/posts/' + target.id, moderator, undefined, 403);
+      await expect('DELETE', '/api/posts/' + adminOwned.id, moderator, undefined, 403);
+      await expect('DELETE', '/api/posts/' + target.id, studentB, undefined, 403);
+      assert.equal((await Post.findByPk(target.id)).status, 'active');
+      assert.equal((await Post.findByPk(adminOwned.id)).status, 'active');
+      assert.equal(await ModerationAuditLog.count({ where: { post_id: target.id } }), 0);
+
+      // Author can continue editing/deleting own active content normally.
+      const edit = await expect('PUT', '/api/posts/' + owned.id, studentA,
+        { title: 'Owner edit still allowed' });
+      assert.equal(edit.data.title, 'Owner edit still allowed');
+      await expect('DELETE', '/api/posts/' + owned.id, studentA);
+      assert.equal((await Post.findByPk(owned.id)).status, 'deleted');
+      assert.equal(await ModerationAuditLog.count({ where: { post_id: owned.id } }), 0);
+      await expect('DELETE', '/api/posts/' + owned.id, studentA, undefined, 409);
+
+      // Moderator must use the auditable atomic endpoint for every post,
+      // including one created by the admin account.
+      await expect('PATCH', '/api/posts/' + target.id + '/moderation',
+        moderator, { status: 'hidden' });
+      assert.equal(await ModerationAuditLog.count({ where: { post_id: target.id } }), 1);
+      await expect('DELETE', '/api/posts/' + target.id, studentA, undefined, 409);
+      await expect('PUT', '/api/posts/' + target.id, moderator, { title: 'restore?' }, 403);
+      assert.equal((await Post.findByPk(target.id)).status, 'hidden');
+      assert.equal(await ModerationAuditLog.count({ where: { post_id: target.id } }), 1);
+
+      await expect('PATCH', '/api/posts/' + adminOwned.id + '/moderation',
+        moderator, { status: 'deleted' });
+      assert.equal((await Post.findByPk(adminOwned.id)).status, 'deleted');
+      assert.equal(await ModerationAuditLog.count({ where: { post_id: adminOwned.id } }), 1);
+    });
     console.log('FE66 P2 contract regression PASS: ' + steps + ' scenario groups on actual Express + MySQL 8');
   } finally {
     try {

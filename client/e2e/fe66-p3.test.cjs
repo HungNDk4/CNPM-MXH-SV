@@ -241,8 +241,8 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
 
     await step('Search and category filtering reflected in browser result/URL',async()=>{
       await page.goto(UI+'/');
-      await page.getByPlaceholder('Tìm kiếm bài viết, tài liệu...').fill('P3 Other '+seed);
-      await page.getByPlaceholder('Tìm kiếm bài viết, tài liệu...').press('Enter');
+      await page.getByPlaceholder('Tìm kiếm...').fill('P3 Other '+seed);
+      await page.getByPlaceholder('Tìm kiếm...').press('Enter');
       await page.waitForURL(u=>u.searchParams.get('search')==='P3 Other '+seed);
       await page.getByRole('heading',{name:other.title,exact:true}).waitFor();
       await page.getByRole('button',{name:'Xóa từ khóa tìm kiếm'}).click();

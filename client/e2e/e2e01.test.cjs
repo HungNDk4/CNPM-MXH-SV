@@ -148,7 +148,7 @@ test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, a
 
     await check('Guest feed/detail show safe metadata and login CTA', async () => {
       await guest.goto(UI + '/');
-      await guest.getByText(title, { exact: true }).waitFor();
+      await guest.getByRole('heading', { name: title, exact: true }).first().waitFor();
       await guest.goto(UI + '/documents/' + postId);
       await guest.getByRole('link', { name: /Đăng nhập để tải/ }).waitFor();
       assert.equal(await guest.getByRole('button', { name: /Tải PDF/ }).count(), 0);

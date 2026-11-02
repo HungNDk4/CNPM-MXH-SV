@@ -162,21 +162,23 @@ test('BE-09: secure social Post create/edit ownership and field validation', { t
       assert.equal((await Post.findByPk(postId)).title, 'Updated title');
     });
 
-    await check('Owner may hide an active post but cannot restore/edit after hiding', async () => {
-      const newPost = await create({ title: 'BE09 hide', post_type: 'question' });
+    await check('Owner must use DELETE; generic status edits fail and deleted posts stay closed', async () => {
+      const newPost = await create({ title: 'BE09 owner delete', post_type: 'question' });
       status(newPost, 201); hiddenId = newPost.data.data.id;
-      status(await edit(hiddenId, { status: 'hidden' }), 200);
-      assert.equal((await Post.findByPk(hiddenId)).status, 'hidden');
+      status(await edit(hiddenId, { status: 'hidden' }), 422);
+      assert.equal((await Post.findByPk(hiddenId)).status, 'active');
+      status(await call('DELETE', '/api/posts/' + hiddenId, undefined, a.token), 200);
+      assert.equal((await Post.findByPk(hiddenId)).status, 'deleted');
       status(await edit(hiddenId, { status: 'active' }), 403);
       status(await edit(hiddenId, { title: 'Bypass moderation' }), 403);
-      assert.equal((await Post.findByPk(hiddenId)).status, 'hidden');
+      assert.equal((await Post.findByPk(hiddenId)).status, 'deleted');
     });
 
     await check('Admin still must pass field validation; unrelated post stays intact', async () => {
       status(await edit(postId, { status: 'hidden', role: 'admin' }, admin.token), 422);
       status(await edit(postId, { title: 'Admin reviewed title' }, admin.token), 200);
       assert.equal((await Post.findByPk(postId)).user_id, a.id);
-      assert.equal((await Post.findByPk(hiddenId)).status, 'hidden');
+      assert.equal((await Post.findByPk(hiddenId)).status, 'deleted');
     });
 
     console.log('BE-09 RESULT: ' + steps + '/8 MySQL8 HTTP groups PASS');

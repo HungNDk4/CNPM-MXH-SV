@@ -191,6 +191,7 @@ jobs:
       E2E_DISPOSABLE_DB: 'true'
       E2E_UI_URL: http://127.0.0.1:5173
       E2E_API_URL: http://127.0.0.1:5000
+      FE74_CI_RATE_LIMIT: EXPLICIT_DISPOSABLE_E2E_ONLY
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

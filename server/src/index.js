@@ -1,11 +1,13 @@
 require('dotenv').config();
 const app = require('./app');
 const { sequelize } = require('./config/database');
+const privateStorage = require('./services/private-document-storage');
 
 const PORT = process.env.PORT || 5000;
 
 async function bootstrap() {
   try {
+    privateStorage.validateConfig();
     // Kiểm tra kết nối database
     await sequelize.authenticate();
     console.log('✅ MySQL connected successfully.');

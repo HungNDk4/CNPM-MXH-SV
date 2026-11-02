@@ -90,7 +90,7 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
   const A = {name:'P3 Alpha',email:'p3alpha-'+seed+'@example.invalid',password:'P3OriginalPass2026'};
   const B = {name:'P3 Beta',email:'p3beta-'+seed+'@example.invalid',password:'P3BetaPass2026'};
   const ADMIN = {email:'p3admin-'+seed+'@example.invalid',password:'P3AdminPass2026'};
-  let authA, authB, question, other, admin;
+  let authA, authB, authAdmin, question, other, admin;
   try {
     await sequelize.authenticate();
     const [[version]] = await sequelize.query('SELECT DATABASE() AS db, VERSION() AS version');
@@ -263,7 +263,7 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
         password_hash:await bcrypt.hash(ADMIN.password,10),role:'admin',is_active:true
       });
       owned.push(admin.id);
-      await login(adminPage,ADMIN.email,ADMIN.password);
+      authAdmin=await login(adminPage,ADMIN.email,ADMIN.password);
       await adminPage.goto(UI+'/admin/audit-logs');
       await adminPage.getByRole('heading',{name:/Quản trị viên — Nhật ký kiểm duyệt/}).waitFor();
       await adminPage.locator('#mod-post-id').fill(String(other.id));
@@ -275,6 +275,41 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       await adminPage.getByRole('button',{name:'Lọc nhật ký'}).click();
       await adminPage.getByRole('link',{name:'Bài #'+other.id}).first().waitFor();
       assert.equal(await ModerationAuditLog.count({where:{post_id:other.id}}),1);
+    });
+
+    await step('ADM-01 Admin queue filters, reason and audit with real HTTP',async()=>{
+      await guest.goto(UI+'/admin/content');
+      await guest.waitForURL(u=>u.pathname==='/login');
+      await bPage.goto(UI+'/admin/content');
+      await bPage.waitForURL(u=>u.pathname==='/');
+      assert.equal((await api('/api/posts/moderation/posts',{token:authB.accessToken})).status,403);
+      assert.equal((await api('/api/posts/moderation/posts',{token:authAdmin.accessToken})).status,200);
+      await adminPage.goto(UI+'/admin/content');
+      await adminPage.getByRole('heading',{name:'Quản lý nội dung'}).waitFor();
+      await adminPage.getByPlaceholder('Tìm theo tiêu đề').fill('P3 Edited '+seed);
+      await adminPage.getByRole('button',{name:'Áp dụng bộ lọc'}).click();
+      await adminPage.getByRole('button',{name:'Xem bài #'+question.id}).waitFor();
+      await adminPage.getByRole('button',{name:'Xem bài #'+question.id}).click();
+      await adminPage.getByRole('button',{name:'Ẩn bài viết'}).click();
+      await adminPage.getByRole('button',{name:'Xác nhận kiểm duyệt'}).waitFor();
+      assert.equal(await adminPage.getByRole('button',{name:'Xác nhận kiểm duyệt'}).isDisabled(),true);
+      const reason='Nội dung không phù hợp với quy tắc cộng đồng';
+      await adminPage.getByRole('textbox',{name:'Lý do kiểm duyệt'}).fill(reason);
+      const pending=adminPage.waitForResponse(res=>
+        new URL(res.url()).pathname==='/api/posts/'+question.id+'/moderation' &&
+        res.request().method()==='PATCH');
+      await adminPage.getByRole('button',{name:'Xác nhận kiểm duyệt'}).click();
+      assert.equal((await pending).status(),200);
+      await waitFor(async()=> (await Post.findByPk(question.id)).status==='hidden','adm01 hidden state');
+      const records=await ModerationAuditLog.findAll({where:{post_id:question.id}});
+      assert.equal(records.length,1);
+      assert.equal(records[0].reason,reason);
+      await adminPage.getByRole('link',{name:/Nhật ký kiểm duyệt/}).click();
+      await adminPage.getByRole('heading',{name:/Nhật ký kiểm duyệt/}).waitFor();
+      const history=await api('/api/posts/moderation/audit-logs?post_id='+question.id,
+        {token:authAdmin.accessToken});
+      assert.equal(history.status,200);
+      assert.equal(history.data.data[0].reason,reason);
     });
 
     await step('Password update UI rejects old login, new credential succeeds',async()=>{

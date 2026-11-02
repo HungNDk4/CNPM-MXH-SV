@@ -172,7 +172,7 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
 
     await step('Profile edit UI survives refresh, student cannot edit another profile',async()=>{
       await page.goto(UI+'/profile/'+authA.user.id);
-      await page.getByRole('button',{name:'Chỉnh sửa thông tin'}).click();
+      await page.getByRole('button',{name:'Chỉnh sửa hồ sơ'}).click();
       await page.locator('#full_name').fill('P3 Alpha Updated');
       await page.locator('#bio').fill('P3 profile regression');
       await page.getByRole('button',{name:'Lưu thay đổi'}).click();
@@ -268,15 +268,15 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
     });
 
     await step('Password update UI rejects old login, new credential succeeds',async()=>{
-      await page.goto(UI+'/profile/'+authA.user.id);
-      await page.getByRole('button',{name:'Đổi mật khẩu',exact:true}).click();
+      await page.goto(UI+'/settings?tab=security');
+      await page.getByRole('heading',{name:'Đổi mật khẩu tài khoản'}).waitFor();
       await page.locator('#current_password').fill(A.password);
       await page.locator('#new_password').fill('P3ChangedPass2026');
       await page.locator('#confirm_password').fill('P3ChangedPass2026');
       const pending=page.waitForResponse(res=>
         new URL(res.url()).pathname==='/api/users/change-password' &&
         res.request().method()==='PUT');
-      await page.getByRole('button',{name:'Đổi mật khẩu',exact:true}).last().click();
+      await page.getByRole('button',{name:'Cập nhật mật khẩu'}).click();
       assert.equal((await pending).status(),200);
       assert.equal((await api('/api/auth/login',{method:'POST',
         body:{email:A.email,password:A.password}})).status,401);

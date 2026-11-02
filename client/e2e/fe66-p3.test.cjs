@@ -278,6 +278,14 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
     });
 
     await step('ADM-01 Admin queue filters, reason and audit with real HTTP',async()=>{
+      // Previous P3 scenario deliberately deleted question, so seed a fresh
+      // active Post instead of attempting to hide an already deleted row.
+      const created=await api('/api/posts',{method:'POST',token:authA.accessToken,
+        body:{title:'P3 ADM01 '+seed,content:'Reasoned moderation fixture',
+          subject:'CNPM',post_type:'question',tags:['P3']}});
+      assert.equal(created.status,201,JSON.stringify(created.data));
+      const targetId=created.data.data.id;
+      posts.push(targetId);
       await guest.goto(UI+'/admin/content');
       await guest.waitForURL(u=>u.pathname==='/login');
       await bPage.goto(UI+'/admin/content');
@@ -286,27 +294,27 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       assert.equal((await api('/api/posts/moderation/posts',{token:authAdmin.accessToken})).status,200);
       await adminPage.goto(UI+'/admin/content');
       await adminPage.getByRole('heading',{name:'Quản lý nội dung'}).waitFor();
-      await adminPage.getByPlaceholder('Tìm theo tiêu đề').fill('P3 Edited '+seed);
+      await adminPage.getByPlaceholder('Tìm theo tiêu đề').fill('P3 ADM01 '+seed);
       await adminPage.getByRole('button',{name:'Áp dụng bộ lọc'}).click();
-      await adminPage.getByRole('button',{name:'Xem bài #'+question.id}).waitFor();
-      await adminPage.getByRole('button',{name:'Xem bài #'+question.id}).click();
+      await adminPage.getByRole('button',{name:'Xem bài #'+targetId}).waitFor();
+      await adminPage.getByRole('button',{name:'Xem bài #'+targetId}).click();
       await adminPage.getByRole('button',{name:'Ẩn bài viết'}).click();
       await adminPage.getByRole('button',{name:'Xác nhận kiểm duyệt'}).waitFor();
       assert.equal(await adminPage.getByRole('button',{name:'Xác nhận kiểm duyệt'}).isDisabled(),true);
       const reason='Nội dung không phù hợp với quy tắc cộng đồng';
       await adminPage.getByRole('textbox',{name:'Lý do kiểm duyệt'}).fill(reason);
       const pending=adminPage.waitForResponse(res=>
-        new URL(res.url()).pathname==='/api/posts/'+question.id+'/moderation' &&
+        new URL(res.url()).pathname==='/api/posts/'+targetId+'/moderation' &&
         res.request().method()==='PATCH');
       await adminPage.getByRole('button',{name:'Xác nhận kiểm duyệt'}).click();
       assert.equal((await pending).status(),200);
-      await waitFor(async()=> (await Post.findByPk(question.id)).status==='hidden','adm01 hidden state');
-      const records=await ModerationAuditLog.findAll({where:{post_id:question.id}});
+      await waitFor(async()=> (await Post.findByPk(targetId)).status==='hidden','adm01 hidden state');
+      const records=await ModerationAuditLog.findAll({where:{post_id:targetId}});
       assert.equal(records.length,1);
       assert.equal(records[0].reason,reason);
       await adminPage.getByRole('link',{name:/Nhật ký kiểm duyệt/}).click();
       await adminPage.getByRole('heading',{name:/Nhật ký kiểm duyệt/}).waitFor();
-      const history=await api('/api/posts/moderation/audit-logs?post_id='+question.id,
+      const history=await api('/api/posts/moderation/audit-logs?post_id='+targetId,
         {token:authAdmin.accessToken});
       assert.equal(history.status,200);
       assert.equal(history.data.data[0].reason,reason);

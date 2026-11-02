@@ -124,7 +124,7 @@ function titleFilter(value) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > 100) {
     throw createError('Từ khóa tìm kiếm không hợp lệ.', 422);
   }
-  return value.trim().replace(/[\\%_]/g, '\\module.exports = { moderatePost, listModerationAuditLogs };');
+  return value.trim().replace(/[\\%_]/g, '\\$&');
 }
 const ADMIN_POST_FIELDS = ['id','user_id','title','post_type','subject','status','created_at'];
 const ADMIN_AUTHOR_FIELDS = ['id','full_name'];

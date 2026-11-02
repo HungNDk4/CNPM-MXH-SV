@@ -225,8 +225,18 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       await page.waitForURL(u=>u.pathname==='/posts/'+other.id);
       assert.equal((await Notification.findByPk(first.id)).is_read,true);
       await page.getByRole('button',{name:'Thông báo'}).click();
+      const readAllPending = page.waitForResponse(res=>
+        new URL(res.url()).pathname==='/api/users/me/notifications/read-all' &&
+        res.request().method()==='PATCH');
       await page.getByRole('button',{name:'Đọc tất cả'}).click();
-      await waitFor(async()=> (await Notification.count({where:{recipient_id:authA.user.id,is_read:false}}))===0,'read-all state');
+      const readAllResponse=await readAllPending;
+      assert.equal(readAllResponse.status(),200,await readAllResponse.text());
+      // The Backend explicitly excludes hidden/deleted post events from read-all.
+      // Test visible inbox state, not raw unread rows for suppressed targets.
+      await waitFor(async()=>{
+        const count=await api('/api/users/me/notifications/unread-count',{token:authA.accessToken});
+        return count.status===200 && count.data?.data?.count===0;
+      },'visible read-all state');
     });
 
     await step('Search and category filtering reflected in browser result/URL',async()=>{

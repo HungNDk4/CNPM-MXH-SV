@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const { randomUUID } = require('node:crypto');
 const { chromium } = require('playwright');
-const { User, Post, RefreshToken, DocumentFile, sequelize } = require('../../server/src/models');
+const { User, Post, RefreshToken, DocumentFile, ModerationAuditLog, sequelize } = require('../../server/src/models');
 const storage = require('../../server/src/services/private-document-storage');
 const serverRequire = require('node:module').createRequire(require.resolve('../../server/package.json'));
 const jwt = serverRequire('jsonwebtoken');
@@ -255,18 +255,37 @@ test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, a
       assert.equal(file.size_bytes, MAX);
     });
 
-    await check('Hidden document disappears, stale download denied', async () => {
-      const hidden = await jsonRequest('/api/posts/' + postId, {
+    await check('Audited Admin hide blocks PDF; owner cannot bypass moderation', async () => {
+      // A real Admin principal exists only in this guarded disposable MySQL8 test.
+      const moderator = await User.create({
+        full_name: 'E2E01 Moderator', email: 'e2e01-admin-' + seed + '@example.test',
+        password_hash: 'disposable-ci-no-login', role: 'admin', is_active: true,
+      });
+      userIds.push(moderator.id);
+      const tokenAdmin = jwt.sign(
+        { id: moderator.id, role: 'admin' }, process.env.JWT_ACCESS_SECRET,
+        { expiresIn: '15m' });
+      const bypass = await jsonRequest('/api/posts/' + postId, {
         method: 'PUT', token: tokenA, body: { status: 'hidden' },
       });
+      assert.equal(bypass.status, 422, await bypass.text());
+      const hidden = await jsonRequest('/api/posts/' + postId + '/moderation', {
+        method: 'PATCH', token: tokenAdmin, body: { status: 'hidden' },
+      });
       assert.equal(hidden.status, 200, await hidden.text());
+      assert.equal(await ModerationAuditLog.count({where:{post_id:postId}}), 1);
       assert.equal((await jsonRequest('/api/posts/' + postId)).status, 404);
       assert.equal((await jsonRequest('/api/documents/' + postId + '/download', {token:tokenA})).status, 404);
       assert.equal((await jsonRequest('/api/documents/' + postId + '/download', {token:tokenB})).status, 404);
       await guest.goto(UI + '/documents/' + postId);
       await guest.getByText('Tài liệu không tồn tại hoặc đã bị ẩn.').waitFor();
-      const del = await jsonRequest('/api/posts/' + postId, {method:'DELETE',token:tokenA});
-      assert.equal(del.status, 200, await del.text());
+      const denied = await jsonRequest('/api/posts/' + postId, {method:'DELETE',token:tokenA});
+      assert.equal(denied.status, 409, await denied.text());
+      const deleted = await jsonRequest('/api/posts/' + postId + '/moderation', {
+        method: 'PATCH', token: tokenAdmin, body: { status: 'deleted' },
+      });
+      assert.equal(deleted.status, 200, await deleted.text());
+      assert.equal(await ModerationAuditLog.count({where:{post_id:postId}}), 2);
       assert.equal((await jsonRequest('/api/documents/' + postId + '/download', {token:tokenA})).status, 404);
     });
 
@@ -286,6 +305,7 @@ test('E2E-01 real Chrome/Vite/Express/MySQL/private PDF', { timeout: 240000 }, a
   } finally {
     try {
       // Remove only own synthetic DB rows and private objects; never clean global storage.
+      if (postId) await ModerationAuditLog.destroy({ where: { post_id: postId } });
       for (const id of userIds) {
         const [rows] = await sequelize.query(
           'SELECT storage_key FROM document_files WHERE post_id IN (SELECT id FROM posts WHERE user_id = ?)',

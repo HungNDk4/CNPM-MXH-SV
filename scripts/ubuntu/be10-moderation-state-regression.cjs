@@ -102,8 +102,11 @@ test('BE-10: suppressed Post cannot be restored or edited by any role', { timeou
       assert.equal((await Post.findByPk(questionId)).user_id, owner.id);
     });
 
-    await check('Owner may hide an active social Post, nobody can restore it', async () => {
-      assertStatus(await edit(questionId, { status: 'hidden' }, owner.token), 200);
+    await check('Only audited Admin moderation can hide social Posts; nobody can restore', async () => {
+      assertStatus(await edit(questionId, { status: 'hidden' }, owner.token), 422);
+      assertStatus(await edit(questionId, { status: 'hidden' }, admin.token), 422);
+      assert.equal((await Post.findByPk(questionId)).status, 'active');
+      assertStatus(await moderate(questionId, 'hidden'), 200);
       const original = await Post.findByPk(questionId);
       assert.equal(original.status, 'hidden');
       for (const actor of [owner, admin]) {

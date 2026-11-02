@@ -186,6 +186,35 @@ test('FE66 P2: Notifications + Follow + Bookmarks + Admin Audit contracts', { ti
       await expect('GET','/api/users/me/notifications?unread_only=invalid',studentA,undefined,422);
       await expect('GET','/api/users/me/notifications?limit=51',studentA,undefined,422);
     });
+    await check('Admin audit authorization and empty response DTO', async () => {
+      await expect('GET','/api/posts/moderation/audit-logs',studentA,undefined,403);
+      await expect('PATCH','/api/posts/' + post1.id + '/moderation',studentA,{status:'hidden'},403);
+      const empty=await expect('GET','/api/posts/moderation/audit-logs?page=1&limit=1',moderator);
+      pageShape(empty,0,1,1);
+      await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'active'},422);
+      await expect('PATCH','/api/posts/x/moderation',moderator,{status:'hidden'},422);
+      await expect('GET','/api/posts/moderation/audit-logs?page=0',moderator,undefined,422);
+      await expect('GET','/api/posts/moderation/audit-logs?post_id=bad',moderator,undefined,422);
+    });
+    await check('Admin moderation atomic audit, filtering, pagination and forbidden restoration', async () => {
+      const first=await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'hidden'});
+      assert.deepEqual(first.data,{id:post1.id,status:'hidden'});
+      await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'hidden'});
+      assert.equal(await ModerationAuditLog.count({where:{post_id:post1.id}}),1);
+      const second=await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'deleted'});
+      assert.equal(second.data.status,'deleted');
+      await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'hidden'},409);
+      assert.equal((await Post.findByPk(post1.id)).status,'deleted');
+      const all=await expect('GET','/api/posts/moderation/audit-logs?page=1&limit=1',moderator);
+      pageShape(all,2,1,1);
+      const filtered=await expect('GET','/api/posts/moderation/audit-logs?post_id=' + post1.id,moderator);
+      pageShape(filtered,2,1,10);
+      assert.deepEqual(Object.keys(filtered.data[0]).sort(),
+        ['id','actor_admin_id','post_id','previous_status','new_status','created_at'].sort());
+      assert.equal(filtered.data[0].actor_admin_id,moderator.id);
+      const nonexistent=await expect('GET','/api/posts/moderation/audit-logs?post_id=99999999',moderator);
+      pageShape(nonexistent,0,1,10);
+    });
     await check('SEC-ADMIN deny unaudited status writes and preserve owner delete', async () => {
       const target = await createPost('SEC-ADMIN audit bypass target');
       const owned = await createPost('SEC-ADMIN owner deletion');
@@ -234,35 +263,6 @@ test('FE66 P2: Notifications + Follow + Bookmarks + Admin Audit contracts', { ti
         moderator, { status: 'deleted' });
       assert.equal((await Post.findByPk(adminOwned.id)).status, 'deleted');
       assert.equal(await ModerationAuditLog.count({ where: { post_id: adminOwned.id } }), 1);
-    });
-    await check('Admin audit authorization and empty response DTO', async () => {
-      await expect('GET','/api/posts/moderation/audit-logs',studentA,undefined,403);
-      await expect('PATCH','/api/posts/' + post1.id + '/moderation',studentA,{status:'hidden'},403);
-      const empty=await expect('GET','/api/posts/moderation/audit-logs?page=1&limit=1',moderator);
-      pageShape(empty,0,1,1);
-      await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'active'},422);
-      await expect('PATCH','/api/posts/x/moderation',moderator,{status:'hidden'},422);
-      await expect('GET','/api/posts/moderation/audit-logs?page=0',moderator,undefined,422);
-      await expect('GET','/api/posts/moderation/audit-logs?post_id=bad',moderator,undefined,422);
-    });
-    await check('Admin moderation atomic audit, filtering, pagination and forbidden restoration', async () => {
-      const first=await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'hidden'});
-      assert.deepEqual(first.data,{id:post1.id,status:'hidden'});
-      await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'hidden'});
-      assert.equal(await ModerationAuditLog.count({where:{post_id:post1.id}}),1);
-      const second=await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'deleted'});
-      assert.equal(second.data.status,'deleted');
-      await expect('PATCH','/api/posts/' + post1.id + '/moderation',moderator,{status:'hidden'},409);
-      assert.equal((await Post.findByPk(post1.id)).status,'deleted');
-      const all=await expect('GET','/api/posts/moderation/audit-logs?page=1&limit=1',moderator);
-      pageShape(all,2,1,1);
-      const filtered=await expect('GET','/api/posts/moderation/audit-logs?post_id=' + post1.id,moderator);
-      pageShape(filtered,2,1,10);
-      assert.deepEqual(Object.keys(filtered.data[0]).sort(),
-        ['id','actor_admin_id','post_id','previous_status','new_status','created_at'].sort());
-      assert.equal(filtered.data[0].actor_admin_id,moderator.id);
-      const nonexistent=await expect('GET','/api/posts/moderation/audit-logs?post_id=99999999',moderator);
-      pageShape(nonexistent,0,1,10);
     });
     console.log('FE66 P2 contract regression PASS: ' + steps + ' scenario groups on actual Express + MySQL 8');
   } finally {

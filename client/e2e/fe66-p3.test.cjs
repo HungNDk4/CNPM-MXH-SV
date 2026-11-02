@@ -267,6 +267,7 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       await adminPage.goto(UI+'/admin/audit-logs');
       await adminPage.getByRole('heading',{name:/Quản trị viên — Nhật ký kiểm duyệt/}).waitFor();
       await adminPage.locator('#mod-post-id').fill(String(other.id));
+      await adminPage.locator('#mod-reason').fill('Bài thảo luận vi phạm quy định cộng đồng');
       adminPage.once('dialog',dialog=>dialog.accept());
       await adminPage.getByRole('button',{name:'Xác nhận kiểm duyệt'}).click();
       await waitFor(async()=> (await Post.findByPk(other.id)).status==='hidden','moderation status');
@@ -318,6 +319,26 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
         {token:authAdmin.accessToken});
       assert.equal(history.status,200);
       assert.equal(history.data.data[0].reason,reason);
+
+      // Hidden -> deleted uses the same reason-required Admin UI, not an
+      // unlogged generic DELETE shortcut. Both audit entries must persist.
+      await adminPage.goto(UI+'/admin/content');
+      await adminPage.getByPlaceholder('Tìm theo tiêu đề').fill('P3 ADM01 '+seed);
+      await adminPage.getByRole('button',{name:'Áp dụng bộ lọc'}).click();
+      await adminPage.getByRole('button',{name:'Xem bài #'+targetId}).click();
+      await adminPage.getByRole('button',{name:'Xóa bài viết'}).click();
+      const deletedReason='Nội dung vi phạm nghiêm trọng, đã quyết định xóa';
+      await adminPage.getByRole('textbox',{name:'Lý do kiểm duyệt'}).fill(deletedReason);
+      const deletePending=adminPage.waitForResponse(res=>
+        new URL(res.url()).pathname==='/api/posts/'+targetId+'/moderation' &&
+        res.request().method()==='PATCH');
+      await adminPage.getByRole('button',{name:'Xác nhận kiểm duyệt'}).click();
+      assert.equal((await deletePending).status(),200);
+      await waitFor(async()=>(await Post.findByPk(targetId)).status==='deleted','adm01 deleted state');
+      const afterDelete=await ModerationAuditLog.findAll({where:{post_id:targetId},order:[['id','ASC']]});
+      assert.equal(afterDelete.length,2);
+      assert.equal(afterDelete[0].reason,reason);
+      assert.equal(afterDelete[1].reason,deletedReason);
     });
 
     await step('Password update UI rejects old login, new credential succeeds',async()=>{

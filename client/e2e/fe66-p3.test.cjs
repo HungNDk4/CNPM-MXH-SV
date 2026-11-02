@@ -110,6 +110,31 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       assert.ok(question.id && other.id);
     });
 
+    await step('FE74 Settings uses live profile and password endpoints',async()=>{
+      const profilePending = page.waitForResponse(res =>
+        new URL(res.url()).pathname === '/api/users/' + authA.user.id &&
+        res.request().method() === 'GET');
+      await page.goto(UI + '/settings?tab=account');
+      const profileRes = await profilePending;
+      assert.equal(profileRes.status(), 200, await profileRes.text());
+      await page.getByRole('heading', {name:'Cài đặt tài khoản & hệ thống'}).waitFor();
+      await page.getByRole('button', {name:/Mật khẩu & bảo mật/}).click();
+      await page.locator('#current_password').fill('FE74-Wrong-Password');
+      await page.locator('#new_password').fill('FE74-Secure-New-Password-2026');
+      await page.locator('#confirm_password').fill('FE74-Secure-New-Password-2026');
+      const passwordPending = page.waitForResponse(res =>
+        new URL(res.url()).pathname === '/api/users/change-password' &&
+        res.request().method() === 'PUT');
+      await page.getByRole('button', {name:'Cập nhật mật khẩu'}).click();
+      assert.equal((await passwordPending).status(), 400, 'Incorrect current password must be rejected');
+      const listPending = page.waitForResponse(res =>
+        new URL(res.url()).pathname === '/api/posts' &&
+        res.request().method() === 'GET');
+      await page.getByRole('button', {name:/Bài đăng & hoạt động/}).click();
+      assert.equal((await listPending).status(), 200);
+      await page.getByRole('link', {name:question.title, exact:true}).waitFor();
+    });
+
     await step('Bookmark UI save, list, refresh, remove and account isolation',async()=>{
       await page.goto(UI+'/posts/'+question.id);
       await page.getByRole('heading',{name:question.title,exact:true}).waitFor();

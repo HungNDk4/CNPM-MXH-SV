@@ -110,6 +110,31 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       assert.ok(question.id && other.id);
     });
 
+    await step('FE74 Settings uses live profile and password endpoints',async()=>{
+      const profilePending = page.waitForResponse(res =>
+        new URL(res.url()).pathname === '/api/users/' + authA.user.id &&
+        res.request().method() === 'GET');
+      await page.goto(UI + '/settings?tab=account');
+      const profileRes = await profilePending;
+      assert.equal(profileRes.status(), 200, await profileRes.text());
+      await page.getByRole('heading', {name:'Cài đặt tài khoản & hệ thống'}).waitFor();
+      await page.getByRole('button', {name:/Mật khẩu & bảo mật/}).click();
+      await page.locator('#current_password').fill('FE74-Wrong-Password');
+      await page.locator('#new_password').fill('FE74-Secure-New-Password-2026');
+      await page.locator('#confirm_password').fill('FE74-Secure-New-Password-2026');
+      const passwordPending = page.waitForResponse(res =>
+        new URL(res.url()).pathname === '/api/users/change-password' &&
+        res.request().method() === 'PUT');
+      await page.getByRole('button', {name:'Cập nhật mật khẩu'}).click();
+      assert.equal((await passwordPending).status(), 400, 'Incorrect current password must be rejected');
+      const listPending = page.waitForResponse(res =>
+        new URL(res.url()).pathname === '/api/posts' &&
+        res.request().method() === 'GET');
+      await page.getByRole('button', {name:/Bài đăng & hoạt động/}).click();
+      assert.equal((await listPending).status(), 200);
+      await page.getByRole('link', {name:question.title, exact:true}).waitFor();
+    });
+
     await step('Bookmark UI save, list, refresh, remove and account isolation',async()=>{
       await page.goto(UI+'/posts/'+question.id);
       await page.getByRole('heading',{name:question.title,exact:true}).waitFor();
@@ -147,7 +172,7 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
 
     await step('Profile edit UI survives refresh, student cannot edit another profile',async()=>{
       await page.goto(UI+'/profile/'+authA.user.id);
-      await page.getByRole('button',{name:'Chỉnh sửa thông tin'}).click();
+      await page.getByRole('button',{name:'Chỉnh sửa hồ sơ'}).click();
       await page.locator('#full_name').fill('P3 Alpha Updated');
       await page.locator('#bio').fill('P3 profile regression');
       await page.getByRole('button',{name:'Lưu thay đổi'}).click();
@@ -200,14 +225,24 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       await page.waitForURL(u=>u.pathname==='/posts/'+other.id);
       assert.equal((await Notification.findByPk(first.id)).is_read,true);
       await page.getByRole('button',{name:'Thông báo'}).click();
+      const readAllPending = page.waitForResponse(res=>
+        new URL(res.url()).pathname==='/api/users/me/notifications/read-all' &&
+        res.request().method()==='PATCH');
       await page.getByRole('button',{name:'Đọc tất cả'}).click();
-      await waitFor(async()=> (await Notification.count({where:{recipient_id:authA.user.id,is_read:false}}))===0,'read-all state');
+      const readAllResponse=await readAllPending;
+      assert.equal(readAllResponse.status(),200,await readAllResponse.text());
+      // The Backend explicitly excludes hidden/deleted post events from read-all.
+      // Test visible inbox state, not raw unread rows for suppressed targets.
+      await waitFor(async()=>{
+        const count=await api('/api/users/me/notifications/unread-count',{token:authA.accessToken});
+        return count.status===200 && count.data?.data?.count===0;
+      },'visible read-all state');
     });
 
     await step('Search and category filtering reflected in browser result/URL',async()=>{
       await page.goto(UI+'/');
-      await page.getByPlaceholder('Tìm kiếm bài viết, tài liệu...').fill('P3 Other '+seed);
-      await page.getByPlaceholder('Tìm kiếm bài viết, tài liệu...').press('Enter');
+      await page.getByPlaceholder('Tìm kiếm...').fill('P3 Other '+seed);
+      await page.getByPlaceholder('Tìm kiếm...').press('Enter');
       await page.waitForURL(u=>u.searchParams.get('search')==='P3 Other '+seed);
       await page.getByRole('heading',{name:other.title,exact:true}).waitFor();
       await page.getByRole('button',{name:'Xóa từ khóa tìm kiếm'}).click();
@@ -243,15 +278,15 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
     });
 
     await step('Password update UI rejects old login, new credential succeeds',async()=>{
-      await page.goto(UI+'/profile/'+authA.user.id);
-      await page.getByRole('button',{name:'Đổi mật khẩu',exact:true}).click();
+      await page.goto(UI+'/settings?tab=security');
+      await page.getByRole('heading',{name:'Đổi mật khẩu tài khoản'}).waitFor();
       await page.locator('#current_password').fill(A.password);
       await page.locator('#new_password').fill('P3ChangedPass2026');
       await page.locator('#confirm_password').fill('P3ChangedPass2026');
       const pending=page.waitForResponse(res=>
         new URL(res.url()).pathname==='/api/users/change-password' &&
         res.request().method()==='PUT');
-      await page.getByRole('button',{name:'Đổi mật khẩu',exact:true}).last().click();
+      await page.getByRole('button',{name:'Cập nhật mật khẩu'}).click();
       assert.equal((await pending).status(),200);
       assert.equal((await api('/api/auth/login',{method:'POST',
         body:{email:A.email,password:A.password}})).status,401);

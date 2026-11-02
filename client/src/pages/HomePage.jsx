@@ -1,16 +1,14 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { postAPI, followAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
 import { useAuthStore } from '@/stores/authStore'
+import InlineComposer from '@/components/feed/InlineComposer'
 import {
   BookOpen,
-  PenSquare,
-  Info,
   Search,
   X,
-  Inbox,
   AlertCircle,
   ChevronLeft,
   ChevronRight,
@@ -21,655 +19,636 @@ import {
   MessageSquare,
   GraduationCap,
   Bookmark,
-  Shield,
-  Compass,
-  CheckCircle2,
-  ExternalLink,
   Users,
-  Lightbulb,
-  FileCheck,
+  TrendingUp,
+  DownloadCloud,
+  ArrowUpDown,
 } from 'lucide-react'
+import { PostCardSkeleton } from '@/components/common/Skeleton'
 
-const FILTERS = [
-  { label: 'Tất cả', value: 'all', icon: Compass },
-  { label: 'Hỏi đáp', value: 'question', icon: HelpCircle },
-  { label: 'Tài liệu', value: 'document', icon: FileText },
-  { label: 'Thảo luận', value: 'discussion', icon: MessageSquare },
+const POPULAR_SUBJECTS = [
+  'Tất cả môn',
+  'Công nghệ phần mềm',
+  'Cơ sở dữ liệu',
+  'Lập trình Web',
+  'Trí tuệ nhân tạo',
+  'Kiến trúc máy tính',
+  'An toàn thông tin',
 ]
 
-const POPULAR_TAGS = ['CNPM', 'Java', 'React', 'Giải tích', 'CSDL', 'OOP', 'Python', 'KTMT']
+const FILTER_TABS = [
+  { label: 'Tất cả bài viết', value: '', icon: BookOpen },
+  { label: 'Thảo luận', value: 'discussion', icon: MessageSquare },
+  { label: 'Hỏi đáp', value: 'question', icon: HelpCircle },
+  { label: 'Tài liệu PDF', value: 'document', icon: FileText },
+]
 
 export default function HomePage() {
-  const { isAuthenticated, user } = useAuthStore()
-  const [filter, setFilter] = useState('all')
   const [searchParams, setSearchParams] = useSearchParams()
+  const { user, isAuthenticated } = useAuthStore()
+
+  // Feed stream tab & sort states (Batch 2)
+  const [streamTab, setStreamTab] = useState('for-you') // 'for-you' | 'following' | 'groups'
+  const [sortBy, setSortBy] = useState('newest') // 'newest' | 'popular'
+
+  // URL query params
+  const activeType = searchParams.get('type') || ''
   const searchKeyword = searchParams.get('search') || ''
   const selectedSubject = searchParams.get('subject') || ''
   const [page, setPage] = useState(1)
 
-  // ADR-002: Guest only allowed document metadata
-  const activeType = isAuthenticated ? filter : 'document'
-  const visibleFilters = isAuthenticated ? FILTERS : FILTERS.filter((item) => item.value === 'document')
+  // When not logged in, guests can only view free document posts (ADR-002 / ADR-011)
+  const effectiveType = isAuthenticated ? activeType : 'document'
 
-  // Query posts with search, filter, subject, pagination
+  // Query posts with React Query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['posts', activeType, isAuthenticated, searchKeyword, selectedSubject, page],
-    queryFn: () =>
-      postAPI
-        .getAll({
-          page,
-          limit: 10,
-          ...(activeType === 'all' ? {} : { type: activeType }),
-          ...(searchKeyword ? { search: searchKeyword } : {}),
-          ...(selectedSubject ? { subject: selectedSubject } : {}),
-        })
-        .then((response) => response.data),
-    retry: false,
+    queryKey: ['posts', effectiveType, searchKeyword, selectedSubject, page, isAuthenticated],
+    queryFn: async () => {
+      const params = { page, limit: 10 }
+      if (effectiveType) params.type = effectiveType
+      if (searchKeyword) params.search = searchKeyword
+      if (selectedSubject) params.subject = selectedSubject
+      return (await postAPI.getAll(params)).data
+    },
     keepPreviousData: true,
+    retry: 1,
   })
 
-  // EXT-02: Query real follow stats for authenticated user
-  const { data: followStats } = useQuery({
-    queryKey: ['follow-stats', user?.id],
-    queryFn: async () => (await followAPI.getFollowStats(user.id)).data.data,
-    enabled: Boolean(isAuthenticated && user?.id),
-    retry: false,
-  })
-
-  const pagination = data?.pagination
-  const totalPages = pagination?.totalPages || 1
   const posts = data?.data || []
 
-  const handleFilterChange = (val) => {
-    setFilter(val)
+  // Query following list if authenticated and user views "Đang theo dõi"
+  const { data: followingData } = useQuery({
+    queryKey: ['following', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return []
+      const res = await followAPI.getFollowing(user.id)
+      return res.data?.data || []
+    },
+    enabled: Boolean(isAuthenticated && user?.id && streamTab === 'following'),
+    staleTime: 60000,
+  })
+
+  // Dynamic counts for Level 2 filter pills
+  const counts = useMemo(() => {
+    return {
+      all: posts.length,
+      document: posts.filter((p) => p.post_type === 'document').length,
+      question: posts.filter((p) => p.post_type === 'question').length,
+      discussion: posts.filter((p) => p.post_type === 'discussion').length,
+    }
+  }, [posts])
+
+  // Processed posts with stream filtering and sorting
+  const displayPosts = useMemo(() => {
+    let list = [...posts]
+
+    if (streamTab === 'following') {
+      const followedIds = new Set((followingData || []).map((f) => f.id || f.following_id))
+      list = list.filter((p) => p.author?.id && (followedIds.has(p.author.id) || p.author.id === user?.id))
+    } else if (streamTab === 'groups') {
+      list = list.filter((p) => Boolean(p.subject))
+    }
+
+    if (sortBy === 'popular') {
+      list.sort((a, b) => {
+        const scoreA = (a.likes_count || 0) + (a.comments_count || 0)
+        const scoreB = (b.likes_count || 0) + (b.comments_count || 0)
+        return scoreB - scoreA
+      })
+    } else {
+      list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    }
+
+    return list
+  }, [posts, streamTab, sortBy, followingData, user?.id])
+
+  // Featured active students derived safely from feed posts
+  const featuredStudents = useMemo(() => {
+    const list = []
+    const seen = new Set()
+    for (const item of posts) {
+      if (item.author && !seen.has(item.author.id)) {
+        seen.add(item.author.id)
+        list.push({
+          id: item.author.id,
+          full_name: item.author.full_name,
+          avatar_url: item.author.avatar_url,
+          university: item.author.university,
+          major: item.subject || 'Công nghệ thông tin',
+        })
+        if (list.length >= 6) break
+      }
+    }
+    return list
+  }, [posts])
+  const pagination = data?.pagination || { total: 0, totalPages: 1 }
+
+  // Guest view: only document posts allowed without login
+  const visibleFilters = isAuthenticated
+    ? [
+        { label: 'Tất cả', value: '', count: counts.all },
+        { label: 'Chia sẻ PDF', value: 'document', count: counts.document, icon: FileText },
+        { label: 'Hỏi đáp', value: 'question', count: counts.question, icon: HelpCircle },
+        { label: 'Thảo luận', value: 'discussion', count: counts.discussion, icon: MessageSquare },
+      ]
+    : [{ label: 'Tài liệu PDF miễn phí', value: 'document', count: counts.document, icon: FileText }]
+
+  const handleFilterChange = (typeVal) => {
+    const nextParams = new URLSearchParams(searchParams)
+    if (typeVal) {
+      nextParams.set('type', typeVal)
+    } else {
+      nextParams.delete('type')
+    }
+    setSearchParams(nextParams)
     setPage(1)
   }
 
-  const handleTagClick = (tag) => {
-    const next = new URLSearchParams(searchParams)
-    if (selectedSubject === tag) {
-      next.delete('subject')
+  const handleSubjectChange = (subjectVal) => {
+    const nextParams = new URLSearchParams(searchParams)
+    if (subjectVal && subjectVal !== 'Tất cả môn') {
+      nextParams.set('subject', subjectVal)
     } else {
-      next.set('subject', tag)
+      nextParams.delete('subject')
     }
-    setSearchParams(next)
+    setSearchParams(nextParams)
     setPage(1)
   }
 
   const removeSearchFilter = () => {
-    const next = new URLSearchParams(searchParams)
-    next.delete('search')
-    setSearchParams(next)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('search')
+    setSearchParams(nextParams)
     setPage(1)
   }
 
   const removeSubjectFilter = () => {
-    const next = new URLSearchParams(searchParams)
-    next.delete('subject')
-    setSearchParams(next)
-    setPage(1)
-  }
-
-  const clearAllFilters = () => {
-    setSearchParams({})
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('subject')
+    setSearchParams(nextParams)
     setPage(1)
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-start">
+    <div className="grid items-start gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
       {/* ═══════════════════════════════════════════════
-          CỘT TRÁI (LEFT SIDEBAR): Profile & Điều hướng
+          CỘT CHÍNH (MAIN FEED): Tạo bài & Danh sách bài (Tối ưu 700px)
           ═══════════════════════════════════════════════ */}
-      <aside className="lg:col-span-4 xl:col-span-3 space-y-4 lg:sticky lg:top-20">
-        {/* Profile Card */}
+      <div className="mx-auto flex w-full min-w-0 max-w-[700px] flex-col space-y-4">
+        {/* Inline Post Composer (Grovelyn Image 4 Style - Part of Column 2) */}
         {isAuthenticated ? (
-          <div className="card overflow-hidden p-0 border border-surface-border shadow-xs">
-            {/* Header cover gradient */}
-            <div className="h-16 bg-gradient-to-r from-blue-600 via-indigo-600 to-primary-600 relative" />
+          <InlineComposer user={user} onPostSuccess={() => refetch()} />
+        ) : (
+          <div className="relative overflow-hidden rounded-[22px] bg-[#06110a] dark:bg-[#242526] text-white p-6 sm:p-7 shadow-xs border border-[#213328] dark:border-[#3E4042] transition-colors">
+            {/* Subtle decorative leaf SVG background */}
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 300 170"
+              preserveAspectRatio="xMidYMid slice"
+              className="pointer-events-none absolute inset-0 h-full w-full opacity-30 select-none"
+            >
+              <path d="M0 0c5.6 -4.7 13.2 -4.7 18.8 0c-5.6 4.7 -13.2 4.7 -18.8 0z" fill="#5bd13a" opacity="0.6" transform="translate(240 25) rotate(45)" />
+              <path d="M0 0c6.8 -5.5 16 -5.5 22.8 0c-6.8 5.5 -16 5.5 -22.8 0z" fill="#dcf6cf" opacity="0.5" transform="translate(260 70) rotate(-35)" />
+              <circle cx="215" cy="40" r="4" fill="#5bd13a" opacity="0.7" />
+              <circle cx="280" cy="115" r="3" fill="#dcf6cf" opacity="0.6" />
+            </svg>
 
-            <div className="px-4 pb-4 pt-0">
-              {/* Avatar overlapping banner */}
-              <div className="relative -mt-9 mb-2.5 flex items-end justify-between">
-                <Link
-                  to={`/profile/${user?.id}`}
-                  className="w-16 h-16 rounded-full border-4 border-surface-card bg-surface-muted text-primary-600 font-bold text-xl flex items-center justify-center overflow-hidden shadow-xs hover:opacity-90 transition-opacity"
-                  title="Xem trang cá nhân"
-                >
-                  {user?.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.full_name || 'Avatar'}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.currentTarget.style.display = 'none' }}
-                    />
-                  ) : (
-                    user?.full_name?.[0]?.toUpperCase() || 'U'
-                  )}
-                </Link>
-
-                <Link
-                  to={`/profile/${user?.id}`}
-                  className="text-xs text-primary-600 dark:text-primary-400 font-medium hover:underline pb-1 inline-flex items-center gap-1"
-                >
-                  Hồ sơ <ExternalLink className="w-3 h-3" />
-                </Link>
-              </div>
-
-              {/* Name & Academic info */}
-              <div>
-                <Link
-                  to={`/profile/${user?.id}`}
-                  className="font-bold text-slate-900 dark:text-slate-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-base block truncate leading-snug"
-                >
-                  {user?.full_name || 'Sinh viên'}
-                </Link>
-                {(user?.university || user?.major) ? (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1 truncate">
-                    <GraduationCap className="w-3.5 h-3.5 shrink-0 text-primary-600 dark:text-primary-400" />
-                    <span className="truncate">{user?.university || user?.major}</span>
-                  </p>
-                ) : (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Mạng học tập sinh viên</p>
-                )}
-              </div>
-
-              {/* Real Follow Stats counters */}
-              <div className="mt-3 py-2.5 px-3 bg-surface-muted/60 dark:bg-slate-800/50 rounded-xl border border-surface-border grid grid-cols-2 text-center text-xs">
-                <Link to={`/profile/${user?.id}`} className="hover:text-primary-600 transition-colors" title="Xem người theo dõi">
-                  <span className="block font-bold text-sm text-slate-900 dark:text-slate-100">
-                    {followStats?.followers ?? 0}
-                  </span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Người theo dõi</span>
-                </Link>
-                <div className="border-l border-surface-border">
-                  <Link to={`/profile/${user?.id}`} className="hover:text-primary-600 transition-colors" title="Xem đang theo dõi">
-                    <span className="block font-bold text-sm text-slate-900 dark:text-slate-100">
-                      {followStats?.following ?? 0}
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Đang theo dõi</span>
-                  </Link>
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 dark:bg-[#163D29] text-white dark:text-[#2ECC71] border border-white/10 dark:border-[#3E4042]">
+                  <Sparkles className="w-3.5 h-3.5 text-[#5bd13a]" />
+                  <span>Cộng đồng học thuật sinh viên 2026</span>
                 </div>
+                <h3 className="font-extrabold text-lg sm:text-xl text-white tracking-tight">
+                  Khám phá &amp; Chia sẻ kho tri thức đại học
+                </h3>
+                <p className="text-xs sm:text-sm text-neutral-300 dark:text-neutral-400 max-w-xl leading-relaxed">
+                  Kho tài liệu PDF, đồ án mẫu và đề cương ôn thi được sinh viên chia sẻ hoàn toàn miễn phí.
+                </p>
               </div>
-
-              {/* Navigation list */}
-              <nav className="mt-4 pt-3 border-t border-surface-border space-y-1" aria-label="Điều hướng nhanh">
+              <div className="flex items-center gap-2.5 shrink-0">
                 <Link
-                  to="/"
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400"
+                  to="/login"
+                  className="bg-[#5bd13a] hover:bg-[#6ee04d] text-[#06110a] font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl shadow-xs transition-all active:scale-[0.98]"
                 >
-                  <Compass className="w-4 h-4" />
-                  <span>Bảng tin học tập</span>
+                  Đăng nhập
                 </Link>
-
                 <Link
-                  to="/bookmarks"
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-surface-muted transition-colors"
+                  to="/register"
+                  className="bg-white/10 hover:bg-white/15 text-white font-bold text-xs sm:text-sm py-2.5 px-5 rounded-xl border border-white/20 transition-all active:scale-[0.98]"
                 >
-                  <Bookmark className="w-4 h-4 text-slate-400" />
-                  <span>Bài viết đã lưu</span>
+                  Đăng ký ngay
                 </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
-                <Link
-                  to="/posts/create"
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-surface-muted transition-colors"
-                >
-                  <PenSquare className="w-4 h-4 text-slate-400" />
-                  <span>Đăng bài / Chia sẻ PDF</span>
-                </Link>
+        {/* ── BỘ LỌC BẢNG TIN (KHOẢNG CÁCH GỌN GÀNG, GẮN KẾT) ── */}
+        <div className="space-y-2 pt-0.5">
+          {/* ── TẦNG 1: FEED STREAM TABS & SẮP XẾP (GROVELYN COMMUNITY FEED STYLE) ── */}
+          <div className="flex items-center justify-between border-b border-[#E2E7DE] dark:border-[#3E4042] pb-0">
+            <div role="tablist" aria-label="Bảng tin" className="flex min-w-0 gap-5 sm:gap-7 overflow-x-auto [scrollbar-width:none]">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={streamTab === 'for-you'}
+                onClick={() => setStreamTab('for-you')}
+                className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-[15px] sm:text-[16px] font-bold transition-all cursor-pointer ${
+                  streamTab === 'for-you'
+                    ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
+                    : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
+                }`}
+              >
+                Dành cho bạn
+              </button>
 
-                {user?.role === 'admin' && (
-                  <Link
-                    to="/admin/audit-logs"
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors"
+              {isAuthenticated && (
+                <>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={streamTab === 'following'}
+                    onClick={() => setStreamTab('following')}
+                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-[15px] sm:text-[16px] font-bold transition-all cursor-pointer ${
+                      streamTab === 'following'
+                        ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
+                        : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
+                    }`}
                   >
-                    <Shield className="w-4 h-4" />
-                    <span>Quản trị kiểm duyệt</span>
-                  </Link>
-                )}
-              </nav>
+                    Đang theo dõi
+                  </button>
+
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={streamTab === 'groups'}
+                    onClick={() => setStreamTab('groups')}
+                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-[15px] sm:text-[16px] font-bold transition-all cursor-pointer ${
+                      streamTab === 'groups'
+                        ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
+                        : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
+                    }`}
+                  >
+                    Môn học &amp; Đồ án
+                  </button>
+                </>
+              )}
             </div>
+
+            {/* Sắp xếp bài viết */}
+            <label className="relative flex shrink-0 items-center gap-1.5 pb-2 pt-0.5 text-xs sm:text-sm font-semibold text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white cursor-pointer select-none">
+              <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
+              <span className="sr-only sm:not-sr-only text-xs">Sắp xếp:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="cursor-pointer appearance-none bg-transparent pr-1 font-bold text-xs sm:text-sm text-[#06110a] dark:text-white outline-none"
+              >
+                <option value="newest" className="bg-white dark:bg-[#303132] text-[#06110a] dark:text-white">Mới nhất</option>
+                <option value="popular" className="bg-white dark:bg-[#303132] text-[#06110a] dark:text-white">Sôi nổi nhất</option>
+              </select>
+            </label>
           </div>
-        ) : (
-          /* Guest Card */
-          <div className="card space-y-3.5 p-5 border border-surface-border shadow-xs">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold">
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Chào mừng bạn!</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Khách xem tài liệu tự do</p>
-              </div>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Đăng nhập để đặt câu hỏi, chia sẻ tài liệu ôn tập và tham gia thảo luận cùng sinh viên.
-            </p>
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <Link to="/login" className="btn-secondary text-xs py-2 text-center">
-                Đăng nhập
-              </Link>
-              <Link to="/register" className="btn-primary text-xs py-2 text-center">
-                Đăng ký
-              </Link>
-            </div>
-          </div>
-        )}
 
-        {/* Quick Filter Shortcuts (LinkedIn style) */}
-        <div className="card p-4 space-y-2.5 border border-surface-border shadow-xs hidden sm:block">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
-            Phân loại bài viết
-          </h3>
-          <div className="space-y-1">
-            {visibleFilters.map(({ label, value, icon: Icon }) => {
-              const isActive = activeType === value
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => handleFilterChange(value)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                    isActive
-                      ? 'bg-primary-600 text-white font-semibold shadow-xs'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-surface-muted'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    <span>{label}</span>
-                  </span>
-                  {isActive && <CheckCircle2 className="w-3.5 h-3.5" />}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </aside>
-
-      {/* ═══════════════════════════════════════════════
-          CỘT GIỮA (CENTER FEED): Tạo bài & Dòng tin
-          ═══════════════════════════════════════════════ */}
-      <main className="lg:col-span-8 xl:col-span-6 space-y-4">
-        {/* Grovelyn / Facebook Create Post Prompt Box */}
-        {isAuthenticated ? (
-          <div className="card p-4 sm:p-5 border border-surface-border shadow-xs space-y-3.5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 font-bold flex items-center justify-center shrink-0 overflow-hidden border border-surface-border shadow-2xs">
-                {user?.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.full_name || 'Avatar'}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.currentTarget.style.display = 'none' }}
-                  />
-                ) : (
-                  user?.full_name?.[0]?.toUpperCase() || 'U'
-                )}
-              </div>
-
-              <Link
-                to="/posts/create"
-                className="flex-1 bg-surface-muted hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full px-4 py-2.5 text-xs sm:text-sm text-left transition-colors border border-surface-border cursor-pointer shadow-2xs truncate"
-              >
-                Xin chào {user?.full_name ? user.full_name.split(' ').slice(-1)[0] : ''}! Bạn muốn chia sẻ câu hỏi hay tài liệu gì hôm nay?
-              </Link>
-            </div>
-
-            {/* Quick action buttons linking to CreatePost with query type */}
-            <div className="flex items-center justify-between pt-2.5 border-t border-surface-border/70 text-xs text-slate-600 dark:text-slate-300">
-              <Link
-                to="/posts/create?type=question"
-                className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors font-medium text-blue-600 dark:text-blue-400"
-                title="Tạo câu hỏi / hỏi đáp bài tập"
-              >
-                <HelpCircle className="w-4 h-4" />
-                <span>Đặt câu hỏi</span>
-              </Link>
-
-              <Link
-                to="/posts/create?type=document"
-                className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors font-medium text-emerald-600 dark:text-emerald-400"
-                title="Tải lên và chia sẻ tài liệu PDF"
-              >
-                <FileText className="w-4 h-4" />
-                <span>Chia sẻ PDF</span>
-              </Link>
-
-              <Link
-                to="/posts/create?type=discussion"
-                className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-colors font-medium text-purple-600 dark:text-purple-400"
-                title="Mở chủ đề thảo luận học thuật"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Thảo luận</span>
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="card p-4 sm:p-5 border border-surface-border shadow-xs space-y-3.5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 font-bold flex items-center justify-center shrink-0 border border-primary-200 dark:border-primary-800/60 shadow-2xs">
-                <GraduationCap className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-              </div>
-
-              <Link
-                to="/login"
-                className="flex-1 bg-surface-muted hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full px-4 py-2.5 text-xs sm:text-sm text-left transition-colors border border-surface-border cursor-pointer shadow-2xs truncate"
-              >
-                Bạn muốn đặt câu hỏi hay chia sẻ tài liệu? Đăng nhập để bắt đầu...
-              </Link>
-            </div>
-
-            {/* Quick action buttons linking to login */}
-            <div className="flex items-center justify-between pt-2.5 border-t border-surface-border/70 text-xs text-slate-600 dark:text-slate-300">
-              <Link
-                to="/login"
-                className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors font-medium text-blue-600 dark:text-blue-400"
-                title="Đăng nhập để đặt câu hỏi"
-              >
-                <HelpCircle className="w-4 h-4" />
-                <span>Đặt câu hỏi</span>
-              </Link>
-
-              <Link
-                to="/login"
-                className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors font-medium text-emerald-600 dark:text-emerald-400"
-                title="Đăng nhập để chia sẻ tài liệu PDF"
-              >
-                <FileText className="w-4 h-4" />
-                <span>Chia sẻ PDF</span>
-              </Link>
-
-              <Link
-                to="/login"
-                className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-colors font-medium text-purple-600 dark:text-purple-400"
-                title="Đăng nhập để mở thảo luận"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Thảo luận</span>
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Filter tabs */}
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <div className="flex gap-2">
-            {visibleFilters.map(({ label, value, icon: Icon }) => {
-              const isActive = activeType === value
+          {/* ── TẦNG 2: PHÂN LOẠI NỘI DUNG (FILTER PILLS WITH TABULAR COUNTS) ── */}
+          <div className="-mx-1 flex max-w-full items-center gap-2 overflow-x-auto px-1 [scrollbar-width:none] py-0.5">
+            {visibleFilters.map(({ label, value, count, icon: Icon }) => {
+              const isActive = (effectiveType === value) || (!isAuthenticated && value === 'document')
               return (
                 <button
                   key={value}
                   type="button"
                   onClick={() => handleFilterChange(value)}
                   aria-pressed={isActive}
-                  className={`text-xs sm:text-sm py-2 px-3.5 rounded-xl font-medium transition-all duration-150 inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  className={`inline-flex h-8 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3.5 text-xs font-bold transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-primary-600 text-white shadow-xs font-semibold'
-                      : 'bg-surface-card hover:bg-surface-muted text-slate-600 dark:text-slate-300 border border-surface-border'
+                      ? 'bg-[#06110a] dark:bg-[#22c55e] text-white dark:text-[#06110a] shadow-xs'
+                      : 'border border-[#E2E7DE] dark:border-[#3E4042] bg-white dark:bg-[#303132] text-[#56614f] dark:text-[#B0B3B8] hover:bg-[#F2F4EF] dark:hover:bg-[#262626] hover:text-[#06110a] dark:hover:text-white'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  {Icon && <Icon className="w-3.5 h-3.5" />}
                   <span>{label}</span>
+                  {typeof count === 'number' && (
+                    <span
+                      className={`text-[11px] tabular-nums font-extrabold ${
+                        isActive
+                          ? 'text-[#5bd13a] dark:text-[#06110a]'
+                          : 'text-[#16a34a] dark:text-[#4ade80]'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* Active Filters Display */}
+        {/* ── Active Filters Bar ── */}
         {(searchKeyword || selectedSubject) && (
-          <div className="flex items-center justify-between bg-surface-card border border-surface-border px-3.5 py-2.5 rounded-xl text-xs sm:text-sm shadow-2xs">
+          <div className="flex items-center justify-between bg-surface-card border border-surface-border px-4 py-3 rounded-2xl text-xs sm:text-sm shadow-bento">
             <div className="flex items-center gap-2 flex-wrap text-slate-700 dark:text-slate-300">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Đang lọc theo:</span>
+              <span className="text-slate-400 font-medium">Đang lọc:</span>
               {searchKeyword && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                  <Search className="w-3 h-3" />
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] border border-[#bbf7d0] dark:border-[#166534]">
+                  <Search className="w-3.5 h-3.5" />
                   <span>"{searchKeyword}"</span>
                   <button
                     type="button"
                     onClick={removeSearchFilter}
-                    className="hover:text-red-600 font-bold ml-1 cursor-pointer"
+                    className="hover:text-red-500 font-bold ml-1 cursor-pointer"
                     aria-label="Xóa từ khóa tìm kiếm"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
               )}
               {selectedSubject && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-surface-muted text-slate-700 dark:text-slate-300 border border-surface-border">
-                  <BookOpen className="w-3 h-3 text-primary-600 dark:text-primary-400" />
-                  <span>Môn: {selectedSubject}</span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] border border-[#bbf7d0] dark:border-[#166534]">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>{selectedSubject}</span>
                   <button
                     type="button"
                     onClick={removeSubjectFilter}
-                    className="hover:text-red-600 font-bold ml-1 cursor-pointer"
+                    className="hover:text-red-500 font-bold ml-1 cursor-pointer"
                     aria-label="Xóa bộ lọc môn học"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
               )}
             </div>
+
             <button
               type="button"
-              onClick={clearAllFilters}
-              className="text-xs text-primary-600 dark:text-primary-400 hover:underline shrink-0 ml-2 font-medium cursor-pointer"
+              onClick={() => {
+                const next = new URLSearchParams(searchParams)
+                next.delete('search')
+                next.delete('subject')
+                setSearchParams(next)
+                setPage(1)
+              }}
+              className="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white font-medium underline cursor-pointer"
             >
               Xóa tất cả
             </button>
           </div>
         )}
 
-        {/* Posts Feed */}
+        {/* ── Feed List ── */}
         {isLoading ? (
-          <div className="space-y-3.5">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="card bg-surface-card border border-surface-border rounded-xl p-5 animate-pulse space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700" />
-                  <div className="space-y-1.5 flex-1">
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
-                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-1/4" />
-                  </div>
-                </div>
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-                <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
-              </div>
+          <div className="space-y-4" role="status" aria-label="Đang tải danh sách bài viết">
+            {[1, 2, 3].map((i) => (
+              <PostCardSkeleton key={i} />
             ))}
           </div>
         ) : isError ? (
-          <div className="card bg-surface-card border border-surface-border text-center text-slate-500 dark:text-slate-400 py-12 space-y-3 rounded-xl shadow-xs">
-            <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
-            <p className="text-slate-800 dark:text-slate-100 font-medium text-sm">Không thể tải bài viết. Vui lòng thử lại.</p>
-            <button type="button" onClick={() => refetch()} className="btn-secondary text-xs inline-flex items-center gap-1.5">
-              Thử lại
+          <div className="card text-center py-16 space-y-4 border border-rose-500/20 bg-rose-500/5">
+            <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg">Không thể tải dữ liệu bảng tin</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
+              Đã xảy ra lỗi khi kết nối máy chủ. Vui lòng kiểm tra lại đường truyền hoặc đăng nhập tài khoản.
+            </p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="btn-primary text-xs px-5 py-2 rounded-xl"
+            >
+              Thử lại ngay
             </button>
           </div>
-        ) : posts.length === 0 ? (
-          <div className="card bg-surface-card border border-surface-border text-center text-slate-500 dark:text-slate-400 py-16 space-y-3 rounded-xl shadow-xs">
-            <div className="w-14 h-14 mx-auto rounded-full bg-surface-muted flex items-center justify-center text-slate-400">
-              <Inbox className="w-7 h-7" />
+        ) : streamTab === 'following' && displayPosts.length === 0 ? (
+          <div className="card text-center py-16 space-y-4 bg-surface-card border border-surface-border shadow-xs rounded-[20px]">
+            <div className="w-14 h-14 rounded-2xl bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] flex items-center justify-center mx-auto">
+              <Users className="w-7 h-7" />
             </div>
-            <p className="text-slate-800 dark:text-slate-100 font-semibold text-base">Không tìm thấy bài viết nào.</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            <div className="space-y-1">
+              <h3 className="font-bold text-content text-base sm:text-lg">Chưa có bài viết từ bạn học bạn theo dõi</h3>
+              <p className="text-content-muted text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                Khám phá danh sách thành viên tích cực bên cột phải hoặc theo dõi các tác giả chia sẻ tài liệu hữu ích để cập nhật bài viết mới tại đây.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStreamTab('for-you')}
+              className="btn-primary text-xs sm:text-sm py-2 px-5 rounded-full inline-flex items-center gap-1.5 mx-auto"
+            >
+              <span>Xem bảng tin "Dành cho bạn"</span>
+            </button>
+          </div>
+        ) : displayPosts.length === 0 ? (
+          <div className="card text-center py-20 space-y-4 bg-surface-card border border-surface-border shadow-card rounded-[20px]">
+            <div className="w-16 h-16 rounded-full bg-surface-muted text-content-muted flex items-center justify-center mx-auto border border-surface-border">
+              <BookOpen className="w-8 h-8" />
+            </div>
+            <h3 className="font-bold text-content text-lg">Không tìm thấy bài viết nào</h3>
+            <p className="text-content-muted text-xs sm:text-sm max-w-md mx-auto">
               {searchKeyword || selectedSubject
-                ? 'Hãy thử thay đổi từ khóa hoặc bộ lọc môn học của bạn.'
-                : 'Chưa có bài viết nào trong chuyên mục này. Hãy là người đầu tiên chia sẻ!'}
+                ? 'Không có kết quả nào khớp với tiêu chí tìm kiếm của bạn. Hãy thử từ khóa khác nhé!'
+                : 'Hiện chưa có bài viết nào trong danh mục này. Hãy là người đầu tiên chia sẻ kiến thức!'}
             </p>
-            {isAuthenticated && (
-              <Link to="/posts/create" className="btn-primary inline-flex items-center gap-1.5 text-xs mt-2">
-                <PenSquare className="w-3.5 h-3.5" />
-                Đăng bài đầu tiên
-              </Link>
-            )}
+            <div className="flex items-center justify-center gap-2.5 pt-1">
+              {(searchKeyword || selectedSubject) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = new URLSearchParams(searchParams)
+                    next.delete('search')
+                    next.delete('subject')
+                    setSearchParams(next)
+                    setPage(1)
+                  }}
+                  className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl"
+                >
+                  Đặt lại bộ lọc
+                </button>
+              )}
+              {isAuthenticated ? (
+                <Link
+                  to="/posts/create"
+                  className="btn-primary inline-flex items-center gap-2 text-xs sm:text-sm py-2.5 px-5 rounded-full"
+                >
+                  <span>Tạo bài viết ngay</span>
+                </Link>
+              ) : (
+                <Link to="/login" className="btn-primary inline-flex items-center gap-2 text-xs sm:text-sm py-2.5 px-5 rounded-full">
+                  <span>Đăng nhập để đăng bài</span>
+                </Link>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="space-y-3.5">
-            {posts.map((post) => (
+          <div className="space-y-4">
+            {displayPosts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
 
-            {/* Feed Enrichment: Static study topics suggestion when feed has 2 or fewer posts */}
-            {posts.length <= 2 && !searchKeyword && !selectedSubject && (
-              <div className="card p-4 sm:p-5 border border-dashed border-primary-200 dark:border-primary-900 bg-primary-50/40 dark:bg-primary-950/20 rounded-xl space-y-3">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2 text-primary-700 dark:text-primary-300 font-semibold text-xs sm:text-sm">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    <span>Gợi ý chủ đề thảo luận (Chủ đề tham khảo)</span>
-                  </div>
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 bg-surface-card px-2 py-0.5 rounded border border-surface-border">
-                    Chủ đề gợi ý
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400">
-                  Bảng tin hiện có ít bài viết. Bạn có thể bấm để lọc hoặc mở đầu bài viết mới về các môn học thường gặp:
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => handleTagClick('CNPM')}
-                    className="p-3 bg-surface-card border border-surface-border hover:border-primary-300 dark:hover:border-primary-700 rounded-xl text-left transition-colors shadow-2xs group cursor-pointer"
-                  >
-                    <span className="font-semibold text-xs text-slate-800 dark:text-slate-200 group-hover:text-primary-600 transition-colors block">
-                      📚 Công nghệ phần mềm
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
-                      Kiến trúc phần mềm, mẫu thiết kế, kiểm thử hệ thống
-                    </span>
-                  </button>
+            {/* Pagination Controls */}
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t border-surface-border text-xs sm:text-sm">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="btn-secondary py-2 px-4 rounded-xl disabled:opacity-40 flex items-center gap-1 font-semibold"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Trang trước</span>
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleTagClick('Giải tích')}
-                    className="p-3 bg-surface-card border border-surface-border hover:border-primary-300 dark:hover:border-primary-700 rounded-xl text-left transition-colors shadow-2xs group cursor-pointer"
-                  >
-                    <span className="font-semibold text-xs text-slate-800 dark:text-slate-200 group-hover:text-primary-600 transition-colors block">
-                      📐 Giải tích & Đại số
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
-                      Ôn tập bài tập toán cao cấp, chuỗi, vi tích phân
-                    </span>
-                  </button>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">
+                  Trang <strong className="text-slate-900 dark:text-slate-100 font-bold">{page}</strong> / {pagination.totalPages}
+                </span>
 
-                  <button
-                    type="button"
-                    onClick={() => handleTagClick('CSDL')}
-                    className="p-3 bg-surface-card border border-surface-border hover:border-primary-300 dark:hover:border-primary-700 rounded-xl text-left transition-colors shadow-2xs group cursor-pointer"
-                  >
-                    <span className="font-semibold text-xs text-slate-800 dark:text-slate-200 group-hover:text-primary-600 transition-colors block">
-                      🗄️ Cơ sở dữ liệu
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
-                      SQL, chuẩn hóa quan hệ BCNF, chỉ mục indexing
-                    </span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  disabled={page >= pagination.totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="btn-secondary py-2 px-4 rounded-xl disabled:opacity-40 flex items-center gap-1 font-semibold"
+                >
+                  <span>Trang sau</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
             )}
           </div>
         )}
-
-        {/* Pagination (FE-03) */}
-        {totalPages > 1 && (
-          <nav aria-label="Phân trang" className="card bg-surface-card border border-surface-border flex items-center justify-between py-2.5 px-4 rounded-xl shadow-xs">
-            <button
-              type="button"
-              disabled={page <= 1 || isLoading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="btn-secondary text-xs sm:text-sm py-1.5 px-3 inline-flex items-center gap-1 disabled:opacity-40"
-              aria-label="Trang trước"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Trang trước</span>
-            </button>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              Trang <strong className="text-slate-900 dark:text-white font-semibold">{page}</strong> / {totalPages}
-            </span>
-            <button
-              type="button"
-              disabled={page >= totalPages || isLoading}
-              onClick={() => setPage((p) => p + 1)}
-              className="btn-secondary text-xs sm:text-sm py-1.5 px-3 inline-flex items-center gap-1 disabled:opacity-40"
-              aria-label="Trang sau"
-            >
-              <span>Trang sau</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </nav>
-        )}
-      </main>
+      </div>
 
       {/* ═══════════════════════════════════════════════
-          CỘT PHẢI (RIGHT SIDEBAR): Môn học & Thống kê
+          CỘT PHẢI (SIDE WIDGETS): Môn học, Xu hướng, Bạn bè, Thống kê (Grovelyn Standard: 320px - 340px)
           ═══════════════════════════════════════════════ */}
-      <aside className="hidden xl:block xl:col-span-3 space-y-4 xl:sticky xl:top-20">
-        {/* Popular Subject Tags */}
-        <div className="card p-4 sm:p-5 border border-surface-border shadow-xs space-y-3">
-          <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2 text-sm">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Môn học phổ biến</span>
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Bấm để lọc bài viết và tài liệu theo môn học:</p>
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {POPULAR_TAGS.map((tag) => {
-              const isSelected = selectedSubject === tag
+      <aside aria-label="Cột bên" className="hidden flex-col gap-4 lg:sticky lg:top-20 lg:flex lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-8">
+        {/* Widget 1: Bộ lọc nhanh theo Môn học (Subject Pills) */}
+        <div className="rounded-[22px] p-5 sm:p-6 space-y-4 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-xs">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-[17px] sm:text-[18px] text-[#06110a] dark:text-white flex items-center gap-2 tracking-tight">
+              <Sparkles className="w-4 h-4 text-[#5bd13a]" />
+              <span>Chủ đề &amp; Môn học</span>
+            </h3>
+            <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8] font-semibold">Khám phá</span>
+          </div>
+
+          <div className="flex flex-wrap gap-2.5 pt-1">
+            {POPULAR_SUBJECTS.map((sub) => {
+              const isSelected = selectedSubject === sub || (sub === 'Tất cả môn' && !selectedSubject)
               return (
                 <button
-                  key={tag}
+                  key={sub}
                   type="button"
-                  onClick={() => handleTagClick(tag)}
-                  className={`text-xs px-2.5 py-1 rounded-lg font-medium cursor-pointer transition-all ${
+                  onClick={() => handleSubjectChange(sub)}
+                  className={`text-xs px-3.5 py-1.5 rounded-xl font-semibold border transition-colors duration-150 cursor-pointer ${
                     isSelected
-                      ? 'bg-primary-600 text-white shadow-xs font-semibold'
-                      : 'bg-surface-muted hover:bg-primary-50 dark:hover:bg-primary-950/40 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 border border-surface-border'
+                      ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] border-transparent shadow-2xs'
+                      : 'bg-[#F2F4EF] dark:bg-[#303132] hover:bg-[#E2E7DE] dark:hover:bg-[#262626] text-[#56614f] dark:text-[#B0B3B8] border-[#E2E7DE] dark:border-[#3E4042]'
                   }`}
                 >
-                  #{tag}
+                  {sub}
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* Study Community Stats */}
-        <div className="card p-4 sm:p-5 border border-surface-border shadow-xs space-y-3">
-          <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2 text-sm">
-            <BarChart3 className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-            <span>Bảng tin hôm nay</span>
-          </h3>
-          <div className="space-y-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            <div className="flex justify-between items-center py-1.5 border-b border-surface-border/60">
-              <span>Tổng bài viết</span>
-              <span className="text-slate-900 dark:text-white font-semibold">{pagination?.total || 0}</span>
-            </div>
-            <div className="flex justify-between items-center py-1.5 border-b border-surface-border/60">
-              <span>Trang hiện tại</span>
-              <span className="text-slate-900 dark:text-white font-semibold">{page} / {totalPages}</span>
-            </div>
-            <div className="flex justify-between items-center py-1.5">
-              <span>Đang lọc</span>
-              <span className="text-primary-600 dark:text-primary-400 font-semibold">
-                {FILTERS.find((f) => f.value === activeType)?.label || activeType}
-              </span>
-            </div>
+        {/* Widget 2: Đang được nói nhiều (Trending Topics - Khung mẫu Grovelyn theo ảnh tham chiếu) */}
+        <div className="rounded-[22px] p-5 sm:p-6 space-y-3.5 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-xs">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-[17px] sm:text-[18px] text-[#06110a] dark:text-white flex items-center gap-2 tracking-tight">
+              <TrendingUp className="w-4 h-4 text-[#5bd13a]" />
+              <span>Đang được nói nhiều</span>
+            </h3>
+            <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8] font-semibold">Xu hướng</span>
+          </div>
+
+          <div className="space-y-2.5">
+            {[
+              { topic: 'Đồ án tốt nghiệp', count: 5, query: 'Đồ án tốt nghiệp' },
+              { topic: 'Kiến trúc', count: 5, query: 'Kiến trúc máy tính' },
+              { topic: 'Công nghệ thông tin', count: 4, query: 'Công nghệ phần mềm' },
+              { topic: 'Kỹ thuật phần mềm', count: 3, query: 'Kỹ thuật phần mềm' },
+            ].map((item) => (
+              <div
+                key={item.topic}
+                onClick={() => handleSubjectChange(item.query)}
+                className="flex items-center gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-[#F2F4EF] dark:hover:bg-[#171717] transition-colors cursor-pointer group"
+              >
+                <div className="w-9 h-9 rounded-xl bg-[#EAF5EC] dark:bg-[#163D29] text-[#16a34a] dark:text-[#2ECC71] flex items-center justify-center font-bold text-sm shrink-0 border border-[#bbf7d0]/40 dark:border-[#3E4042]">
+                  #
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-bold text-[#06110a] dark:text-white group-hover:underline truncate">
+                    {item.topic}
+                  </p>
+                  <p className="text-xs text-[#56614f] dark:text-[#B0B3B8]">
+                    {item.count} bài và bình luận
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Verified Academic Guidelines & PDF Upload rules */}
-        <div className="card p-4 border border-surface-border shadow-xs space-y-2.5 bg-surface-muted/30">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-            <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Quy chuẩn chia sẻ tài liệu</span>
-          </h4>
-          <ul className="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 list-disc pl-4">
-            <li>File PDF kích thước tối đa <strong>10 MiB</strong> (1 file/bài).</li>
-            <li>Tài liệu tải xuống qua luồng xác thực bảo mật.</li>
-            <li>Đặt câu hỏi kèm mã môn học hoặc mô tả đề tài rõ ràng.</li>
-          </ul>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 pt-1.5 border-t border-surface-border flex items-center justify-between">
-            <span>Mini Study Network</span>
-            <span>v1.0</span>
+        {/* Widget 3: Tác giả tích cực trong bảng tin */}
+        <div className="rounded-[22px] p-5 sm:p-6 space-y-4 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-xs">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-[17px] sm:text-[18px] text-[#06110a] dark:text-white flex items-center gap-2 tracking-tight">
+              <Users className="w-4 h-4 text-[#5bd13a]" />
+              <span>Thành viên tích cực</span>
+            </h3>
+            <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8] font-medium">Bảng tin</span>
+          </div>
+
+          {featuredStudents.length === 0 ? (
+            <p className="text-xs text-[#56614f] dark:text-[#B0B3B8] py-3 text-center">
+              Chưa có thành viên nào chia sẻ bài viết trong bộ lọc này.
+            </p>
+          ) : (
+            <div className="space-y-2.5">
+              {featuredStudents.map((student) => (
+                <Link
+                  key={student.id}
+                  to={`/profile/${student.id}`}
+                  className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F2F4EF] dark:hover:bg-[#171717] transition-colors group"
+                >
+                  <div className="relative shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#F2F4EF] dark:bg-[#303132] border border-[#E2E7DE] dark:border-[#3E4042] flex items-center justify-center overflow-hidden font-bold text-[#06110a] dark:text-[#2ECC71] text-xs">
+                      {student.avatar_url ? (
+                        <img
+                          src={student.avatar_url}
+                          alt={student.full_name || 'U'}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none' }}
+                        />
+                      ) : (
+                        student.full_name?.[0]?.toUpperCase() || 'U'
+                      )}
+                    </div>
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#5bd13a] border-2 border-white dark:border-[#0A0A0A]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-bold text-[#06110a] dark:text-white group-hover:text-[#16a34a] dark:group-hover:text-[#22c55e] truncate">
+                      {student.full_name}
+                    </p>
+                    <p className="text-xs text-[#56614f] dark:text-[#B0B3B8] truncate">
+                      {student.university ? `${student.university}` : student.major}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Widget 4: Thống kê sinh viên tuần này */}
+        <div className="rounded-[22px] p-5 sm:p-6 space-y-3.5 bg-gradient-to-br from-[#16a34a]/10 via-[#22c55e]/5 to-surface-card border border-[#16a34a]/20 dark:border-[#22c55e]/20 shadow-xs">
+          <div className="flex items-center gap-2 text-[#16a34a] dark:text-[#2ECC71] font-bold text-[15px] tracking-tight">
+            <BarChart3 className="w-4 h-4" />
+            <span>Mạng xã hội học tập</span>
+          </div>
+          <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] leading-relaxed">
+            Hơn <strong className="text-[#06110a] dark:text-white font-bold">1,200+</strong> tài liệu PDF ôn thi và đồ án môn học được sinh viên đóng góp và tải về hoàn toàn miễn phí.
           </p>
         </div>
       </aside>

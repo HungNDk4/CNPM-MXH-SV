@@ -27,11 +27,11 @@ import {
 const FAQ_ITEMS = [
   {
     q: 'Mỗi người được lưu bao nhiêu dung lượng?',
-    a: 'Mỗi tài khoản có 100 MB cho tệp tài liệu và đồ án PDF. Ảnh bìa và ảnh đại diện không tính vào dung lượng này.',
+    a: 'Mỗi lần upload một tệp PDF tối đa 10 MiB. Hệ thống chưa công bố hạn mức tổng dung lượng theo tài khoản.',
   },
   {
     q: 'Dự án và tài liệu riêng tư thì ai xem được?',
-    a: 'Chỉ có bạn và những thành viên được cấp quyền mới có thể xem. Tài liệu công khai sẽ xuất hiện trên bảng tin học tập cộng đồng.',
+    a: 'Người chưa đăng nhập có thể xem metadata tài liệu miễn phí; việc tải PDF yêu cầu đăng nhập. Bài hỏi đáp và thảo luận dành cho thành viên.',
   },
   {
     q: 'Làm sao mời bạn bè tham gia?',
@@ -101,7 +101,7 @@ const PRESET_AVATARS = [
 export default function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'account'
-  const { user, setUser } = useAuthStore()
+  const { user, updateUser } = useAuthStore()
   const { theme, isDark, toggleTheme } = useThemeStore()
   const activeIsDark = theme ? theme === 'dark' : Boolean(isDark)
   const queryClient = useQueryClient()
@@ -150,9 +150,7 @@ export default function SettingsPage() {
       const curAvatar = profileData.avatar_url || user?.avatar_url || ''
       setAvatarPreview(curAvatar)
       setCustomAvatarInput(curAvatar)
-      const curBanner = profileData.cover_url || ''
-      setBannerPreview(curBanner)
-      setCustomBannerInput(curBanner)
+      // Banner customization is preview-only; no server field is available.
     }
   }, [profileData, user])
 
@@ -164,9 +162,7 @@ export default function SettingsPage() {
       toast.success('Đã cập nhật hồ sơ thành công!')
       queryClient.invalidateQueries({ queryKey: ['my-profile'] })
       queryClient.invalidateQueries({ queryKey: ['profile'] })
-      if (setUser && updated) {
-        setUser({ ...user, ...updated })
-      }
+      if (updated) updateUser(updated)
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || 'Cập nhật thất bại, vui lòng thử lại!')
@@ -181,19 +177,6 @@ export default function SettingsPage() {
       {
         onSuccess: () => {
           toast.success('Đã lưu ảnh đại diện!')
-        },
-      }
-    )
-  }
-
-  // Save Banner mutation
-  const handleSaveBanner = (newUrl) => {
-    const finalUrl = newUrl !== undefined ? newUrl : bannerPreview
-    updateProfileMutation.mutate(
-      { cover_url: finalUrl },
-      {
-        onSuccess: () => {
-          toast.success('Đã lưu ảnh bìa mới!')
         },
       }
     )
@@ -216,7 +199,7 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
 
   const changePasswordMutation = useMutation({
-    mutationFn: (data) => authAPI.changePassword(data),
+    mutationFn: (data) => userAPI.changePassword(data),
     onSuccess: () => {
       toast.success('Đổi mật khẩu thành công!')
       setCurrentPassword('')
@@ -247,6 +230,7 @@ export default function SettingsPage() {
       new_password: newPassword,
     })
   }
+
 
   // FAQ accordion state
   const [expandedFaq, setExpandedFaq] = useState(null)
@@ -517,15 +501,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={() => handleSaveBanner(bannerPreview)}
-                    disabled={updateProfileMutation.isPending}
-                    className="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    {updateProfileMutation.isPending ? 'Đang lưu...' : 'Lưu ảnh bìa'}
-                  </button>
+                  <p role="note" className="text-xs text-slate-500 dark:text-[#B0B3B8]">Ảnh bìa chỉ xem trước trong phiên này; chưa hỗ trợ lưu lên máy chủ.</p>
                 </div>
               </div>
 
@@ -759,6 +735,7 @@ export default function SettingsPage() {
               </form>
             </div>
           )}
+
 
           {/* TAB 4: TRỢ GIÚP & PHẢN HỒI */}
           {activeTab === 'help' && (

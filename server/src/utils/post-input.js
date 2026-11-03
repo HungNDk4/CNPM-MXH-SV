@@ -7,7 +7,8 @@ const { createError } = require('../middlewares/error.middleware');
 const CREATE_FIELDS = new Set([
   'title', 'content', 'post_type', 'subject', 'tags', 'price', 'images',
 ]);
-const EDIT_FIELDS = new Set(['title', 'content', 'subject', 'tags', 'status']);
+// Post status is a privileged state transition, never a generic content edit.
+const EDIT_FIELDS = new Set(['title', 'content', 'subject', 'tags']);
 const MAX_CONTENT = 10000;
 const MAX_TAGS = 12;
 const MAX_TAG = 40;
@@ -80,14 +81,6 @@ function validateCreatePost(payload) {
 }
 function validateEditPost(payload) {
   const data = validateFields(payload, EDIT_FIELDS);
-  if (Object.hasOwn(payload, 'status')) {
-    // No role may restore a hidden/deleted Post through the generic edit API.
-    // ADR-013 has no approved "unhide" transition (Admin included).
-    if (payload.status !== 'hidden' && payload.status !== 'deleted') {
-      reject('Trạng thái bài viết không hợp lệ.');
-    }
-    data.status = payload.status;
-  }
   return data;
 }
 module.exports = { validateCreatePost, validateEditPost };

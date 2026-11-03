@@ -281,7 +281,7 @@ function CommentItem({ comment, user, depth, create, remove }) {
           {canRemove && (
             <button
               type="button"
-              className="text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 p-2 rounded-xl transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+              className="text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 min-h-10 min-w-10 p-2 rounded-xl transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
               aria-label={'Xóa bình luận #' + comment.id}
               onClick={deleteItem}
               disabled={remove.isPending}
@@ -303,7 +303,7 @@ function CommentItem({ comment, user, depth, create, remove }) {
           {depth === 0 && (
             <button
               type="button"
-              className="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950/40 py-1.5 px-3 rounded-xl inline-flex items-center gap-1.5 transition-colors"
+              className="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950/40 min-h-10 py-1.5 px-3 rounded-xl inline-flex items-center gap-1.5 transition-colors"
               aria-label="Trả lời bình luận"
               onClick={() => setReplyOpen((value) => !value)}
             >

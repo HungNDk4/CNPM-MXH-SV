@@ -2,7 +2,8 @@
 -- Mini Study Network / MySQL 8 - SAFE POST & UPLOAD TEST QUERY
 -- Location: CNPM_Sample_Database_Upload_Test/cnpm-upload-test-sample/seed_upload_test.sql
 -- ================================================================
-USE mini_study_network;
+-- Explicitly scope these read-only checks to the disposable local fixture.
+USE fe66_seed_upload_test_01;
 
 -- 1. Check current test accounts
 SELECT id, full_name, email, role, university, major
@@ -25,7 +26,7 @@ SELECT
 FROM posts p
 ORDER BY p.id;
 
--- 4. After uploading a PDF through the UI (CreatePostPage / API POST /api/documents/upload),
+-- 4. After uploading a PDF through the UI (CreatePostPage / API POST /api/documents),
 -- Run this query to inspect document_files metadata:
 SELECT 
   p.id AS post_id, 

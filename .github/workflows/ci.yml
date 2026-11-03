@@ -191,6 +191,7 @@ jobs:
       E2E_DISPOSABLE_DB: 'true'
       E2E_UI_URL: http://127.0.0.1:5173
       E2E_API_URL: http://127.0.0.1:5000
+      FE74_CI_RATE_LIMIT: EXPLICIT_DISPOSABLE_E2E_ONLY
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -230,7 +231,6 @@ jobs:
           echo "HTTP startup failed"; cat "$RUNNER_TEMP/e2e01-backend.log" "$RUNNER_TEMP/e2e01-vite.log"
           exit 1
       - name: Run real Chromium browser E2E against MySQL/private disk
-        continue-on-error: true
         run: |
           node --test client/e2e/e2e01.test.cjs
           node --test client/e2e/fe01.test.cjs

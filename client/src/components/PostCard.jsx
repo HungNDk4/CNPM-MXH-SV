@@ -511,11 +511,11 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
           aria-label={isBookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
         >
           {isBookmarked ? (
-            <BookmarkCheck className="w-4 h-4 fill-amber-500 text-amber-600" />
+            <BookmarkCheck className="w-4 h-4 fill-amber-500 text-amber-600" aria-hidden="true" />
           ) : (
-            <Bookmark className="w-4 h-4" />
+            <Bookmark className="w-4 h-4" aria-hidden="true" />
           )}
-          <span>Lưu</span>
+          <span>{isBookmarked ? 'Bỏ lưu' : 'Lưu'}</span>
         </button>
       </div>
 

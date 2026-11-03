@@ -457,3 +457,14 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Backend syntax check (`node --check`): **PASS** (0 errors).
    - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
    - Offline unit tests: **PASS** (14/14 tests).
+
+## SESSION-20261104-CI-FIX-PR86-V6 — Align Bookmark Text and Resilient Test Locator
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103` (PR #86).
+**Scope & Deliverables:**
+1. **Synchronized PostCard Bookmark Button Text & Accessibility:**
+   - In `PostCard.jsx`, updated the action button text to dynamically display `<span>{isBookmarked ? 'Bỏ lưu' : 'Lưu'}</span>` with `aria-hidden="true"` on the SVG icon, matching `aria-label={isBookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}`.
+   - In `client/e2e/fe66-p3.test.cjs`, updated bookmark save and unbookmark click locators to use flexible matching (`getByRole('button', { name: /Bỏ lưu bài viết|Bỏ lưu/ }).or(...)`), ensuring rock-solid test resilience against both aria-label and text representation.
+2. **Verification Evidence:**
+   - Frontend production build (`npm --prefix client run build`): **PASS** (6.05s, 2104 modules, 0 errors).
+   - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
+   - Offline unit tests: **PASS** (14/14 tests).

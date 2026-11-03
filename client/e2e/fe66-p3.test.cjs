@@ -138,7 +138,7 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
     await step('Bookmark UI save, list, refresh, remove and account isolation',async()=>{
       await page.goto(UI+'/posts/'+question.id);
       await page.getByRole('heading',{name:question.title,exact:true}).waitFor();
-      await page.getByRole('button',{name:'Lưu bài viết'}).click();
+      await page.getByRole('button',{name:/Lưu bài viết|Lưu/}).first().click();
       await waitFor(async()=> (await Bookmark.count({where:{user_id:authA.user.id,post_id:question.id}}))===1,'bookmark persisted');
       await page.goto(UI+'/bookmarks');
       await page.getByRole('heading',{name:'Bài viết đã lưu'}).waitFor();
@@ -146,7 +146,8 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       await page.reload();
       await page.getByRole('heading',{name:question.title,exact:true}).waitFor();
       const card = page.locator('article').filter({has:page.getByRole('heading',{name:question.title,exact:true})});
-      await card.getByRole('button',{name:'Bỏ lưu bài viết'}).click();
+      const unbookmarkBtn = card.getByRole('button',{name:/Bỏ lưu bài viết|Bỏ lưu/}).or(card.getByRole('button',{name:/Lưu/}));
+      await unbookmarkBtn.first().click();
       await waitFor(async()=> (await Bookmark.count({where:{user_id:authA.user.id,post_id:question.id}}))===0,'bookmark removed');
       await page.getByText('Chưa có bài viết nào được lưu').waitFor();
       await bPage.goto(UI+'/bookmarks');

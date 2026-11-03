@@ -62,9 +62,9 @@ export default function HomePage() {
 
   // Query posts with React Query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['posts', effectiveType, searchKeyword, selectedSubject, page, isAuthenticated],
+    queryKey: ['posts', effectiveType, searchKeyword, selectedSubject, page, sortBy, isAuthenticated],
     queryFn: async () => {
-      const params = { page, limit: 10 }
+      const params = { page, limit: 10, sort: sortBy }
       if (effectiveType) params.type = effectiveType
       if (searchKeyword) params.search = searchKeyword
       if (selectedSubject) params.subject = selectedSubject
@@ -153,21 +153,29 @@ export default function HomePage() {
       const followedIds = new Set((followingData || []).map((f) => f.id || f.following_id))
       list = list.filter((p) => p.author?.id && (followedIds.has(p.author.id) || p.author.id === user?.id))
     } else if (streamTab === 'groups') {
-      list = list.filter((p) => Boolean(p.subject))
+      const projectKeywords = ['đồ án', 'dự án', 'project', 'srs', 'báo cáo', 'tiểu luận', 'bài tập', 'luận văn', 'nghiên cứu', 'tài liệu', 'công nghệ', 'giải thuật', 'hệ điều hành', 'mạng máy tính', 'cơ sở dữ liệu']
+      list = list.filter((p) => {
+        if (selectedSubject) {
+          return (p.subject || '').toLowerCase() === selectedSubject.toLowerCase()
+        }
+        const text = `${p.title || ''} ${p.content || ''} ${p.subject || ''} ${(p.tags || []).join(' ')}`.toLowerCase()
+        return p.post_type === 'document' || projectKeywords.some((kw) => text.includes(kw))
+      })
     }
 
     if (sortBy === 'popular') {
       list.sort((a, b) => {
-        const scoreA = (a.likes_count || 0) + (a.comments_count || 0)
-        const scoreB = (b.likes_count || 0) + (b.comments_count || 0)
-        return scoreB - scoreA
+        const scoreA = (Number(a.like_count) || Number(a.likes_count) || 0) * 2 + (Number(a.comment_count) || Number(a.comments_count) || 0) * 3 + (Number(a.view_count) || 0)
+        const scoreB = (Number(b.like_count) || Number(b.likes_count) || 0) * 2 + (Number(b.comment_count) || Number(b.comments_count) || 0) * 3 + (Number(b.view_count) || 0)
+        if (scoreB !== scoreA) return scoreB - scoreA
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0)
       })
     } else {
       list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
     }
 
     return list
-  }, [posts, streamTab, sortBy, followingData, user?.id])
+  }, [posts, streamTab, sortBy, selectedSubject, followingData, user?.id])
 
   // Featured active students derived safely from feed posts
   const featuredStudents = useMemo(() => {
@@ -210,6 +218,14 @@ export default function HomePage() {
     setSearchParams(nextParams)
     setPage(1)
   }
+
+  const handleTrendingClick = (topicItem) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('search', topicItem.query);
+    setSearchParams(nextParams);
+    setSearchKeyword(topicItem.query);
+    setPage(1);
+  };
 
   const handleSubjectChange = (subjectVal) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -357,6 +373,32 @@ export default function HomePage() {
               </select>
             </label>
           </div>
+
+          {/* ── THANH CHỌN MÔN HỌC TRỰC TIẾP KHI Ở TAB MÔN HỌC & ĐỒ ÁN ── */}
+          {streamTab === 'groups' && (
+            <div className="flex items-center gap-1.5 overflow-x-auto py-1.5 scrollbar-none -mx-1 px-1">
+              <span className="text-[11px] font-bold text-[#56614f] dark:text-[#B0B3B8] shrink-0 mr-1">
+                Lọc môn:
+              </span>
+              {POPULAR_SUBJECTS.map((sub) => {
+                const isSelected = selectedSubject === sub || (sub === 'Tất cả môn' && !selectedSubject)
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => handleSubjectChange(sub)}
+                    className={`text-xs px-3 py-1 rounded-xl transition-all cursor-pointer shrink-0 font-semibold ${
+                      isSelected
+                        ? 'bg-[#16a34a] text-white dark:bg-[#2ECC71] dark:text-[#18191A] shadow-2xs font-bold'
+                        : 'bg-white dark:bg-[#242526] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white border border-[#E2E7DE] dark:border-[#3E4042]'
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {/* ── TẦNG 2: PHÂN LOẠI NỘI DUNG (FILTER PILLS WITH TABULAR COUNTS) ── */}
           <div className="-mx-1 flex max-w-full items-center gap-2 overflow-x-auto px-1 [scrollbar-width:none] py-0.5">
@@ -618,7 +660,7 @@ export default function HomePage() {
               trendingTopics.map((item) => (
                 <div
                   key={item.topic}
-                  onClick={() => handleSubjectChange(item.query)}
+                  onClick={() => handleTrendingClick(item)}
                   className="flex items-center gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-[#F2F4EF] dark:hover:bg-[#171717] transition-colors cursor-pointer group"
                 >
                   <div className="w-9 h-9 rounded-xl bg-[#EAF5EC] dark:bg-[#163D29] text-[#16a34a] dark:text-[#2ECC71] flex items-center justify-center font-bold text-sm shrink-0 border border-[#bbf7d0]/40 dark:border-[#3E4042]">
@@ -626,7 +668,7 @@ export default function HomePage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[15px] font-bold text-[#06110a] dark:text-white group-hover:underline truncate">
-                      {item.topic}
+                      #{item.topic}
                     </p>
                     <p className="text-xs text-[#56614f] dark:text-[#B0B3B8]">
                       {item.count} bài viết

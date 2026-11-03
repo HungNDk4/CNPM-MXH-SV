@@ -416,7 +416,7 @@ function Comments({ postId }) {
       <div className="flex items-center justify-between pb-3 border-b border-surface-border">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-          <span>Bình luận ({comments.length})</span>
+          <span>Bình luận{comments.length > 0 ? ` (${comments.length})` : ''}</span>
         </h2>
       </div>
 

@@ -460,8 +460,12 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
 
         {/* Right: Authentic Comment & View summary */}
         <div className="flex items-center gap-2">
-          <span>{totalComments > 0 ? `${totalComments} bình luận` : 'Chưa có bình luận'}</span>
-          <span>·</span>
+          {totalComments > 0 && (
+            <>
+              <span>{totalComments} bình luận</span>
+              <span>·</span>
+            </>
+          )}
           <span>{post.view_count || 0} lượt xem</span>
         </div>
       </div>

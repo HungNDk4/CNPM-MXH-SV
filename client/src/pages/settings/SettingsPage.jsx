@@ -20,7 +20,6 @@ import {
   Globe,
   GraduationCap,
   BookOpen,
-  Image as ImageIcon,
   Camera,
 } from 'lucide-react'
 
@@ -43,32 +42,6 @@ const FAQ_ITEMS = [
   },
 ]
 
-const PRESET_BANNERS = [
-  {
-    id: 'garden-code',
-    title: 'Khu vườn Công nghệ',
-    url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80',
-    desc: 'Bản mạch xanh lá & công nghệ tối ưu',
-  },
-  {
-    id: 'cozy-library',
-    title: 'Thư viện Yên tĩnh',
-    url: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1200&auto=format&fit=crop&q=80',
-    desc: 'Không gian học tập & nghiên cứu tập trung',
-  },
-  {
-    id: 'cyber-dark',
-    title: 'Kỷ nguyên Lập trình',
-    url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80',
-    desc: 'Matrix xanh dương & mã nguồn số',
-  },
-  {
-    id: 'minimal-nature',
-    title: 'Mầm Xanh Học Thuật',
-    url: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=1200&auto=format&fit=crop&q=80',
-    desc: 'Tươi sáng, năng động và tạo cảm hứng',
-  },
-]
 
 const PRESET_AVATARS = [
   {
@@ -136,9 +109,6 @@ export default function SettingsPage() {
   const [avatarPreview, setAvatarPreview] = useState('')
   const [customAvatarInput, setCustomAvatarInput] = useState('')
 
-  // State for Banner customization
-  const [bannerPreview, setBannerPreview] = useState('')
-  const [customBannerInput, setCustomBannerInput] = useState('')
 
   // Sync profile data to form state
   useEffect(() => {
@@ -150,7 +120,6 @@ export default function SettingsPage() {
       const curAvatar = profileData.avatar_url || user?.avatar_url || ''
       setAvatarPreview(curAvatar)
       setCustomAvatarInput(curAvatar)
-      // Banner customization is preview-only; no server field is available.
     }
   }, [profileData, user])
 
@@ -248,7 +217,7 @@ export default function SettingsPage() {
   }
 
   const navItems = [
-    { id: 'account', label: 'Tài khoản', icon: User, desc: 'Ảnh đại diện, ảnh bìa, thông tin & giao diện' },
+    { id: 'account', label: 'Tài khoản', icon: User, desc: 'Ảnh đại diện, thông tin & giao diện' },
     { id: 'security', label: 'Mật khẩu & bảo mật', icon: ShieldCheck, desc: 'Đổi mật khẩu và an toàn tài khoản' },
     { id: 'help', label: 'Trợ giúp & phản hồi', icon: HelpCircle, desc: 'Giải đáp thắc mắc và góp ý' },
   ]
@@ -434,78 +403,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* PHẦN 2: ẢNH BÌA */}
-              <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200 dark:border-[#3E4042] p-6 shadow-sm">
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#3E4042]">
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Ảnh bìa</h2>
-                    <p className="text-xs text-slate-500 dark:text-[#B0B3B8] mt-0.5">Tỷ lệ khuyến nghị 3:1 (ví dụ 1200 x 400 px)</p>
-                  </div>
-                  <ImageIcon className="w-5 h-5 text-slate-400 dark:text-[#B0B3B8]" />
-                </div>
-
-                {/* Banner preview */}
-                <div className="mt-4 relative rounded-xl overflow-hidden aspect-[3/1] bg-slate-100 dark:bg-[#303132] border border-slate-200 dark:border-[#3E4042]">
-                  {bannerPreview ? (
-                    <img src={bannerPreview} alt="Banner Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 dark:text-[#B0B3B8] p-4 text-center">
-                      <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
-                      <span className="text-xs">Chưa cài đặt ảnh bìa cá nhân</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Banner presets */}
-                <div className="mt-4">
-                  <span className="text-xs font-semibold text-slate-700 dark:text-[#E4E6EB]">Chọn mẫu có sẵn:</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-2">
-                    {PRESET_BANNERS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => {
-                          setBannerPreview(preset.url)
-                          setCustomBannerInput(preset.url)
-                        }}
-                        className={`group relative rounded-lg overflow-hidden border-2 transition-all text-left ${
-                          bannerPreview === preset.url
-                            ? 'border-primary-600 dark:border-[#2ECC71] ring-2 ring-primary-500/20'
-                            : 'border-transparent hover:border-slate-300 dark:hover:border-[#3E4042]'
-                        }`}
-                      >
-                        <img src={preset.url} alt={preset.title} className="w-full h-14 object-cover" />
-                        <div className="p-1.5 bg-slate-50 dark:bg-[#303132]">
-                          <p className="text-[11px] font-bold text-slate-800 dark:text-[#E4E6EB] truncate">{preset.title}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Custom banner URL */}
-                <div className="mt-4 space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-[#E4E6EB]">Hoặc dán URL ảnh bìa tùy chọn:</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={customBannerInput}
-                    onChange={(e) => {
-                      setCustomBannerInput(e.target.value)
-                      if (e.target.value.startsWith('http')) {
-                        setBannerPreview(e.target.value)
-                      }
-                    }}
-                    className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-[#3E4042] bg-white dark:bg-[#303132] text-slate-900 dark:text-[#E4E6EB] focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-
-                <div className="flex justify-end pt-4">
-                  <p role="note" className="text-xs text-slate-500 dark:text-[#B0B3B8]">Ảnh bìa chỉ xem trước trong phiên này; chưa hỗ trợ lưu lên máy chủ.</p>
-                </div>
-              </div>
-
-              {/* PHẦN 3: THÔNG TIN HỒ SƠ */}
+              {/* PHẦN 2: THÔNG TIN HỒ SƠ */}
               <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200 dark:border-[#3E4042] p-6 shadow-sm">
                 <div className="pb-4 border-b border-slate-100 dark:border-[#3E4042]">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Thông tin hồ sơ</h2>
@@ -595,7 +493,7 @@ export default function SettingsPage() {
                 </form>
               </div>
 
-              {/* PHẦN 4: NGÔN NGỮ VÀ GIAO DIỆN */}
+              {/* PHẦN 3: NGÔN NGỮ VÀ GIAO DIỆN */}
               <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200 dark:border-[#3E4042] p-6 shadow-sm">
                 <div className="pb-4 border-b border-slate-100 dark:border-[#3E4042]">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Ngôn ngữ và giao diện</h2>

@@ -170,12 +170,12 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
 
             {user?.role === 'admin' && (
               <Link
-                to="/admin/audit-logs"
+                to="/admin"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors font-semibold"
               >
                 <Shield className="w-4 h-4 text-amber-500" />
-                <span>Nhật ký kiểm duyệt</span>
+                <span>Bảng quản trị hệ thống</span>
               </Link>
             )}
 

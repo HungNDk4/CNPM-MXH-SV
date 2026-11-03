@@ -79,6 +79,8 @@ export default function NotificationDropdown() {
     setOpen(false)
     if (item.post_id) {
       navigate(`/posts/${item.post_id}`)
+    } else if (item.event_type === 'follow' && item.actor_id) {
+      navigate(`/profile/${item.actor_id}`)
     }
   }
 
@@ -161,12 +163,28 @@ export default function NotificationDropdown() {
                         : 'hover:bg-surface-muted/70'
                     }`}
                   >
-                    <span className={`shrink-0 p-2 rounded-xl mt-0.5 ${config.iconColor}`}>
-                      <EventIcon className="w-4 h-4" />
-                    </span>
+                    <div className="relative shrink-0 mt-0.5">
+                      {item.actor?.avatar_url ? (
+                        <img
+                          src={item.actor.avatar_url}
+                          alt={item.actor?.full_name || 'Avatar'}
+                          className="w-8 h-8 rounded-full object-cover border border-surface-border"
+                        />
+                      ) : (
+                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${config.iconColor}`}>
+                          {item.actor?.full_name?.[0]?.toUpperCase() || <EventIcon className="w-4 h-4" />}
+                        </span>
+                      )}
+                      <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-surface-card border border-surface-border flex items-center justify-center">
+                        <EventIcon className="w-2.5 h-2.5" />
+                      </span>
+                    </div>
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className={`leading-snug break-words ${!item.is_read ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
-                        {config.label}
+                        <span className="font-bold text-slate-900 dark:text-white mr-1">
+                          {item.actor?.full_name || 'Một bạn học'}
+                        </span>
+                        <span>{config.label}</span>
                       </p>
                       <span className="text-[11px] text-slate-400 dark:text-slate-500 block">
                         {new Date(item.created_at).toLocaleString('vi-VN')}

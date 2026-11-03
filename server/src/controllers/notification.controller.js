@@ -4,7 +4,8 @@ const { Notification, User, Post, Comment } = require('../models');
 const { positiveId } = require('../utils/interaction-target');
 const { createError } = require('../middlewares/error.middleware');
 
-const SAFE_FIELDS = ['id','event_type','actor_id','post_id','comment_id','is_read','created_at'];
+const SAFE_FIELDS = ['id', 'event_type', 'actor_id', 'post_id', 'comment_id', 'is_read', 'created_at'];
+
 function bounded(value, label, fallback, maximum) {
   if (value === undefined) return fallback;
   if (typeof value !== 'string' || !/^[1-9][0-9]*$/.test(value)) {
@@ -14,7 +15,8 @@ function bounded(value, label, fallback, maximum) {
   if (!Number.isSafeInteger(n) || n > maximum) throw createError(label + ' vượt giới hạn.', 422);
   return n;
 }
-function visibleFilter(userId, unreadOnly = false) {
+
+function visibleFilter(userId, unreadOnly = false, includeDetails = false) {
   return {
     where: {
       recipient_id: userId,
@@ -25,15 +27,32 @@ function visibleFilter(userId, unreadOnly = false) {
       ],
     },
     include: [
-      { model: User, as: 'actor', attributes: [], required: true, where: { is_active: true } },
-      { model: Post, as: 'targetPost', attributes: [], required: false,
-        where: { status: 'active', price: 0 } },
-      { model: Comment, as: 'targetComment', attributes: [], required: false,
-        where: { status: 'active' } },
+      {
+        model: User,
+        as: 'actor',
+        attributes: includeDetails ? ['id', 'full_name', 'avatar_url'] : [],
+        required: true,
+        where: { is_active: true },
+      },
+      {
+        model: Post,
+        as: 'targetPost',
+        attributes: includeDetails ? ['id', 'title'] : [],
+        required: false,
+        where: { status: 'active', price: 0 },
+      },
+      {
+        model: Comment,
+        as: 'targetComment',
+        attributes: [],
+        required: false,
+        where: { status: 'active' },
+      },
     ],
     subQuery: false,
   };
 }
+
 async function listNotifications(req, res, next) {
   try {
     const page = bounded(req.query.page, 'page', 1, 10000);
@@ -43,21 +62,41 @@ async function listNotifications(req, res, next) {
       throw createError('unread_only phải là true hoặc false.', 422);
     }
     const { count, rows } = await Notification.findAndCountAll({
-      ...visibleFilter(req.user.id, flag === 'true'),
+      ...visibleFilter(req.user.id, flag === 'true', true),
       attributes: SAFE_FIELDS,
-      order: [['created_at','DESC'],['id','DESC']],
-      limit, offset: (page - 1) * limit,
+      order: [['created_at', 'DESC'], ['id', 'DESC']],
+      limit,
+      offset: (page - 1) * limit,
     });
-    res.json({ success: true, data: rows.map(row => row.get({ plain: true })),
-      pagination: { total: count, page, limit, totalPages: Math.ceil(count / limit) } });
+    res.json({
+      success: true,
+      data: rows.map(row => {
+        const plain = row.get({ plain: true });
+        return {
+          ...plain,
+          actor: row.actor ? {
+            id: row.actor.id,
+            full_name: row.actor.full_name,
+            avatar_url: row.actor.avatar_url,
+          } : null,
+          targetPost: row.targetPost ? {
+            id: row.targetPost.id,
+            title: row.targetPost.title,
+          } : null,
+        };
+      }),
+      pagination: { total: count, page, limit, totalPages: Math.ceil(count / limit) },
+    });
   } catch (err) { next(err); }
 }
+
 async function unreadCount(req, res, next) {
   try {
     const count = await Notification.count(visibleFilter(req.user.id, true));
     res.json({ success: true, data: { count } });
   } catch (err) { next(err); }
 }
+
 async function readNotification(req, res, next) {
   try {
     const id = positiveId(req.params.id);
@@ -69,6 +108,7 @@ async function readNotification(req, res, next) {
     res.json({ success: true, data: { id, is_read: true } });
   } catch (err) { next(err); }
 }
+
 async function readAll(req, res, next) {
   try {
     // Filter with the same active/free visibility policy as inbox/unread count.
@@ -84,4 +124,5 @@ async function readAll(req, res, next) {
     res.json({ success: true, data: { updated } });
   } catch (err) { next(err); }
 }
+
 module.exports = { listNotifications, unreadCount, readNotification, readAll };

@@ -13,6 +13,7 @@ export const postAPI = {
   getPosts: (params) => api.get('/posts', { params }),
   getById:  (id)     => api.get(`/posts/${id}`),
   getTrendingTopics: () => api.get('/posts/trending-topics'),
+  getMyStats: () => api.get('/posts/my-stats'),
   create:   (data)   => {
     if (typeof FormData !== 'undefined' && data instanceof FormData) {
       return api.post('/posts', data, { headers: { 'Content-Type': undefined } })
@@ -88,6 +89,9 @@ export const followAPI = {
 
 // EXT-03: Admin Moderation & Audit Logs API
 export const adminAPI = {
+  getOverview:  () => api.get('/posts/admin/overview'),
+  getAnalytics: () => api.get('/posts/admin/analytics'),
+  getPosts:     (params) => api.get('/posts/admin/manage', { params }),
   getAuditLogs: (params) => api.get('/posts/moderation/audit-logs', { params }),
   moderatePost: (postId, status) => api.patch(`/posts/${postId}/moderation`, { status }),
 }

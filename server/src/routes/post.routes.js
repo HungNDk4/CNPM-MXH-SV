@@ -9,7 +9,13 @@ const {
   uploadImagesForPost,
   updatePost,
   deletePost,
+  getMyPostStats,
 } = require('../controllers/post.controller');
+const {
+  getAdminOverview,
+  getAdminAnalytics,
+  getAdminPosts,
+} = require('../controllers/admin.controller');
 const { authenticate, optionalAuthenticate, authorize } = require('../middlewares/auth.middleware');
 const { moderatePost, listModerationAuditLogs } = require('../controllers/moderation.controller');
 const { saveBookmark, removeBookmark, listBookmarks } = require('../controllers/bookmark.controller');
@@ -46,6 +52,14 @@ router.delete('/:id/bookmark', authenticate, removeBookmark);
 
 // EXT-03 static Admin audit read; before generic post ID route.
 router.get('/moderation/audit-logs', authenticate, authorize('admin'), listModerationAuditLogs);
+
+// Student personal post stats (authenticated)
+router.get('/my-stats', authenticate, getMyPostStats);
+
+// Admin content management & analytics
+router.get('/admin/overview', authenticate, authorize('admin'), getAdminOverview);
+router.get('/admin/analytics', authenticate, authorize('admin'), getAdminAnalytics);
+router.get('/admin/manage', authenticate, authorize('admin'), getAdminPosts);
 
 // Optional authentication is scoped in the controller to active/free PDF metadata.
 router.get('/trending-topics', optionalAuthenticate, getTrendingTopics);

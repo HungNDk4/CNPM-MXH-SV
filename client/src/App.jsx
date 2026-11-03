@@ -17,6 +17,9 @@ import ProfilePage from '@/pages/profile/ProfilePage'
 import BookmarksPage from '@/pages/bookmarks/BookmarksPage'
 import NotificationsPage from '@/pages/notifications/NotificationsPage'
 import SettingsPage from '@/pages/settings/SettingsPage'
+import AdminOverviewPage from '@/pages/admin/AdminOverviewPage'
+import AdminPostsPage from '@/pages/admin/AdminPostsPage'
+import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage'
 import AdminAuditPage from '@/pages/admin/AdminAuditPage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
 import NotFoundPage from '@/pages/NotFoundPage'
@@ -76,7 +79,16 @@ export default function App() {
           <Navigate to="/settings?tab=help" replace />
         } />
         <Route path="/admin" element={
-          <Navigate to="/admin/audit-logs" replace />
+          <AdminRoute><AdminOverviewPage /></AdminRoute>
+        } />
+        <Route path="/admin/overview" element={
+          <AdminRoute><AdminOverviewPage /></AdminRoute>
+        } />
+        <Route path="/admin/posts" element={
+          <AdminRoute><AdminPostsPage /></AdminRoute>
+        } />
+        <Route path="/admin/analytics" element={
+          <AdminRoute><AdminAnalyticsPage /></AdminRoute>
         } />
         <Route path="/admin/audit-logs" element={
           <AdminRoute><AdminAuditPage /></AdminRoute>

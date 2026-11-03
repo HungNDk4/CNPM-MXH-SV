@@ -58,15 +58,15 @@ export default function SidebarDock({ isAuthenticated, user }) {
         {/* Admin Shortcut */}
         {isAuthenticated && user?.role === 'admin' && (
           <Link
-            to="/admin/audit-logs"
+            to="/admin"
             className={`flex flex-col items-center justify-center gap-1.5 w-20 h-[68px] rounded-2xl border transition-colors duration-150 group relative select-none ${
-              isCurrent('/admin/audit-logs')
+              isCurrent('/admin')
                 ? 'bg-[#06110a] dark:bg-[#163D29] text-white dark:text-[#2ECC71] border-transparent dark:border-[#163D29] shadow-2xs'
                 : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-[#E4E6EB] hover:bg-white dark:hover:bg-[#303132]'
             }`}
-            title="Quản trị kiểm duyệt"
+            title="Bảng quản trị"
           >
-            <Shield className={`w-5 h-5 shrink-0 ${isCurrent('/admin/audit-logs') ? 'text-[#5bd13a] dark:text-[#2ECC71] stroke-[2.5]' : 'text-amber-500'}`} />
+            <Shield className={`w-5 h-5 shrink-0 ${isCurrent('/admin') ? 'text-[#5bd13a] dark:text-[#2ECC71] stroke-[2.5]' : 'text-amber-500'}`} />
             <span className="text-[11px] leading-tight font-semibold tracking-tight">Quản trị</span>
           </Link>
         )}

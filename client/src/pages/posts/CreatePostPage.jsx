@@ -405,10 +405,15 @@ export default function CreatePostPage() {
                             return false
                           }
                           return true
-                        }).slice(0, 4)
-                        setImageFiles(valid)
-                        const urls = valid.map((f) => URL.createObjectURL(f))
+                        })
+                        if (imageFiles.length + valid.length > 4) {
+                          toast.error('Chỉ được tải lên tối đa 4 ảnh minh họa.')
+                        }
+                        const combined = [...imageFiles, ...valid].slice(0, 4)
+                        setImageFiles(combined)
+                        const urls = combined.map((f) => URL.createObjectURL(f))
                         setPreviewImages(urls)
+                        e.target.value = ''
                       }}
                     />
                   </label>

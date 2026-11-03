@@ -131,7 +131,14 @@ const getPosts = async (req, res, next) => {
         { model: PostImage, as: 'images', attributes: ['id', 'image_url', 'sort_order'], required: false },
       ],
       distinct: true,
-      order: [['created_at', 'DESC'], ['id', 'DESC']],
+      order: req.query.sort === 'popular'
+        ? [
+            [sequelize.literal('(like_count + comment_count)'), 'DESC'],
+            ['view_count', 'DESC'],
+            ['created_at', 'DESC'],
+            ['id', 'DESC']
+          ]
+        : [['created_at', 'DESC'], ['id', 'DESC']],
       limit,
       offset: (page - 1) * limit,
     });
@@ -323,34 +330,111 @@ const deletePost = async (req, res, next) => {
 
 /**
  * GET /api/posts/trending-topics
- * Returns Top real subjects/topics based on active post counts
+ * Returns Top real tags from active posts, falling back to top subjects
  */
 const getTrendingTopics = async (req, res, next) => {
   try {
-    const topics = await Post.findAll({
-      where: {
-        status: 'active',
-        subject: { [Op.ne]: null },
-      },
-      attributes: [
-        'subject',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
-      ],
-      group: ['subject'],
-      order: [[sequelize.literal('count'), 'DESC']],
-      limit: 5,
+    const posts = await Post.findAll({
+      where: { status: 'active' },
+      attributes: ['tags', 'subject'],
       raw: true,
     });
 
-    const data = topics
-      .filter((t) => t.subject && t.subject.trim())
-      .map((t) => ({
-        topic: t.subject,
-        count: Number(t.count) || 0,
-        query: t.subject,
-      }));
+    const tagCounts = new Map();
+    for (const p of posts) {
+      let tags = [];
+      if (Array.isArray(p.tags)) {
+        tags = p.tags;
+      } else if (typeof p.tags === 'string') {
+        try {
+          const parsed = JSON.parse(p.tags);
+          tags = Array.isArray(parsed) ? parsed : p.tags.split(',');
+        } catch {
+          tags = p.tags.split(',');
+        }
+      }
+      for (const rawTag of tags) {
+        const clean = String(rawTag || '').trim().replace(/^#/, '');
+        if (clean) {
+          const key = clean.toLowerCase();
+          const existing = tagCounts.get(key) || { topic: clean, count: 0, query: clean };
+          existing.count += 1;
+          tagCounts.set(key, existing);
+        }
+      }
+    }
+
+    let data = Array.from(tagCounts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // Fallback if tags < 5: supplement with top subjects
+    if (data.length < 5) {
+      const subjectCounts = new Map();
+      for (const p of posts) {
+        if (p.subject && p.subject.trim()) {
+          const s = p.subject.trim();
+          subjectCounts.set(s, (subjectCounts.get(s) || 0) + 1);
+        }
+      }
+      const existingQueries = new Set(data.map((d) => d.query.toLowerCase()));
+      const topSubjects = Array.from(subjectCounts.entries())
+        .filter(([sub]) => !existingQueries.has(sub.toLowerCase()))
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5 - data.length)
+        .map(([sub, count]) => ({ topic: sub, count, query: sub }));
+      data = [...data, ...topSubjects];
+    }
 
     res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/posts/my-stats
+ * Real personal statistics for authenticated student: total posts, likes received, comments received, views.
+ */
+const getMyPostStats = async (req, res, next) => {
+  try {
+    const userId = Number(req.user.id);
+    const totalPosts = await Post.count({
+      where: { user_id: userId, status: 'active' },
+    });
+
+    const [likeResult] = await sequelize.query(
+      `SELECT COUNT(l.id) AS total_likes
+       FROM likes l
+       JOIN posts p ON l.target_type = 'post' AND l.target_id = p.id
+       WHERE p.user_id = :userId AND p.status = 'active'`,
+      { replacements: { userId }, type: sequelize.QueryTypes.SELECT }
+    );
+
+    const [commentResult] = await sequelize.query(
+      `SELECT COUNT(c.id) AS total_comments
+       FROM comments c
+       JOIN posts p ON c.post_id = p.id
+       WHERE p.user_id = :userId AND p.status = 'active' AND c.status = 'active'`,
+      { replacements: { userId }, type: sequelize.QueryTypes.SELECT }
+    );
+
+    const [viewResult] = await sequelize.query(
+      `SELECT COALESCE(SUM(view_count), 0) AS total_views
+       FROM posts
+       WHERE user_id = :userId AND status = 'active'`,
+      { replacements: { userId }, type: sequelize.QueryTypes.SELECT }
+    );
+
+    res.json({
+      success: true,
+      data: {
+        total_posts: totalPosts,
+        total_likes: Number(likeResult?.total_likes || 0),
+        total_comments: Number(commentResult?.total_comments || 0),
+        total_views: Number(viewResult?.total_views || 0),
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -360,8 +444,10 @@ module.exports = {
   getPosts,
   getPostById,
   getTrendingTopics,
+  getMyPostStats,
   createPost,
   uploadImagesForPost,
   updatePost,
   deletePost,
 };
+

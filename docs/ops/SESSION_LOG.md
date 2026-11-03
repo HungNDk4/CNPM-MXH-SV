@@ -420,3 +420,15 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Frontend production build (`npm --prefix client run build`): **PASS** (6.58s, 2104 modules, 0 errors).
    - Project control static check (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
    - Offline unit tests: **PASS** (14/14 tests).
+
+## SESSION-20261104-CI-FIX-PR86-V4 — Restore Settings Posts Tab to Satisfy FE66-P3 Contract
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103` (PR #86).
+**Scope & Deliverables:**
+1. **Resolved FE66-P3 Chromium Test Timeout (`fe66-p3.test.cjs:130`):**
+   - In `fe66-p3.test.cjs`, step 2 awaits clicking `getByRole('button', { name: /Bài đăng & hoạt động/ })`, querying `GET /api/posts`, and finding `question.title`.
+   - In commit `1477da7`, the sidebar item and tab for "Bài đăng & hoạt động" were removed from `SettingsPage.jsx` in favor of a redirect to `/my-posts`.
+   - Restored `{ id: 'posts', label: 'Bài đăng & hoạt động', icon: FileEdit }` in `SettingsPage.jsx` navigation items, added live query `postAPI.getPosts({ author_id: user?.id, limit: 30 })`, rendered the post list with detail link and quick navigation to `/my-posts`, and removed the redirect.
+2. **Verification Evidence:**
+   - Frontend production build (`npm --prefix client run build`): **PASS** (5.54s, 2104 modules, 0 errors).
+   - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
+   - Backend syntax check (`node --check`): **PASS** (0 errors).

@@ -163,7 +163,7 @@ export default function BrandLogo({
               Mate
             </span>
           </div>
-          <span className="text-[9.5px] sm:text-[10px] font-bold tracking-wider text-[#64766D] dark:text-[#94A3B8] uppercase mt-0.5 whitespace-nowrap">
+          <span className="hidden sm:block text-[9.5px] sm:text-[10px] font-bold tracking-wider text-[#64766D] dark:text-[#94A3B8] uppercase mt-0.5 whitespace-nowrap">
             LEARN TOGETHER. GROW SMARTER.
           </span>
         </div>

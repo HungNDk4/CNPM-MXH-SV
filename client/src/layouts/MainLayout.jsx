@@ -9,9 +9,7 @@ import NotificationDropdown from '@/components/layout/NotificationDropdown'
 import UserMenuDropdown from '@/components/layout/UserMenuDropdown'
 import BrandLogo from '@/components/common/BrandLogo'
 import {
-  GraduationCap,
   Search,
-  Plus,
   Bookmark,
   Sun,
   Moon,
@@ -95,22 +93,22 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col transition-colors duration-200 relative">
-      {/* ── Top Header Navigation Bar (Sticky Clean Surface) ── */}
-      <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#17231F]/95 backdrop-blur-md border-b border-[#DCE5DC] dark:border-[#2C3B35] transition-colors duration-200 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
+      {/* ── Top Header Navigation Bar (Neutral clean surface with subtle border) ── */}
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#18191A]/95 backdrop-blur-md border-b border-[#DCE5DC] dark:border-[#2C3B35] transition-colors duration-200 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-3">
           {/* Brand Logo & Title */}
           <Link
             to="/"
-            className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] rounded-xl"
+            className="flex items-center gap-2 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] rounded-xl"
             title="OwlMate"
           >
             <BrandLogo size={38} showText={true} />
           </Link>
 
-          {/* Search Bar with neutral background, moderate rounding, and clear focus state */}
+          {/* Search Bar - Responsive, never squished on mobile */}
           <form
             onSubmit={handleSearchSubmit}
-            className={`flex-1 min-w-0 max-w-lg relative mx-0 sm:mx-3 ${isAuthenticated ? 'block' : 'hidden sm:block'}`}
+            className={`flex-1 min-w-0 max-w-lg relative mx-1.5 sm:mx-3 ${isAuthenticated ? 'block' : 'hidden sm:block'}`}
             role="search"
           >
             <input
@@ -118,18 +116,18 @@ export default function MainLayout() {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Tìm kiếm tài liệu, câu hỏi, đồ án..."
-              className="w-full bg-[#F0F5EF] dark:bg-[#1E2E28] border border-[#DCE5DC] dark:border-[#2C3B35] text-[#123D35] dark:text-[#E2E8F0] placeholder-[#52675A] dark:placeholder-[#A8B9AF] rounded-2xl pl-10 pr-10 py-2 text-xs sm:text-sm focus:bg-white dark:focus:bg-[#17231F] focus:border-[#16A34A] dark:focus:border-[#4ADE80] focus:ring-2 focus:ring-[#16A34A]/20 dark:focus:ring-[#4ADE80]/20 outline-none transition-all shadow-2xs font-medium"
+              placeholder="Tìm kiếm..."
+              className="w-full bg-[#F0F5EF] dark:bg-[#1E2E28] border border-[#DCE5DC] dark:border-[#2C3B35] text-[#123D35] dark:text-[#E2E8F0] placeholder-[#52675A] dark:placeholder-[#A8B9AF] rounded-xl sm:rounded-2xl pl-8 sm:pl-10 pr-7 sm:pr-10 py-1.5 sm:py-2 text-xs sm:text-sm focus:bg-white dark:focus:bg-[#17231F] focus:border-[#16A34A] dark:focus:border-[#4ADE80] focus:ring-2 focus:ring-[#16A34A]/20 dark:focus:ring-[#4ADE80]/20 outline-none transition-all shadow-2xs font-medium"
             />
-            <Search className="w-4 h-4 text-[#52675A] dark:text-[#A8B9AF] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#52675A] dark:text-[#A8B9AF] absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             {searchInput ? (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#52675A] hover:text-[#123D35] dark:text-[#A8B9AF] dark:hover:text-white"
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-[#52675A] hover:text-[#123D35] dark:text-[#A8B9AF] dark:hover:text-white p-0.5"
                 aria-label="Xóa từ khóa"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             ) : (
               <kbd className="hidden sm:inline-flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 h-5 min-w-[20px] px-1 text-[11px] font-bold text-[#52675A] dark:text-[#A8B9AF] bg-white dark:bg-[#17231F] border border-[#DCE5DC] dark:border-[#2C3B35] rounded-md shadow-2xs pointer-events-none">
@@ -138,18 +136,18 @@ export default function MainLayout() {
             )}
           </form>
 
-          {/* Right Action Bar: Clustered Control Group */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Right Action Bar: Clustered Control Group without nested borders */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {isAuthenticated ? (
-              <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-2xl bg-[#F0F5EF] dark:bg-[#1E2E28] border border-[#DCE5DC] dark:border-[#2C3B35] shadow-2xs">
+              <>
                 {/* 1. Bookmark shortcut */}
                 <Link
                   to="/bookmarks"
                   aria-label="Bài viết đã lưu"
-                  className="w-9 h-9 hidden md:flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-white dark:hover:bg-[#17231F] rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
+                  className="w-10 h-10 hidden md:flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-[#F0F5EF] dark:hover:bg-[#1E2E28] rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
                   title="Bài viết đã lưu"
                 >
-                  <Bookmark className="w-4.5 h-4.5" />
+                  <Bookmark className="w-5 h-5" />
                 </Link>
 
                 {/* 2. Notification Dropdown */}
@@ -157,17 +155,14 @@ export default function MainLayout() {
                   <NotificationDropdown />
                 </div>
 
-                {/* 3. Clustered Divider */}
-                <div className="hidden sm:block w-px h-5 bg-[#DCE5DC] dark:bg-[#2C3B35] my-auto mx-0.5" aria-hidden="true" />
-
-                {/* 4. User Menu Dropdown */}
+                {/* 3. User Menu Dropdown */}
                 <UserMenuDropdown
                   user={user}
                   theme={theme}
                   toggleTheme={toggleTheme}
                   onLogout={handleLogout}
                 />
-              </div>
+              </>
             ) : (
               <div className="flex items-center gap-2">
                 {/* Theme Toggle Button for Guests */}

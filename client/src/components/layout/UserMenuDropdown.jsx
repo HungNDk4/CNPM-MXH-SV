@@ -37,10 +37,10 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-white dark:hover:bg-[#17231F] text-[#123D35] dark:text-white transition-all duration-150 border border-transparent hover:border-[#DCE5DC]/60 dark:hover:border-[#2C3B35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
+        className="flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-white/20 text-white transition-all duration-150 border border-transparent hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4ADE80] cursor-pointer"
         aria-label="Menu tài khoản"
       >
-        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-[#16A34A]/40 dark:border-[#4ADE80]/40 shadow-2xs">
+        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-white/40 shadow-2xs">
           {user?.avatar_url ? (
             <img
               src={user.avatar_url}
@@ -55,14 +55,14 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
           )}
         </div>
         <div className="hidden xl:flex flex-col text-left">
-          <span className="text-xs font-bold text-[#123D35] dark:text-white max-w-[110px] truncate leading-tight">
+          <span className="text-xs font-bold text-white max-w-[110px] truncate leading-tight">
             {user?.full_name || 'Thành viên'}
           </span>
-          <span className="text-[10px] font-semibold text-[#52675A] dark:text-[#A8B9AF] leading-tight">
+          <span className="text-[10px] font-semibold text-[#4ADE80] leading-tight">
             {user?.role === 'admin' ? 'Quản trị viên' : 'Sinh viên'}
           </span>
         </div>
-        <ChevronDown className={`w-3.5 h-3.5 text-[#52675A] dark:text-[#A8B9AF] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3.5 h-3.5 text-white/70 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (

@@ -100,7 +100,7 @@ export default function NotificationDropdown() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Thông báo"
-        className="relative w-9 h-9 flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-white dark:hover:bg-[#17231F] rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
+        className="relative w-9 h-9 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4ADE80] cursor-pointer"
       >
         <Bell className="w-4.5 h-4.5" aria-hidden="true" />
         {unreadCount > 0 && (

@@ -342,3 +342,21 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Verification:**
 - `cd client && npm run build`: **PASS** (4.64s, 2096 modules, 0 errors).
 - `node scripts/check-project-control.mjs`: **PASS** (51 task rows validated).
+
+
+## SESSION-20261103-FE-NAV-ROLLBACK-SEARCH-FIX — Rollback Navigation Controls & Retain Mobile Search Fix
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103`.
+**Commit:** `2020f2d`.
+**Scope & Deliverables:**
+1. **Rollback Navigation Bar to `189f8ca` Baseline:**
+   - Restored `UserMenuDropdown.jsx` text colors to dark forest green (`text-[#123D35]`) in Light Mode and crisp white (`dark:text-white`) in Dark Mode, fixing white-on-white text regression.
+   - Restored cohesive clustered action group container pill in `MainLayout.jsx` wrapping Bookmark shortcut, Notification bell, divider, and UserMenuDropdown.
+   - Restored Notification bell styling and active hover states from `189f8ca`.
+   - Restored avatar indicator in `SidebarDock.jsx`.
+2. **Retained Mobile Search Bar Improvements:**
+   - Kept responsive slogan concealment (`hidden sm:block`) in `BrandLogo.jsx` so mobile screens allocate proper width for search without squishing.
+   - Kept compact responsive search input padding (`pl-8 sm:pl-10 pr-7 sm:pr-10 py-1.5 sm:py-2`) and placeholder `Tìm kiếm...` in `MainLayout.jsx`.
+3. **Verification:**
+   - Frontend build (`npm --prefix client run build`): **PASS** (5.73s, 2103 modules transformed, 0 errors).
+   - Backend tests (`node server/tests/admin-and-student-posts.test.cjs`): **PASS** (9/9 passed, 0 failed).
+

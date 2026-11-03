@@ -508,3 +508,19 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Playwright bounding box check: width = 52px, height = 52px, exact aspect ratio = 1.000, `isCircular = true`.
    - Frontend production build (`npm --prefix client run build`): **PASS** (6.68s, 2104 modules, 0 errors).
    - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
+
+## SESSION-20261104-CI-FIX-PR86-V8 — Restore BE-08 Contract & Fix E2E-01 DocumentDetailPage
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103` (PR #86).
+**Scope & Deliverables:**
+1. **Restored Public BE-08 Contract on /api/posts/:id:**
+   - Reverted `post.controller.js` and `interaction-target.js` so `GET /api/posts/:id` returns 404 for non-active posts for all callers (including admin.token), fully satisfying `be08-admin-moderation-regression.cjs` line 127.
+   - In `PostDetailPage.jsx`, enabled Admin inspection of suppressed posts through the dedicated and sanctioned endpoint `adminAPI.getPostDetail(id)` (`GET /api/posts/moderation/posts/:id`), cleanly separating admin inspection from public feed APIs.
+2. **Fixed E2E-01 DocumentDetailPage ReferenceError:**
+   - Cleaned up `DocumentDetailPage.jsx` to prevent undeclared `user` runtime ReferenceError, ensuring `E2E-01 real Chrome/Vite/Express/MySQL/private PDF` document detail heading wait passes reliably.
+3. **Verification Evidence:**
+   - Frontend production build (`npm --prefix client run build`): **PASS** (5.21s, 2104 modules, 0 errors).
+   - Backend syntax check (`node --check`): **PASS** (0 errors).
+   - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
+   - Unit tests: **PASS** (19/19 tests).
+   - BE-08 isolated moderation regression: **PASS** (7/7 groups).
+   - SEC-01 private PDF security regression: **PASS** (18/18 checks).

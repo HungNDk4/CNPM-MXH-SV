@@ -17,9 +17,9 @@ function positiveId(value) {
 
 async function readablePost(id, viewer) {
   const post = await Post.findByPk(positiveId(id));
-  const isAdmin = viewer && viewer.role === 'admin';
-  // Only active/free posts are interactable; admins can inspect suppressed content.
-  if (!post || (!isAdmin && (post.status !== 'active' || Number(post.price) !== 0))) {
+  // Only active/free posts are interactable; admins must use a separately
+  // reviewed moderation endpoint to inspect suppressed content.
+  if (!post || post.status !== 'active' || Number(post.price) !== 0) {
     throw createError('Bài viết không tồn tại.', 404);
   }
   // Current API contract keeps question/discussion member-only. A free active

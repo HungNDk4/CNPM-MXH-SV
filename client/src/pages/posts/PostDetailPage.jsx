@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { commentAPI, likeAPI, postAPI, bookmarkAPI, followAPI } from '@/services/api'
+import { commentAPI, likeAPI, postAPI, bookmarkAPI, followAPI, adminAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import {
   ArrowLeft,
@@ -488,9 +488,21 @@ export default function PostDetailPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({ title: '', content: '', subject: '', tags: '' })
 
+  const isAdmin = user?.role === 'admin'
+
   const { data: post, isLoading, isError, error } = useQuery({
-    queryKey: ['post-detail', id],
-    queryFn: async () => (await postAPI.getById(id)).data.data,
+    queryKey: ['post-detail', id, isAdmin],
+    queryFn: async () => {
+      try {
+        return (await postAPI.getById(id)).data.data
+      } catch (err) {
+        if (isAdmin && err.response?.status === 404) {
+          const res = await adminAPI.getPostDetail(id)
+          return res.data.data
+        }
+        throw err
+      }
+    },
     enabled: Boolean(validId && authenticated),
     retry: false,
   })
@@ -593,7 +605,6 @@ export default function PostDetailPage() {
     </section>
   )
 
-  const isAdmin = user?.role === 'admin'
   const isPostVisible = post && (post.status === 'active' || isAdmin) && Boolean(TYPE_CONFIG[post.post_type])
 
   if (!isPostVisible) return (

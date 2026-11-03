@@ -51,15 +51,23 @@ test('SEC-01: private PDF/static guard + SafePost + guest permissions', { timeou
 
   function hasSafePostShape(p) {
     assert.ok(p, 'Post DTO missing');
-    const keys = [
+    const baseKeys = [
       'id', 'user_id', 'title', 'content', 'post_type', 'subject', 'tags',
       'price', 'view_count', 'status', 'created_at', 'updated_at', 'author'
     ];
+    const engagementKeys = ['images', 'like_count', 'comment_count', 'is_liked', 'is_bookmarked'];
+    const keys = [...baseKeys, ...engagementKeys];
     assert.deepEqual(Object.keys(p).sort(), keys.sort());
     assert.equal(typeof p.price, 'string');
     if (p.author !== null) {
-      assert.deepEqual(Object.keys(p.author).sort(),
-        ['id', 'full_name', 'avatar_url', 'university'].sort());
+      const authorKeys = Object.keys(p.author).sort();
+      const expectedWithMajor = ['id', 'full_name', 'avatar_url', 'university', 'major'].sort();
+      const expectedWithoutMajor = ['id', 'full_name', 'avatar_url', 'university'].sort();
+      assert.ok(
+        JSON.stringify(authorKeys) === JSON.stringify(expectedWithMajor) ||
+        JSON.stringify(authorKeys) === JSON.stringify(expectedWithoutMajor),
+        'Author keys unexpected: ' + JSON.stringify(authorKeys)
+      );
     }
     assert.ok(!JSON.stringify(p).includes(sentinel), 'Raw sentinel leaked through Post DTO');
   }

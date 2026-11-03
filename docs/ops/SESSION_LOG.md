@@ -432,3 +432,15 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Frontend production build (`npm --prefix client run build`): **PASS** (5.54s, 2104 modules, 0 errors).
    - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
    - Backend syntax check (`node --check`): **PASS** (0 errors).
+
+## SESSION-20261104-UI-FIX-SIDEBAR-DOCK — Pin Profile Avatar on Long Page in SidebarDock
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103` (PR #86).
+**Scope & Deliverables:**
+1. **Resolved Sidebar Profile Avatar Stretching to Bottom of Page:**
+   - On long scrollable pages (e.g. feed with many posts and pagination), `SidebarDock` stretched to the full height of the sibling `<main>` content due to flex `align-items: stretch` and `min-h-[calc(100vh-4rem)]`.
+   - With `justify-between`, this pushed the bottom profile avatar down to the very footer of the page (near pagination), off-screen while viewing top/middle content.
+   - Refactored `SidebarDock.jsx` `<aside>` to use `h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] sticky top-16 self-start overflow-y-auto scrollbar-none` and `mt-auto shrink-0` on the profile section, ensuring the dock stays firmly fixed in viewport height and the avatar is always visible at the bottom of the sidebar dock.
+2. **Verification Evidence:**
+   - Frontend production build (`npm --prefix client run build`): **PASS** (5.53s, 2104 modules, 0 errors).
+   - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
+   - Offline unit tests: **PASS** (14/14 tests).

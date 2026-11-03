@@ -45,11 +45,11 @@ export default function SidebarDock({ isAuthenticated, user }) {
 
   return (
     <aside
-      className="hidden md:flex flex-col items-center justify-between w-24 shrink-0 py-5 bg-[#F0F5EF] dark:bg-[#17231F] border-r border-[#DCE5DC] dark:border-[#2C3B35] min-h-[calc(100vh-4rem)] sticky top-16 select-none transition-colors duration-200 z-20"
+      className="hidden md:flex flex-col items-center justify-between w-24 shrink-0 py-5 bg-[#F0F5EF] dark:bg-[#17231F] border-r border-[#DCE5DC] dark:border-[#2C3B35] h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] sticky top-16 self-start select-none transition-colors duration-200 z-20 overflow-y-auto scrollbar-none"
       aria-label="Điều hướng chính"
     >
       {/* Top Nav Items Stack */}
-      <div className="flex flex-col items-center gap-2.5 w-full px-2">
+      <div className="flex flex-col items-center gap-2.5 w-full px-2 shrink-0">
         {navItems.map((item) => {
           if (item.authRequired && !isAuthenticated) return null
           const active = isCurrent(item.to)
@@ -120,7 +120,7 @@ export default function SidebarDock({ isAuthenticated, user }) {
       </div>
 
       {/* Bottom Section: User Profile Avatar */}
-      <div className="flex flex-col items-center w-full px-2 pt-3 pb-1 border-t border-[#DCE5DC] dark:border-[#2C3B35]">
+      <div className="flex flex-col items-center w-full px-2 pt-3 pb-1 border-t border-[#DCE5DC] dark:border-[#2C3B35] mt-auto shrink-0">
         {isAuthenticated ? (
           <Link
             to={`/profile/${user?.id || ''}`}

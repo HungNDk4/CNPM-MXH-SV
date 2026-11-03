@@ -91,9 +91,11 @@ export const followAPI = {
 export const adminAPI = {
   getOverview:  () => api.get('/posts/admin/overview'),
   getAnalytics: () => api.get('/posts/admin/analytics'),
-  getPosts:     (params) => api.get('/posts/admin/manage', { params }),
+  getManagePosts: (params) => api.get('/posts/admin/manage', { params }),
   getAuditLogs: (params) => api.get('/posts/moderation/audit-logs', { params }),
-  moderatePost: (postId, status) => api.patch(`/posts/${postId}/moderation`, { status }),
+  moderatePost: (postId, status, reason) => api.patch(`/posts/${postId}/moderation`, reason === undefined ? { status } : { status, reason }),
+  getPosts: (params) => api.get('/posts/moderation/posts', { params }),
+  getPostDetail: (id) => api.get(`/posts/moderation/posts/${id}`),
 }
 
 

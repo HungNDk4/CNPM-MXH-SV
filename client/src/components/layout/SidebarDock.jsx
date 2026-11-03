@@ -3,35 +3,56 @@ import {
   Home,
   Bookmark,
   Bell,
-  PlusCircle,
+  PlusSquare,
   Shield,
   User,
 } from 'lucide-react'
 
-const NAV_ITEMS = [
-  { to: '/', label: 'Trang chủ', icon: Home, exact: true },
-  { to: '/bookmarks', label: 'Đã lưu', icon: Bookmark, authRequired: true },
-  { to: '/notifications', label: 'Thông báo', icon: Bell, authRequired: true },
-  { to: '/posts/create', label: 'Đăng bài', icon: PlusCircle, authRequired: true },
-]
-
 export default function SidebarDock({ isAuthenticated, user }) {
   const location = useLocation()
 
-  const isCurrent = (path, exact = false) => {
-    if (exact) return location.pathname === path
+  const isCurrent = (path) => {
+    if (path === '/') return location.pathname === '/'
     return location.pathname.startsWith(path)
   }
 
+  const navItems = [
+    {
+      to: '/',
+      label: 'Trang chủ',
+      icon: Home,
+      exact: true,
+    },
+    {
+      to: '/bookmarks',
+      label: 'Đã lưu',
+      icon: Bookmark,
+      authRequired: true,
+    },
+    {
+      to: '/notifications',
+      label: 'Thông báo',
+      icon: Bell,
+      authRequired: true,
+    },
+    {
+      to: '/posts/create',
+      label: 'Đăng bài',
+      icon: PlusSquare,
+      authRequired: true,
+    },
+  ]
+
   return (
     <aside
-      className="hidden md:flex flex-col justify-between w-24 py-4 items-center h-[calc(100vh-4rem)] sticky top-16 bg-[#F0F5EF] dark:bg-[#17231F] border-r border-[#DCE5DC] dark:border-[#2C3B35] transition-colors duration-200 select-none z-30"
-      aria-label="Thanh điều hướng nhanh OwlMate"
+      className="hidden md:flex flex-col items-center justify-between w-24 shrink-0 py-5 bg-[#F0F5EF] dark:bg-[#17231F] border-r border-[#DCE5DC] dark:border-[#2C3B35] min-h-[calc(100vh-4rem)] sticky top-16 select-none transition-colors duration-200 z-20"
+      aria-label="Điều hướng chính"
     >
-      {/* Top Section: Main Nav Icons */}
-      <div className="flex flex-col items-center gap-2 w-full px-2">
-        {NAV_ITEMS.map((item) => {
-          const active = isCurrent(item.to, item.exact)
+      {/* Top Nav Items Stack */}
+      <div className="flex flex-col items-center gap-2.5 w-full px-2">
+        {navItems.map((item) => {
+          if (item.authRequired && !isAuthenticated) return null
+          const active = isCurrent(item.to)
           const Icon = item.icon
 
           return (
@@ -47,21 +68,21 @@ export default function SidebarDock({ isAuthenticated, user }) {
               aria-label={item.label}
               aria-current={active ? 'page' : undefined}
             >
-              {/* Bookmark-inspired geometric active ribbon indicator */}
               {active && (
                 <span
                   className="absolute -left-2 top-1/2 -translate-y-1/2 w-1.5 h-8 rounded-r-full bg-[#16A34A] dark:bg-[#4ADE80] shadow-xs"
                   aria-hidden="true"
                 />
               )}
-
               <Icon
                 className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-105 duration-150 ${
-                  active ? 'text-[#4ADE80] stroke-[2.4]' : 'stroke-[2]'
+                  active
+                    ? 'text-[#4ADE80] stroke-[2.4]'
+                    : 'text-[#52675A] dark:text-[#A8B9AF] group-hover:text-[#123D35] dark:group-hover:text-white stroke-[1.8]'
                 }`}
                 aria-hidden="true"
               />
-              <span className={`text-[11px] leading-tight font-bold tracking-tight ${active ? 'text-white' : ''}`}>
+              <span className="text-[11px] leading-tight font-bold tracking-tight">
                 {item.label}
               </span>
             </Link>

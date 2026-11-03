@@ -21,6 +21,7 @@ import AdminOverviewPage from '@/pages/admin/AdminOverviewPage'
 import AdminPostsPage from '@/pages/admin/AdminPostsPage'
 import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage'
 import AdminAuditPage from '@/pages/admin/AdminAuditPage'
+import AdminContentPage from '@/pages/admin/AdminContentPage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
@@ -89,6 +90,9 @@ export default function App() {
         } />
         <Route path="/admin/analytics" element={
           <AdminRoute><AdminAnalyticsPage /></AdminRoute>
+        } />
+        <Route path="/admin/content" element={
+          <AdminRoute><AdminContentPage /></AdminRoute>
         } />
         <Route path="/admin/audit-logs" element={
           <AdminRoute><AdminAuditPage /></AdminRoute>

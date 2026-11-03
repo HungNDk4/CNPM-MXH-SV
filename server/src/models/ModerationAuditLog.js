@@ -12,6 +12,7 @@ const ModerationAuditLog = sequelize.define('ModerationAuditLog', {
     type: DataTypes.ENUM('active', 'hidden', 'deleted'), allowNull: false,
   },
   new_status: { type: DataTypes.ENUM('hidden', 'deleted'), allowNull: false },
+  reason: { type: DataTypes.STRING(500), allowNull: true, defaultValue: null },
   created_at: { type: DataTypes.DATE(3), allowNull: false, defaultValue: DataTypes.NOW },
 }, {
   tableName: 'moderation_audit_logs',

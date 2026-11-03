@@ -32,6 +32,7 @@ export default function AdminAuditPage() {
   // Quick moderation form state
   const [modPostId, setModPostId] = useState('')
   const [modStatus, setModStatus] = useState('hidden') // 'hidden' | 'deleted'
+  const [modReason, setModReason] = useState('')
 
   // Query audit logs
   const { data, isLoading, isError, refetch } = useQuery({
@@ -46,10 +47,11 @@ export default function AdminAuditPage() {
 
   // Mutation: Moderate post
   const moderateMutation = useMutation({
-    mutationFn: ({ postId, status }) => adminAPI.moderatePost(postId, status),
+    mutationFn: ({ postId, status, reason }) => adminAPI.moderatePost(postId, status, reason),
     onSuccess: (res) => {
       toast.success(res.data.message || 'Đã áp dụng kiểm duyệt thành công!')
       setModPostId('')
+      setModReason('')
       queryClient.invalidateQueries({ queryKey: ['admin-audit-logs'] })
     },
     onError: (err) => {
@@ -76,8 +78,13 @@ export default function AdminAuditPage() {
       toast.error('ID bài viết phải là số nguyên dương.')
       return
     }
+    const reason = modReason.trim()
+    if (reason.length < 5 || reason.length > 500) {
+      toast.error('Lý do kiểm duyệt phải có từ 5 đến 500 ký tự.')
+      return
+    }
     if (window.confirm(`Bạn có chắc chắn muốn chuyển bài viết #${id} sang trạng thái "${modStatus}"?`)) {
-      moderateMutation.mutate({ postId: id, status: modStatus })
+      moderateMutation.mutate({ postId: id, status: modStatus, reason })
     }
   }
 
@@ -91,6 +98,8 @@ export default function AdminAuditPage() {
         title="Nhật ký kiểm duyệt bài viết"
         subtitle="Ghi nhận toàn bộ thao tác ẩn/xóa bài viết vi phạm, bảo toàn tính minh bạch và toàn vẹn của mạng xã hội sinh viên."
       />
+
+      <Link className="btn-secondary inline-flex items-center gap-2 text-sm" to="/admin/content">Quản lý danh sách bài viết</Link>
 
       {/* ── Control Grid: Quick Moderation & Filter ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -159,9 +168,14 @@ export default function AdminAuditPage() {
                 </label>
               </div>
             </div>
+            <label htmlFor="mod-reason" className="block space-y-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+              Lý do kiểm duyệt (5–500 ký tự)
+              <textarea id="mod-reason" className="input w-full min-h-20 resize-y text-sm"
+                maxLength={500} required value={modReason} onChange={e => setModReason(e.target.value)} />
+            </label>
             <button
               type="submit"
-              disabled={moderateMutation.isPending}
+              disabled={moderateMutation.isPending || modReason.trim().length < 5}
               className="btn-primary text-xs py-2.5 w-full flex items-center justify-center gap-2 font-bold shadow-md shadow-primary/20"
             >
               {moderateMutation.isPending ? 'Đang xử lý...' : 'Xác nhận kiểm duyệt'}
@@ -271,6 +285,7 @@ export default function AdminAuditPage() {
                   <th className="py-3 px-3.5 font-bold">Mã bài viết</th>
                   <th className="py-3 px-3.5 font-bold">Trạng thái trước</th>
                   <th className="py-3 px-3.5 font-bold">Trạng thái mới</th>
+                  <th className="py-3 px-3.5 font-bold">Lý do</th>
                   <th className="py-3 px-3.5 font-bold">Thời gian</th>
                 </tr>
               </thead>
@@ -304,6 +319,7 @@ export default function AdminAuditPage() {
                           {newBadge.label}
                         </span>
                       </td>
+                      <td className="py-3 px-3.5 text-slate-500 dark:text-slate-400 max-w-[250px] break-words">{log.reason || 'Không có lý do'}</td>
                       <td className="py-3 px-3.5 text-slate-500 dark:text-slate-400 whitespace-nowrap font-medium">
                         {new Date(log.created_at).toLocaleString('vi-VN')}
                       </td>

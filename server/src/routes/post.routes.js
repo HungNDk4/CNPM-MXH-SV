@@ -17,7 +17,7 @@ const {
   getAdminPosts,
 } = require('../controllers/admin.controller');
 const { authenticate, optionalAuthenticate, authorize } = require('../middlewares/auth.middleware');
-const { moderatePost, listModerationAuditLogs } = require('../controllers/moderation.controller');
+const { moderatePost, listModerationAuditLogs, listAdminPosts, getAdminPostById } = require('../controllers/moderation.controller');
 const { saveBookmark, removeBookmark, listBookmarks } = require('../controllers/bookmark.controller');
 const { createError } = require('../middlewares/error.middleware');
 
@@ -52,6 +52,9 @@ router.delete('/:id/bookmark', authenticate, removeBookmark);
 
 // EXT-03 static Admin audit read; before generic post ID route.
 router.get('/moderation/audit-logs', authenticate, authorize('admin'), listModerationAuditLogs);
+// ADM-01 static paths before /:id. Admin-only suppressed content views.
+router.get('/moderation/posts', authenticate, authorize('admin'), listAdminPosts);
+router.get('/moderation/posts/:id', authenticate, authorize('admin'), getAdminPostById);
 
 // Student personal post stats (authenticated)
 router.get('/my-stats', authenticate, getMyPostStats);

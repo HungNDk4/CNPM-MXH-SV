@@ -49,4 +49,6 @@ server/uploads/*
 # Private PDF objects (never commit document bytes)
 server/private-documents/
 
+erorlog/
+
 .agents/

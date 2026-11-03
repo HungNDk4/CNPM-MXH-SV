@@ -154,7 +154,7 @@ function LikeButton({ targetType, targetId, initialLiked = false, initialCount }
             ? 'text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40'
             : 'text-slate-700 dark:text-slate-200 hover:text-rose-600'
         }`}
-        aria-label={(liked ? 'Bỏ thích ' : 'Thích ') + item}
+        aria-label={'Thích hoặc bỏ thích ' + item}
         aria-pressed={liked}
         onClick={() => toggle.mutate()}
         disabled={toggle.isPending}

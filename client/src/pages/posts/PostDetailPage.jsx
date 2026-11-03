@@ -110,7 +110,7 @@ function BookmarkButton({ postId, initialBookmarked = false }) {
 
 function LikeButton({ targetType, targetId, initialLiked = false, initialCount }) {
   const qc = useQueryClient()
-  const [liked, setLiked] = useState(Boolean(initialLiked))
+  const [liked, setLiked] = useState(typeof initialLiked === 'boolean' ? initialLiked : null)
   const key = ['fe01-likes', targetType, targetId]
 
   useEffect(() => {
@@ -122,7 +122,7 @@ function LikeButton({ targetType, targetId, initialLiked = false, initialCount }
   const { data: count, isLoading, isError } = useQuery({
     queryKey: key,
     queryFn: async () => (await likeAPI.count(targetType, targetId)).data.data.count,
-    initialData: typeof initialCount === 'number' ? initialCount : undefined,
+
     enabled: Boolean(targetId),
     retry: false,
   })
@@ -142,7 +142,7 @@ function LikeButton({ targetType, targetId, initialLiked = false, initialCount }
     onError: (error) => toast.error(error.response?.data?.message || 'Không thể cập nhật lượt thích.'),
   })
 
-  const label = liked ? 'Đã thích' : 'Thích'
+  const label = liked === null ? 'Thích / Bỏ thích' : liked ? 'Đã thích' : 'Thích'
   const item = targetType === 'post' ? 'bài viết' : 'bình luận'
 
   return (
@@ -155,7 +155,8 @@ function LikeButton({ targetType, targetId, initialLiked = false, initialCount }
             : 'text-slate-700 dark:text-slate-200 hover:text-rose-600'
         }`}
         aria-label={'Thích hoặc bỏ thích ' + item}
-        aria-pressed={liked}
+        aria-pressed={liked === null ? 'mixed' : liked}
+        title={liked === null ? 'Chưa có dữ liệu về trạng thái thích ban đầu của tài khoản' : undefined}
         onClick={() => toggle.mutate()}
         disabled={toggle.isPending}
       >

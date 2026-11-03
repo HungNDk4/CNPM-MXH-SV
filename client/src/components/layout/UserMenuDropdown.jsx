@@ -37,7 +37,7 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-white dark:hover:bg-[#17231F] text-[#123D35] dark:text-white transition-all duration-150 border border-transparent hover:border-[#DCE5DC]/60 dark:hover:border-[#2C3B35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
+        className="flex items-center gap-2 px-2 py-1 min-h-10 rounded-xl hover:bg-white dark:hover:bg-[#17231F] text-[#123D35] dark:text-white transition-all duration-150 border border-transparent hover:border-[#DCE5DC]/60 dark:hover:border-[#2C3B35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
         aria-label="Menu tài khoản"
       >
         <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-[#16A34A]/40 dark:border-[#4ADE80]/40 shadow-2xs">

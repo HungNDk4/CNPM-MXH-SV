@@ -393,3 +393,18 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
 - `node --check` across modified server/seeder/test scripts: **PASS** (0 errors).
 - `node scripts/check-project-control.mjs`: **PASS** (51 task rows validated).
 - `node --test server/tests/fe66-seed-guard.test.cjs server/tests/dep-release-blob-adapter.test.cjs`: **PASS** (14/14 tests).
+
+## SESSION-20261104-CI-FIX-PR86-V2 — Fix EXT-01 SafePost Keys, Touch Target Height and Like Sync
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103` (PR #86).
+**Scope & Deliverables:**
+1. **Ubuntu MySQL 8 Integration (`pdf-download.test.cjs` -> `ext01-bookmarks-regression.cjs:141`):**
+   - In `ext01-bookmarks-regression.cjs` line 141, bookmarks list returns SafePosts with engagement keys (`images`, `like_count`, `comment_count`, etc.). Filtered out engagement keys before checking base contract keys to align with enriched Post model.
+   - In `pdf-security.test.cjs`, updated `hasSafePostShape` to flexibly validate base keys with or without engagement keys.
+2. **E2E-01 Chrome Mobile Responsive & Like Button (`fe01.test.cjs`):**
+   - Added `min-h-10` to `UserMenuDropdown.jsx` button to satisfy Playwright mobile touch-target height requirement (`>= 39px`).
+   - Removed `initialData` from `useQuery` in `LikeButton` (`PostDetailPage.jsx`) to guarantee immediate synchronization on like/unlike toggling.
+3. **Verification:**
+   - Frontend build (`npm --prefix client run build`): **PASS** (5.50s, 0 errors).
+   - Node syntax checks (`node --check`): **PASS**.
+   - Project control static checks: **PASS** (51 task rows).
+   - Offline unit tests: **PASS** (14/14 tests).

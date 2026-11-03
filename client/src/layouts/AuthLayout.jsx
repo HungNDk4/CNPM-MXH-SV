@@ -7,32 +7,37 @@ import {
   ArrowLeft,
   ShieldCheck,
   Sparkles,
-  BookOpen,
-  GraduationCap,
 } from 'lucide-react'
 import { useThemeStore } from '@/stores/themeStore'
-import BrandLogo from '@/components/common/BrandLogo'
+import BrandLogo, { BrandIcon } from '@/components/common/BrandLogo'
 
 export default function AuthLayout() {
   const { theme, toggleTheme } = useThemeStore()
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col md:flex-row relative selection:bg-emerald-500/20">
-      {/* ── CỘT TRÁI: SHOWCASE ĐỒ HỌA THƯƠNG HIỆU OWLMATE (SPLIT SCREEN 50%) ── */}
-      <div className="hidden md:flex md:w-1/2 xl:w-[48%] flex-col justify-between p-8 lg:p-12 xl:p-14 bg-gradient-to-br from-[#0b241e] via-[#123D35] to-[#081a15] border-r border-[#1a4a40] text-white relative overflow-hidden select-none">
-        {/* Glow ambient background orbs */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#45C878]/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-0 w-80 h-80 bg-[#FFD45C]/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#F8F9F6] dark:bg-[#12161A] text-[#123D35] dark:text-[#E2E8F0] flex flex-col md:flex-row relative selection:bg-[#45C878]/25 transition-colors duration-200">
+      {/* ── CỘT TRÁI: BRAND SHOWCASE (DESKTOP) ── */}
+      <aside
+        aria-label="Giới thiệu Owl Mate"
+        className="hidden md:flex md:w-[46%] xl:w-[45%] flex-col justify-between p-8 lg:p-12 xl:p-14 bg-[#EEF3EF] dark:bg-[#151D20] border-r border-[#DCE5DF] dark:border-[#223136] relative overflow-hidden select-none transition-colors duration-200"
+      >
+        {/* Subtle decorative ambient lights (restrained & non-intrusive) */}
+        <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#45C878]/10 dark:bg-[#45C878]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-0 w-72 h-72 bg-[#FFD45C]/15 dark:bg-[#FFD45C]/5 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Top Brand & Back to feed */}
+        {/* Top Header: Brand Logo & Back to feed */}
         <div className="flex items-center justify-between relative z-10">
-          <Link to="/" className="flex items-center gap-3 group transition-transform active:scale-95">
-            <BrandLogo size={44} showText={true} textClassName="[&_span]:text-white [&_p]:text-emerald-200/70" />
+          <Link
+            to="/"
+            className="flex items-center gap-3 group transition-transform active:scale-95"
+            title="Owl Mate — Trang chủ"
+          >
+            <BrandLogo size={42} showText={true} />
           </Link>
 
           <Link
             to="/"
-            className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all border border-white/15 backdrop-blur-sm shadow-xs"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full bg-white/80 hover:bg-white text-[#123D35] dark:bg-white/10 dark:hover:bg-white/15 dark:text-[#E2E8F0] border border-[#D5E0D8] dark:border-white/15 shadow-2xs transition-all backdrop-blur-xs"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Xem bảng tin</span>
@@ -40,109 +45,116 @@ export default function AuthLayout() {
         </div>
 
         {/* Center Showcase Content */}
-        <div className="space-y-7 my-auto py-6 relative z-10 max-w-xl">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/15 text-emerald-300 backdrop-blur-sm">
-              <Sparkles className="w-3.5 h-3.5 text-[#FFD45C]" />
-              <span>Cộng đồng học thuật sinh viên đại học</span>
+        <div className="space-y-6 my-auto py-4 relative z-10 max-w-lg">
+          {/* Owl Mate Mascot Anchor */}
+          <div className="flex items-center gap-4">
+            <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-[#1C2824] border border-[#D5E0D8] dark:border-[#2A3C35] p-2.5 shadow-sm flex items-center justify-center shrink-0">
+              <BrandIcon size={64} />
             </div>
-            <h1 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-snug">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E1F3E7] dark:bg-[#1B3527] text-[#1D7D46] dark:text-[#45C878] border border-[#C5E5CE] dark:border-[#27533B]">
+                <Sparkles className="w-3 h-3 text-[#F5A623]" />
+                <span>Nền tảng học thuật sinh viên</span>
+              </div>
+              <p className="text-xs font-semibold text-[#4A6056] dark:text-[#9FB3A9]">
+                Cùng học, cùng trưởng thành mỗi ngày.
+              </p>
+            </div>
+          </div>
+
+          {/* Headline & Description */}
+          <div className="space-y-2.5">
+            <h1 className="text-2xl lg:text-3xl font-black text-[#123D35] dark:text-white tracking-tight leading-snug">
               Nơi dự án &amp; tri thức <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#45C878] via-[#86efac] to-[#FFD45C]">
+              <span className="text-[#239B57] dark:text-[#4ade80]">
                 cùng bạn lớn lên.
               </span>
             </h1>
-            <p className="text-emerald-100/75 text-sm xl:text-[15px] leading-relaxed">
-              Mạng xã hội học tập sinh viên: cùng làm đồ án, giải đáp thắc mắc bài tập và chia sẻ tài liệu PDF ôn thi hoàn toàn miễn phí.
+            <p className="text-[#3F554C] dark:text-[#9FB3A9] text-xs sm:text-sm leading-relaxed">
+              Mạng xã hội học tập kết nối sinh viên các trường đại học: cùng giải đáp bài tập, lập nhóm làm đồ án và chia sẻ tài liệu ôn thi hoàn toàn miễn phí.
             </p>
           </div>
 
-          {/* Bento Highlights (Academic Features) */}
-          <div className="grid grid-cols-2 gap-3.5 pt-1">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#45C878]/40 transition-colors space-y-1.5 backdrop-blur-xs">
-              <div className="w-8 h-8 rounded-xl bg-[#45C878]/20 border border-[#45C878]/40 flex items-center justify-center text-[#45C878]">
+          {/* Tối đa 2 điểm nổi bật (Gọn gàng, không để card hoặc testimonial rời rạc chiếm diện tích) */}
+          <div className="grid grid-cols-1 gap-2.5 pt-1">
+            <div className="p-3.5 rounded-xl bg-white/90 dark:bg-[#1B2529] border border-[#DCE5DF] dark:border-[#26373E] shadow-2xs flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[#E1F3E7] dark:bg-[#1D3528] text-[#1D7D46] dark:text-[#45C878] border border-[#C5E5CE] dark:border-[#28573D] flex items-center justify-center shrink-0">
                 <FileText className="w-4 h-4" />
               </div>
-              <h4 className="font-bold text-xs text-white">Kho tài liệu PDF</h4>
-              <p className="text-[11px] text-emerald-100/60 leading-normal">
-                Slide môn học, đề cương và mẫu SRS đồ án sinh viên chia sẻ.
-              </p>
+              <div className="space-y-0.5">
+                <h2 className="font-bold text-xs text-[#123D35] dark:text-[#EAF2ED]">
+                  Kho tài liệu PDF chuẩn hóa
+                </h2>
+                <p className="text-[11px] text-[#4A6056] dark:text-[#9FB3A9] leading-snug">
+                  Đề cương, slide bài giảng &amp; tài liệu đồ án mẫu từ cộng đồng sinh viên.
+                </p>
+              </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#45C878]/40 transition-colors space-y-1.5 backdrop-blur-xs">
-              <div className="w-8 h-8 rounded-xl bg-[#FFD45C]/20 border border-[#FFD45C]/40 flex items-center justify-center text-[#FFD45C]">
+            <div className="p-3.5 rounded-xl bg-white/90 dark:bg-[#1B2529] border border-[#DCE5DF] dark:border-[#26373E] shadow-2xs flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[#FEF5DC] dark:bg-[#382E17] text-[#B87A08] dark:text-[#FFD45C] border border-[#FDE5A3] dark:border-[#58451D] flex items-center justify-center shrink-0">
                 <Users className="w-4 h-4" />
               </div>
-              <h4 className="font-bold text-xs text-white">Mạng lưới sinh viên</h4>
-              <p className="text-[11px] text-emerald-100/60 leading-normal">
-                Kết nối bạn học ĐHBK, UIT, HUST, ĐHKHTN, ĐH CNTT và nhiều trường khác.
-              </p>
-            </div>
-          </div>
-
-          {/* Testimonial Quote */}
-          <div className="p-4 sm:p-4.5 rounded-2xl bg-white/5 border border-white/10 border-l-4 border-l-[#45C878] backdrop-blur-xs space-y-2">
-            <div className="flex items-center gap-1 text-amber-300 text-xs">
-              {'★'.repeat(5)}
-              <span className="text-[11px] text-emerald-200/80 ml-1 font-semibold">5.0 Sinh viên đánh giá</span>
-            </div>
-            <p className="text-xs text-emerald-50 italic leading-relaxed">
-              "Nền tảng giúp mình tìm được tài liệu môn Công nghệ Phần mềm và kết nối được với nhiều bạn cùng làm đồ án môn học."
-            </p>
-            <div className="flex items-center gap-2 pt-1">
-              <div className="w-6 h-6 rounded-full bg-[#21A65B] text-[10px] font-bold flex items-center justify-center text-white ring-1 ring-white/30">
-                H
+              <div className="space-y-0.5">
+                <h2 className="font-bold text-xs text-[#123D35] dark:text-[#EAF2ED]">
+                  Cộng đồng học thuật gắn kết
+                </h2>
+                <p className="text-[11px] text-[#4A6056] dark:text-[#9FB3A9] leading-snug">
+                  Hỏi đáp bài tập, kết nối đồng đội làm đề tài từ ĐHBK, UIT, HUST, ĐHKHTN...
+                </p>
               </div>
-              <span className="text-xs font-bold text-white">Nguyễn Hùng</span>
-              <span className="text-[11px] text-emerald-200/60">• Sinh viên UIT</span>
             </div>
           </div>
         </div>
 
-        {/* Left Footer */}
-        <div className="flex items-center justify-between text-xs text-emerald-200/60 relative z-10 pt-4 border-t border-white/10">
-          <span>© 2026 OwlMate</span>
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1 text-[#45C878] font-medium">
+        {/* Brand Footer */}
+        <div className="flex items-center justify-between text-xs text-[#5A6E64] dark:text-[#8FA399] relative z-10 pt-3 border-t border-[#DCE5DF] dark:border-[#223136]">
+          <span>© 2026 Owl Mate</span>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1 text-[#1D7D46] dark:text-[#45C878] font-semibold text-[11px]">
               <ShieldCheck className="w-3.5 h-3.5" />
-              Hệ thống an toàn
+              An toàn &amp; Bảo mật
             </span>
-            <span>Học thuật phi thương mại</span>
+            <span className="text-[11px]">Học thuật phi thương mại</span>
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* ── CỘT PHẢI: FORM CARD CHỨA NỘI DUNG LOGIN / REGISTER ── */}
-      <div className="w-full md:w-1/2 xl:w-[52%] flex flex-col justify-between p-4 sm:p-8 lg:p-12 relative overflow-y-auto bg-surface min-h-screen">
-        {/* Top Header Mobile Brand + Theme switch */}
-        <div className="flex items-center justify-between w-full max-w-md mx-auto pt-2 sm:pt-0">
-          <Link to="/" className="md:hidden flex items-center gap-2">
-            <BrandLogo size={36} showText={true} />
+      {/* ── CỘT PHẢI: FORM CARD CHỨA NỘI DUNG (LOGIN / REGISTER) ── */}
+      <main className="w-full md:w-[54%] xl:w-[55%] flex flex-col justify-between p-4 sm:p-8 lg:p-12 relative overflow-y-auto min-h-screen">
+        {/* Top Header Controls: Mobile Brand + Theme switch */}
+        <div className="flex items-center justify-between w-full max-w-md mx-auto pt-1 sm:pt-0 pb-3 sm:pb-0">
+          <Link to="/" className="md:hidden flex items-center gap-2" title="Owl Mate">
+            <BrandLogo size={34} showText={true} />
           </Link>
 
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-            className="p-2.5 rounded-2xl text-content-muted hover:text-content bg-surface-card border border-surface-border hover:bg-surface-muted transition-colors shadow-2xs cursor-pointer ml-auto"
+            className="p-2 rounded-xl text-[#5A6E64] dark:text-[#94A3B8] hover:text-[#123D35] dark:hover:text-white bg-white dark:bg-[#1B2327] border border-[#DCE5DF] dark:border-[#29373D] hover:bg-[#F2F6F3] dark:hover:bg-[#222E33] transition-colors shadow-2xs cursor-pointer ml-auto"
             title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-500" />}
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-[#FFD45C]" />
+            ) : (
+              <Moon className="w-4 h-4 text-[#5A6E64]" />
+            )}
           </button>
         </div>
 
-        {/* Center Container: CARD FORM NẰM GỌN GÀNG, SANG TRỌNG */}
-        <div className="w-full max-w-md mx-auto my-auto py-6 sm:py-8">
-          <div className="card shadow-xl shadow-slate-900/5 dark:shadow-black/30 border border-surface-border rounded-3xl p-6 sm:p-8 bg-surface-card">
+        {/* Center Container: CARD FORM NẰM GỌN GÀNG, TẬP TRUNG */}
+        <div className="w-full max-w-md mx-auto my-auto py-4 sm:py-6">
+          <div className="bg-white dark:bg-[#1B2327] border border-[#E3E8E4] dark:border-[#29373D] shadow-lg shadow-emerald-950/[0.03] dark:shadow-black/35 rounded-3xl p-6 sm:p-8">
             <Outlet />
           </div>
         </div>
 
         {/* Bottom copyright footer */}
-        <div className="w-full max-w-md mx-auto text-center py-2 text-xs text-content-muted font-medium">
-          OwlMate — <span className="uppercase tracking-wider font-semibold">LEARN TOGETHER. GROW SMARTER.</span>
-        </div>
-      </div>
+        <footer className="w-full max-w-md mx-auto text-center py-2 text-xs text-[#64766D] dark:text-[#8A9C93] font-medium">
+          Owl Mate — <span className="uppercase tracking-wider font-semibold">LEARN TOGETHER. GROW SMARTER.</span>
+        </footer>
+      </main>
     </div>
   )
 }

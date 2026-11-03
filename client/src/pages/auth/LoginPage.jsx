@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { authAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
-import { Loader2, Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react'
+import { Loader2, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight } from 'lucide-react'
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' })
@@ -25,7 +25,7 @@ export default function LoginPage() {
       const from = location.state?.from?.pathname || '/'
       navigate(from, { replace: true })
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu.')
+      toast.error(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.')
     } finally {
       setLoading(false)
     }
@@ -35,15 +35,15 @@ export default function LoginPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 dark:bg-emerald-950/40 text-primary-700 dark:text-[#4ade80] border border-primary-200/60 dark:border-emerald-800/40">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span>Chào mừng trở lại!</span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E1F3E7] dark:bg-[#1D3528] text-[#1D7D46] dark:text-[#45C878] border border-[#C5E5CE] dark:border-[#28573D]">
+          <Sparkles className="w-3.5 h-3.5 text-[#F5A623]" />
+          <span>Tài khoản sinh viên</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-content tracking-tight">
-          Đăng nhập
+        <h2 className="text-2xl sm:text-3xl font-black text-[#123D35] dark:text-white tracking-tight">
+          Chào mừng bạn trở lại
         </h2>
-        <p className="text-content-muted text-xs sm:text-sm leading-relaxed">
-          Đăng nhập vào OwlMate để tiếp tục thảo luận và khám phá tài liệu ôn thi.
+        <p className="text-[#4A6056] dark:text-[#9FB3A9] text-xs sm:text-sm leading-relaxed">
+          Tiếp tục hành trình học hỏi và chia sẻ cùng cộng đồng.
         </p>
       </div>
 
@@ -51,8 +51,8 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4 pt-1">
         {/* Email */}
         <div className="space-y-1.5">
-          <label htmlFor="email" className="text-xs font-bold text-content block">
-            Email sinh viên / Cá nhân <span className="text-rose-500">*</span>
+          <label htmlFor="email" className="text-xs font-bold text-[#123D35] dark:text-[#E2E8F0] block">
+            Email sinh viên hoặc cá nhân <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
             <input
@@ -61,19 +61,19 @@ export default function LoginPage() {
               type="email"
               value={form.email}
               onChange={handleChange}
-              placeholder="ten@student.edu.vn hoặc email cá nhân"
-              className="input pl-10 pr-4 py-3 text-sm rounded-2xl"
+              placeholder="ví dụ: hung@student.edu.vn"
+              className="w-full bg-[#FAFCFA] dark:bg-[#222D32] border border-[#D8E1DB] dark:border-[#33444C] text-[#123D35] dark:text-white rounded-xl pl-10 pr-4 py-2.5 sm:py-3 text-sm focus:bg-white dark:focus:bg-[#263339] focus:border-[#21A65B] dark:focus:border-[#4ade80] focus:ring-2 focus:ring-[#21A65B]/20 outline-none transition-all placeholder:text-[#8D9F95] dark:placeholder:text-[#64748B] font-medium"
               required
               autoComplete="email"
             />
-            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Mail className="w-4 h-4 text-[#7A8E84] dark:text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
         {/* Password */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label htmlFor="password" className="text-xs font-bold text-content block">
+            <label htmlFor="password" className="text-xs font-bold text-[#123D35] dark:text-[#E2E8F0] block">
               Mật khẩu <span className="text-rose-500">*</span>
             </label>
           </div>
@@ -85,15 +85,15 @@ export default function LoginPage() {
               value={form.password}
               onChange={handleChange}
               placeholder="••••••••"
-              className="input pl-10 pr-11 py-3 text-sm rounded-2xl"
+              className="w-full bg-[#FAFCFA] dark:bg-[#222D32] border border-[#D8E1DB] dark:border-[#33444C] text-[#123D35] dark:text-white rounded-xl pl-10 pr-11 py-2.5 sm:py-3 text-sm focus:bg-white dark:focus:bg-[#263339] focus:border-[#21A65B] dark:focus:border-[#4ade80] focus:ring-2 focus:ring-[#21A65B]/20 outline-none transition-all placeholder:text-[#8D9F95] dark:placeholder:text-[#64748B] font-medium"
               required
               autoComplete="current-password"
             />
-            <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Lock className="w-4 h-4 text-[#7A8E84] dark:text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-content transition-colors cursor-pointer p-1"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7A8E84] hover:text-[#123D35] dark:text-[#64748B] dark:hover:text-white transition-colors cursor-pointer p-1"
               title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
             >
@@ -106,16 +106,16 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full mt-2 py-3.5 inline-flex items-center justify-center gap-2 font-bold shadow-md shadow-primary/20 rounded-2xl transition-all cursor-pointer text-sm"
+          className="w-full mt-2 py-3 sm:py-3.5 px-4 inline-flex items-center justify-center gap-2 font-bold text-sm text-white bg-[#1F8A4D] hover:bg-[#18733F] dark:bg-[#2EB86B] dark:hover:bg-[#25A15C] dark:text-[#0A1F16] rounded-xl shadow-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#21A65B]/40"
         >
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Đang xác thực...</span>
+              <span>Đang đăng nhập...</span>
             </>
           ) : (
             <>
-              <span>Đăng nhập vào OwlMate</span>
+              <span>Đăng nhập</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
@@ -123,15 +123,14 @@ export default function LoginPage() {
       </form>
 
       {/* Switch to Register */}
-      <div className="pt-4 border-t border-surface-border text-center">
-        <p className="text-content-muted text-xs sm:text-sm">
+      <div className="pt-4 border-t border-[#E3E8E4] dark:border-[#29373D] text-center">
+        <p className="text-[#5A6E64] dark:text-[#94A3B8] text-xs sm:text-sm">
           Chưa có tài khoản?{' '}
           <Link
             to="/register"
-            state={location.state}
-            className="text-primary-600 dark:text-primary-400 hover:text-primary-700 font-bold hover:underline transition-colors ml-1"
+            className="text-[#1F8A4D] hover:text-[#18733F] dark:text-[#4ade80] dark:hover:text-[#86efac] font-bold hover:underline transition-colors ml-1"
           >
-            Đăng ký tài khoản ngay
+            Đăng ký ngay
           </Link>
         </p>
       </div>

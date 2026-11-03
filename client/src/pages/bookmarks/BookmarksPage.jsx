@@ -111,7 +111,7 @@ export default function BookmarksPage() {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} initialBookmarked />
+            <PostCard key={post.id} post={{ ...post, is_bookmarked: true }} initialBookmarked />
           ))}
 
           {/* Pagination */}

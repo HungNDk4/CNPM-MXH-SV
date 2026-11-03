@@ -54,7 +54,7 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
 
   const [likesCount, setLikesCount] = useState(Number(post.like_count) || 0)
   const [isLiked, setIsLiked] = useState(post.is_liked !== undefined ? Boolean(post.is_liked) : null)
-  const [isBookmarked, setIsBookmarked] = useState(post.is_bookmarked !== undefined ? Boolean(post.is_bookmarked) : initialBookmarked)
+  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked || (post.is_bookmarked !== undefined ? Boolean(post.is_bookmarked) : false))
   const [commentText, setCommentText] = useState('')
   const [replyingTo, setReplyingTo] = useState(null) // { id: number, authorName: string }
 
@@ -62,8 +62,8 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
   useEffect(() => {
     if (typeof post.like_count === 'number') setLikesCount(post.like_count)
     if (typeof post.is_liked === 'boolean') setIsLiked(post.is_liked)
-    if (typeof post.is_bookmarked === 'boolean') setIsBookmarked(post.is_bookmarked)
-  }, [post.like_count, post.is_liked, post.is_bookmarked])
+    if (typeof post.is_bookmarked === 'boolean') setIsBookmarked(initialBookmarked || post.is_bookmarked)
+  }, [post.like_count, post.is_liked, post.is_bookmarked, initialBookmarked])
 
   const isFree = !post.price || parseFloat(post.price) === 0
   const postUrl = post.post_type === 'document' ? `/documents/${post.id}` : `/posts/${post.id}`

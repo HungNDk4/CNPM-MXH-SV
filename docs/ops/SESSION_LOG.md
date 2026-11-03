@@ -444,3 +444,16 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Frontend production build (`npm --prefix client run build`): **PASS** (5.53s, 2104 modules, 0 errors).
    - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
    - Offline unit tests: **PASS** (14/14 tests).
+
+## SESSION-20261104-CI-FIX-PR86-V5 — Ensure is_bookmarked in Bookmarks and PostCard
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103` (PR #86).
+**Scope & Deliverables:**
+1. **Resolved FE66-P3 Bookmarks Remove Button Timeout (`fe66-p3.test.cjs:149`):**
+   - In `fe66-p3.test.cjs`, line 149 waits for `locator('article').filter(...).getByRole('button', { name: 'Bỏ lưu bài viết' })`.
+   - `listBookmarks` in `bookmark.controller.js` mapped `toSafePost(bookmark.post)` without `is_bookmarked: true`, causing `isBookmarked` to evaluate to `false` and rendering the button with `aria-label="Lưu bài viết"`.
+   - Updated `bookmark.controller.js` to return `is_bookmarked: true` on bookmarks list, updated `BookmarksPage.jsx` to pass `post={{ ...post, is_bookmarked: true }}`, and updated `PostCard.jsx` to respect `initialBookmarked || post.is_bookmarked` so the button displays "Bỏ lưu bài viết" as expected.
+2. **Verification Evidence:**
+   - Frontend production build (`npm --prefix client run build`): **PASS** (6.42s, 2104 modules, 0 errors).
+   - Backend syntax check (`node --check`): **PASS** (0 errors).
+   - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
+   - Offline unit tests: **PASS** (14/14 tests).

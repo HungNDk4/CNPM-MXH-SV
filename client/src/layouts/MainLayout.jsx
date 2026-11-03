@@ -93,8 +93,8 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col transition-colors duration-200 relative">
-      {/* ── Top Header Navigation Bar (Neutral clean surface with subtle border) ── */}
-      <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#18191A]/95 backdrop-blur-md border-b border-[#DCE5DC] dark:border-[#2C3B35] transition-colors duration-200 shadow-2xs">
+      {/* ── Top Header Navigation Bar (Sticky Clean Surface) ── */}
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#17231F]/95 backdrop-blur-md border-b border-[#DCE5DC] dark:border-[#2C3B35] transition-colors duration-200 shadow-2xs">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-3">
           {/* Brand Logo & Title */}
           <Link
@@ -136,18 +136,18 @@ export default function MainLayout() {
             )}
           </form>
 
-          {/* Right Action Bar: Clustered Control Group without nested borders */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {/* Right Action Bar: Clustered Control Group */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {isAuthenticated ? (
-              <>
+              <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-2xl bg-[#F0F5EF] dark:bg-[#1E2E28] border border-[#DCE5DC] dark:border-[#2C3B35] shadow-2xs">
                 {/* 1. Bookmark shortcut */}
                 <Link
                   to="/bookmarks"
                   aria-label="Bài viết đã lưu"
-                  className="w-10 h-10 hidden md:flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-[#F0F5EF] dark:hover:bg-[#1E2E28] rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
+                  className="w-9 h-9 hidden md:flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-white dark:hover:bg-[#17231F] rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
                   title="Bài viết đã lưu"
                 >
-                  <Bookmark className="w-5 h-5" />
+                  <Bookmark className="w-4.5 h-4.5" />
                 </Link>
 
                 {/* 2. Notification Dropdown */}
@@ -155,14 +155,17 @@ export default function MainLayout() {
                   <NotificationDropdown />
                 </div>
 
-                {/* 3. User Menu Dropdown */}
+                {/* 3. Clustered Divider */}
+                <div className="hidden sm:block w-px h-5 bg-[#DCE5DC] dark:bg-[#2C3B35] my-auto mx-0.5" aria-hidden="true" />
+
+                {/* 4. User Menu Dropdown */}
                 <UserMenuDropdown
                   user={user}
                   theme={theme}
                   toggleTheme={toggleTheme}
                   onLogout={handleLogout}
                 />
-              </>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 {/* Theme Toggle Button for Guests */}

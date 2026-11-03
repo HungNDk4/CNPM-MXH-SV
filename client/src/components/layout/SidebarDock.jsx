@@ -123,7 +123,7 @@ export default function SidebarDock({ isAuthenticated, user }) {
                 {user?.full_name?.[0]?.toUpperCase() || 'U'}
               </div>
             )}
-            {/* Avatar without artificial online status */}
+            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#16A34A] dark:bg-[#4ADE80] border-2 border-[#F0F5EF] dark:border-[#17231F]" />
           </Link>
         ) : (
           <Link

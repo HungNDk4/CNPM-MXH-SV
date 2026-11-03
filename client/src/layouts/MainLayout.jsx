@@ -102,7 +102,7 @@ export default function MainLayout() {
           <Link
             to="/"
             className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
-            title="Mini Study Network"
+            title="OwlMate"
           >
             <BrandLogo size={38} showText={true} />
           </Link>

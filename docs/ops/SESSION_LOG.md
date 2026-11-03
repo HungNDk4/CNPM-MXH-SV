@@ -480,3 +480,19 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Frontend production build (`npm --prefix client run build`): **PASS** (5.82s, 2104 modules, 0 errors).
    - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
    - Offline unit tests: **PASS** (14/14 tests).
+
+## SESSION-20261104-FIX-ADMIN-VIEW-AND-AUDIT-LOGS — Enable Admin Inspection of Suppressed Content & Fix Audit Logs Schema
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103` (PR #86).
+**Scope & Deliverables:**
+1. **Resolved Audit Logs Loading Error in Local Database:**
+   - Applied `20261102_adm01_moderation_reason.sql` to local MySQL database, adding `reason VARCHAR(500) NULL` column to `moderation_audit_logs`.
+   - Verified `GET /api/posts/moderation/audit-logs` returns HTTP 200 with all 32 historical audit records and renders cleanly on `/admin/audit-logs`.
+2. **Enabled Admin Inspection of Suppressed/Hidden/Deleted Posts:**
+   - Updated `getPostById` in `server/src/controllers/post.controller.js` and `readablePost` in `server/src/utils/interaction-target.js` so that `req.user.role === 'admin'` can inspect non-active posts (`status: 'hidden'` or `'deleted'`) while maintaining 404 security barriers for guests and normal students.
+   - Updated `client/src/pages/posts/PostDetailPage.jsx` and `client/src/pages/documents/DocumentDetailPage.jsx` to render post details for administrators with a prominent Admin Moderation Notice banner informing them of the post's hidden/deleted state.
+3. **Verification Evidence:**
+   - Frontend production build (`npm --prefix client run build`): **PASS** (5.35s, 2104 modules, 0 errors).
+   - Backend syntax check (`node --check`): **PASS** (0 errors).
+   - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
+   - Offline unit tests: **PASS** (19/19 tests).
+   - E2E Playwright verification: verified `/admin/audit-logs` renders 10 rows and `/posts/14` (hidden post) renders title and Admin banner.

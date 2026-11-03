@@ -170,15 +170,18 @@ const getPostById = async (req, res, next) => {
       ],
     });
     if (!post) throw createError('Bài viết không tồn tại.', 404);
-    if (post.status !== 'active' || Number(post.price) !== 0) {
+    const isAdmin = req.user && req.user.role === 'admin';
+    if (!isAdmin && (post.status !== 'active' || Number(post.price) !== 0)) {
       throw createError('Bài viết không tồn tại.', 404);
     }
     if (!req.user && post.post_type !== 'document') {
       throw createError('Yêu cầu đăng nhập để xem bài viết.', 401);
     }
 
-    // Tăng view count
-    await post.increment('view_count');
+    // Tăng view count khi bài viết đang hoạt động
+    if (post.status === 'active') {
+      await post.increment('view_count');
+    }
 
     res.json({ success: true, data: toSafePost(post) });
   } catch (error) {

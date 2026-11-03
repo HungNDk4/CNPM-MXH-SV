@@ -593,10 +593,13 @@ export default function PostDetailPage() {
     </section>
   )
 
-  if (!post || post.status !== 'active' || !TYPE_CONFIG[post.post_type]) return (
+  const isAdmin = user?.role === 'admin'
+  const isPostVisible = post && (post.status === 'active' || isAdmin) && Boolean(TYPE_CONFIG[post.post_type])
+
+  if (!isPostVisible) return (
     <section className="card text-center py-14 space-y-4 max-w-2xl mx-auto">
       <h1 className="font-bold text-xl text-slate-900 dark:text-white">Bài viết không khả dụng tại trang này.</h1>
-      {post?.post_type === 'document' && post.status === 'active' ? (
+      {post?.post_type === 'document' && (post.status === 'active' || isAdmin) ? (
         <Link to={'/documents/' + post.id} className="btn-primary inline-block">Xem tài liệu</Link>
       ) : (
         <Link to="/" className="btn-secondary inline-block">Về bảng tin</Link>
@@ -618,6 +621,27 @@ export default function PostDetailPage() {
           <span>Quay lại bảng tin</span>
         </Link>
       </nav>
+
+      {/* Admin Moderation Notice Banner */}
+      {isAdmin && post.status !== 'active' && (
+        <div className="p-4 rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div>
+              <p className="font-bold">Chế độ xem Quản trị viên</p>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Bài viết này đang ở trạng thái <strong>{post.status === 'hidden' ? 'Đã ẩn (hidden)' : 'Đã xóa (deleted)'}</strong> và không hiển thị với người dùng thông thường.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/admin/posts"
+            className="shrink-0 px-3 py-1.5 bg-amber-200 dark:bg-amber-800 hover:bg-amber-300 dark:hover:bg-amber-700 text-amber-900 dark:text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5"
+          >
+            Quản trị bài viết &rarr;
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* ── CỘT TRÁI: BÀI VIẾT & BÌNH LUẬN (8 Cols) ── */}

@@ -7,8 +7,6 @@ import {
   ArrowLeft,
   ShieldCheck,
   Sparkles,
-  BookOpen,
-  GraduationCap,
 } from 'lucide-react'
 import { useThemeStore } from '@/stores/themeStore'
 import BrandLogo from '@/components/common/BrandLogo'
@@ -113,9 +111,9 @@ export default function AuthLayout() {
       </div>
 
       {/* ── CỘT PHẢI: FORM CARD CHỨA NỘI DUNG LOGIN / REGISTER ── */}
-      <div className="w-full md:w-1/2 xl:w-[52%] flex flex-col justify-between p-4 sm:p-8 lg:p-12 relative overflow-y-auto bg-surface min-h-screen">
+      <div className="w-full md:w-1/2 xl:w-[52%] flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative overflow-y-auto bg-surface min-h-screen">
         {/* Top Header Mobile Brand + Theme switch */}
-        <div className="flex items-center justify-between w-full max-w-md mx-auto pt-2 sm:pt-0">
+        <div className="flex items-center justify-between w-full max-w-md mx-auto pt-1 sm:pt-0">
           <Link to="/" className="md:hidden flex items-center gap-2">
             <BrandLogo size={36} showText={true} />
           </Link>
@@ -124,16 +122,16 @@ export default function AuthLayout() {
             type="button"
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-            className="p-2.5 rounded-2xl text-content-muted hover:text-content bg-surface-card border border-surface-border hover:bg-surface-muted transition-colors shadow-2xs cursor-pointer ml-auto"
+            className="p-2 rounded-xl text-content-muted hover:text-content bg-surface-card border border-surface-border hover:bg-surface-muted transition-colors shadow-2xs cursor-pointer ml-auto"
             title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}
           >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-500" />}
           </button>
         </div>
 
-        {/* Center Container: CARD FORM NẰM GỌN GÀNG, SANG TRỌNG */}
-        <div className="w-full max-w-md mx-auto my-auto py-6 sm:py-8">
-          <div className="card shadow-xl shadow-slate-900/5 dark:shadow-black/30 border border-surface-border rounded-3xl p-6 sm:p-8 bg-surface-card">
+        {/* Center Container: CARD FORM NẰM GỌN GÀNG, CĂN GIỮA ĐẸP MẮT */}
+        <div className="w-full max-w-md mx-auto my-auto py-2 sm:py-3">
+          <div className="card shadow-xl shadow-slate-900/5 dark:shadow-black/30 border border-surface-border rounded-3xl p-5 sm:p-7 bg-surface-card">
             <Outlet />
           </div>
         </div>

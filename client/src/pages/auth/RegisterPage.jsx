@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { authAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
-import { Loader2, User, Mail, Lock, School, BookOpen, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react'
+import { Loader2, User, Mail, Lock, School, BookOpen, ArrowRight, Eye, EyeOff } from 'lucide-react'
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ full_name: '', email: '', password: '', university: '', major: '' })
@@ -33,14 +33,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="space-y-1.5">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 dark:bg-emerald-950/40 text-primary-700 dark:text-[#4ade80] border border-primary-200/60 dark:border-emerald-800/40">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span>Gia nhập cộng đồng 🎓</span>
-        </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-content tracking-tight">
+      <div className="space-y-1">
+        <h2 className="text-2xl sm:text-[26px] font-black text-content tracking-tight">
           Tạo tài khoản OwlMate
         </h2>
         <p className="text-content-muted text-xs sm:text-sm leading-relaxed">
@@ -49,7 +45,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Form Fields */}
-      <form onSubmit={handleSubmit} className="space-y-3.5 pt-1">
+      <form onSubmit={handleSubmit} className="space-y-2.5 pt-0.5">
         {/* Họ và tên */}
         <div className="space-y-1">
           <label htmlFor="full_name" className="text-xs font-bold text-content block">
@@ -63,7 +59,7 @@ export default function RegisterPage() {
               value={form.full_name}
               onChange={handleChange}
               placeholder="Nguyễn Văn A"
-              className="input pl-10 pr-4 py-2.5 text-sm rounded-2xl"
+              className="input pl-10 pr-4 py-2 text-sm rounded-xl"
               required
               autoComplete="name"
             />
@@ -84,7 +80,7 @@ export default function RegisterPage() {
               value={form.email}
               onChange={handleChange}
               placeholder="ten@student.edu.vn"
-              className="input pl-10 pr-4 py-2.5 text-sm rounded-2xl"
+              className="input pl-10 pr-4 py-2 text-sm rounded-xl"
               required
               autoComplete="email"
             />
@@ -105,7 +101,7 @@ export default function RegisterPage() {
               value={form.password}
               onChange={handleChange}
               placeholder="Tối thiểu 6 ký tự"
-              className="input pl-10 pr-11 py-2.5 text-sm rounded-2xl"
+              className="input pl-10 pr-11 py-2 text-sm rounded-xl"
               required
               autoComplete="new-password"
             />
@@ -135,7 +131,7 @@ export default function RegisterPage() {
               value={form.university}
               onChange={handleChange}
               placeholder="ĐH Bách Khoa, UIT, HUST, ĐHKHTN..."
-              className="input pl-10 pr-4 py-2.5 text-sm rounded-2xl"
+              className="input pl-10 pr-4 py-2 text-sm rounded-xl"
               autoComplete="organization"
             />
             <School className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -155,7 +151,7 @@ export default function RegisterPage() {
               value={form.major}
               onChange={handleChange}
               placeholder="Khoa học Máy tính / CNPM / Hệ thống..."
-              className="input pl-10 pr-4 py-2.5 text-sm rounded-2xl"
+              className="input pl-10 pr-4 py-2 text-sm rounded-xl"
             />
             <BookOpen className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
@@ -165,7 +161,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full mt-2 py-3.5 inline-flex items-center justify-center gap-2 font-bold shadow-md shadow-primary/20 rounded-2xl transition-all cursor-pointer text-sm"
+          className="btn-primary w-full mt-2 py-3 inline-flex items-center justify-center gap-2 font-bold shadow-md shadow-primary/20 rounded-xl transition-all cursor-pointer text-sm"
         >
           {loading ? (
             <>
@@ -182,7 +178,7 @@ export default function RegisterPage() {
       </form>
 
       {/* Switch to Login */}
-      <div className="pt-3.5 border-t border-surface-border text-center">
+      <div className="pt-3 border-t border-surface-border text-center">
         <p className="text-content-muted text-xs sm:text-sm">
           Đã có tài khoản?{' '}
           <Link

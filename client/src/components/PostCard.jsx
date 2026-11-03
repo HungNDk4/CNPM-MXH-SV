@@ -257,12 +257,12 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
                 className="block"
                 title={`Xem trang cá nhân ${post.author?.full_name || 'Tác giả'}`}
               >
-                <div className="w-11 h-11 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center overflow-hidden text-sm font-bold text-[#16a34a] dark:text-[#2ECC71] border border-[#e2e7de] dark:border-[#3e4042]">
+                <div className="w-11 h-11 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center overflow-hidden text-sm font-bold text-[#16a34a] dark:text-[#2ECC71] border border-[#e2e7de] dark:border-[#3e4042] shrink-0 aspect-square">
                   {post.author?.avatar_url ? (
                     <img
                       src={post.author.avatar_url}
                       alt={post.author.full_name || 'Tác giả'}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-full aspect-square"
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
                   ) : (

@@ -496,3 +496,15 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
    - Offline unit tests: **PASS** (19/19 tests).
    - E2E Playwright verification: verified `/admin/audit-logs` renders 10 rows and `/posts/14` (hidden post) renders title and Admin banner.
+
+## SESSION-20261104-UI-FIX-CIRCULAR-AVATARS — Enforce 1:1 Aspect Ratio on Author Avatars
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103` (PR #86).
+**Scope & Deliverables:**
+1. **Resolved Oval/Stretched Author Avatar on Post Detail Sidebar (`PostDetailPage.jsx`):**
+   - In `PostDetailPage.jsx` line 866, the author sidebar card used invalid Tailwind classes `w-13 h-13` which do not exist in Tailwind CSS, causing width/height to evaluate to auto and stretch vertically into an oval inside the flex container.
+   - Updated to standard `w-14 h-14` with `aspect-square shrink-0 rounded-full` and `object-cover rounded-full aspect-square` on the image element.
+   - Synchronized author avatar containers in `PostDetailPage.jsx` header (`w-12 h-12 aspect-square`), `DocumentDetailPage.jsx` (`w-12 h-12 aspect-square`), and `PostCard.jsx` (`w-11 h-11 shrink-0 aspect-square`).
+2. **Verification Evidence:**
+   - Playwright bounding box check: width = 52px, height = 52px, exact aspect ratio = 1.000, `isCircular = true`.
+   - Frontend production build (`npm --prefix client run build`): **PASS** (6.68s, 2104 modules, 0 errors).
+   - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).

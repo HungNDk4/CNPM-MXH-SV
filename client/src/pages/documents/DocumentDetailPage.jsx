@@ -148,13 +148,13 @@ export default function DocumentDetailPage() {
 
           {/* Author Card */}
           <div className="flex items-center gap-3.5 py-4 border-y border-surface-border">
-            <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0">
-              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600">
+            <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
+              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600 aspect-square">
                 {post.author?.avatar_url ? (
                   <img
                     src={post.author.avatar_url}
                     alt={post.author.full_name || 'Tác giả'}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-full aspect-square"
                     onError={(e) => { e.currentTarget.style.display = 'none' }}
                   />
                 ) : (

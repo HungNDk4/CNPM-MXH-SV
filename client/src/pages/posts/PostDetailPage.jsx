@@ -785,13 +785,13 @@ export default function PostDetailPage() {
 
               {/* Author info header */}
               <div className="flex items-center gap-3.5 py-4 border-y border-surface-border">
-                <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0">
-                  <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600">
+                <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
+                  <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600 aspect-square">
                     {post.author?.avatar_url ? (
                       <img
                         src={post.author.avatar_url}
                         alt={post.author.full_name || 'Tác giả'}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-full aspect-square"
                         onError={(e) => { e.currentTarget.style.display = 'none' }}
                       />
                     ) : (
@@ -863,13 +863,13 @@ export default function PostDetailPage() {
           <div className="card p-5 space-y-4 bg-surface-card border border-surface-border rounded-[20px] shadow-xs">
             <div className="text-[11px] font-bold uppercase tracking-wider text-content-muted">Tác giả bài viết</div>
             <div className="flex items-center gap-3.5">
-              <div className="w-13 h-13 rounded-full avatar-gradient-ring p-[2px] shrink-0">
-                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71]">
+              <div className="w-14 h-14 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
+                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71] aspect-square">
                   {post.author?.avatar_url ? (
                     <img
                       src={post.author.avatar_url}
                       alt={post.author.full_name || 'Tác giả'}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-full aspect-square"
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
                   ) : (

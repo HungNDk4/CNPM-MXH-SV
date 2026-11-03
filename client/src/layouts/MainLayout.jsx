@@ -102,7 +102,7 @@ export default function MainLayout() {
             className="flex items-center gap-2 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] rounded-xl"
             title="OwlMate"
           >
-            <BrandLogo size={38} showText={true} />
+            <BrandLogo size={38} showText={true} textClassName="hidden sm:flex" />
           </Link>
 
           {/* Search Bar - Responsive, never squished on mobile */}
@@ -168,13 +168,13 @@ export default function MainLayout() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                {/* Theme Toggle Button for Guests */}
+                {/* Theme Toggle Button for Guests (visible on tablet/desktop; on mobile guest uses login/register) */}
                 <button
                   type="button"
                   onClick={toggleTheme}
                   aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
                   title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-                  className="w-9 h-9 flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-[#F0F5EF] dark:hover:bg-[#1E2E28] rounded-xl transition-all cursor-pointer border border-[#DCE5DC] dark:border-[#2C3B35]"
+                  className="w-9 h-9 hidden sm:flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-[#F0F5EF] dark:hover:bg-[#1E2E28] rounded-xl transition-all cursor-pointer border border-[#DCE5DC] dark:border-[#2C3B35]"
                 >
                   {theme === 'dark' ? (
                     <Sun className="w-4.5 h-4.5 text-[#FFD45C]" aria-hidden="true" />
@@ -184,13 +184,13 @@ export default function MainLayout() {
                 </button>
                 <Link
                   to="/login"
-                  className="text-xs sm:text-sm font-bold text-[#123D35] dark:text-[#E2E8F0] hover:text-[#16A34A] dark:hover:text-[#4ADE80] px-3.5 py-2 rounded-xl transition-colors"
+                  className="text-xs sm:text-sm font-bold text-[#123D35] dark:text-[#E2E8F0] hover:text-[#16A34A] dark:hover:text-[#4ADE80] px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl transition-colors whitespace-nowrap"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="text-xs sm:text-sm px-4 py-2 rounded-xl font-bold text-white bg-[#16A34A] hover:bg-[#15803d] dark:bg-[#2ECC71] dark:hover:bg-[#27ae60] dark:text-[#18191A] shadow-xs transition-all active:scale-[0.98]"
+                  className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold text-white bg-[#16A34A] hover:bg-[#15803d] dark:bg-[#2ECC71] dark:hover:bg-[#27ae60] dark:text-[#18191A] shadow-xs transition-all active:scale-[0.98] whitespace-nowrap"
                 >
                   Đăng ký
                 </Link>

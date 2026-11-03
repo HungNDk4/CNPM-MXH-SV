@@ -408,3 +408,15 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Node syntax checks (`node --check`): **PASS**.
    - Project control static checks: **PASS** (51 task rows).
    - Offline unit tests: **PASS** (14/14 tests).
+
+## SESSION-20261104-CI-FIX-PR86-V3 — Fix Guest 320px Mobile Navigation Overflow
+**Actor:** AI under user pairing. **Branch:** `feat/post-management-admin-analytics-20261103` (PR #86).
+**Scope & Deliverables:**
+1. **Resolved Guest Navbar Overflow at 320px (`fe01.test.cjs:185`):**
+   - At 320px width, `document.documentElement.scrollWidth` was 389px due to uncollapsed brand text and unconstrained right action links.
+   - Configured `BrandLogo` in `MainLayout.jsx` with `textClassName="hidden sm:flex"`, rendering the 38px mascot icon alone on narrow mobile devices while keeping full OwlMate title + slogan on tablet/desktop.
+   - Made guest theme button `hidden sm:flex` (matching integration baseline) and tightened padding on Login (`px-2.5`) and Register (`px-3`) on `< sm`. Total 320px guest navbar width reduced from 389px to ~196px, well within 320px.
+2. **Verification Evidence:**
+   - Frontend production build (`npm --prefix client run build`): **PASS** (6.58s, 2104 modules, 0 errors).
+   - Project control static check (`node scripts/check-project-control.mjs`): **PASS** (51 task rows).
+   - Offline unit tests: **PASS** (14/14 tests).

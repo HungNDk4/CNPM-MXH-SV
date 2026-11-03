@@ -95,7 +95,7 @@ export default function AdminAuditPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12">
       <AdminLayoutNav
-        title="Nhật ký kiểm duyệt bài viết"
+        title="Quản trị viên — Nhật ký kiểm duyệt"
         subtitle="Ghi nhận toàn bộ thao tác ẩn/xóa bài viết vi phạm, bảo toàn tính minh bạch và toàn vẹn của mạng xã hội sinh viên."
       />
 

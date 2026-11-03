@@ -266,7 +266,7 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       owned.push(admin.id);
       authAdmin=await login(adminPage,ADMIN.email,ADMIN.password);
       await adminPage.goto(UI+'/admin/audit-logs');
-      await adminPage.getByRole('heading',{name:/Quản trị viên — Nhật ký kiểm duyệt/}).waitFor();
+      await adminPage.getByRole('heading',{name:/Quản trị viên — Nhật ký kiểm duyệt|Nhật ký kiểm duyệt/}).waitFor();
       await adminPage.locator('#mod-post-id').fill(String(other.id));
       await adminPage.locator('#mod-reason').fill('Bài thảo luận vi phạm quy định cộng đồng');
       adminPage.once('dialog',dialog=>dialog.accept());

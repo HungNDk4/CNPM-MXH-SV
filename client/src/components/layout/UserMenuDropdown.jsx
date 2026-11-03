@@ -37,36 +37,36 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-surface-muted transition-all duration-200 border border-transparent hover:border-surface-border"
+        className="flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-white dark:hover:bg-[#17231F] text-[#123D35] dark:text-white transition-all duration-150 border border-transparent hover:border-[#DCE5DC]/60 dark:hover:border-[#2C3B35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
         aria-label="Menu tài khoản"
       >
-        <div className="w-9 h-9 rounded-full avatar-gradient-ring flex items-center justify-center shrink-0 shadow-2xs">
-          <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600 dark:text-primary-300">
-            {user?.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={user.full_name || 'Avatar'}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
-              />
-            ) : (
-              user?.full_name?.[0]?.toUpperCase() || 'U'
-            )}
-          </div>
+        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-[#16A34A]/40 dark:border-[#4ADE80]/40 shadow-2xs">
+          {user?.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt={user.full_name || 'Avatar'}
+              className="w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+            />
+          ) : (
+            <div className="w-full h-full bg-[#123D35] dark:bg-[#244B3C] text-white dark:text-[#4ADE80] flex items-center justify-center text-xs font-bold">
+              {user?.full_name?.[0]?.toUpperCase() || 'U'}
+            </div>
+          )}
         </div>
         <div className="hidden xl:flex flex-col text-left">
-          <span className="text-xs font-bold text-content max-w-[110px] truncate leading-tight">
+          <span className="text-xs font-bold text-[#123D35] dark:text-white max-w-[110px] truncate leading-tight">
             {user?.full_name || 'Thành viên'}
           </span>
-          <span className="text-[11px] font-medium text-content-muted leading-tight">
+          <span className="text-[10px] font-semibold text-[#52675A] dark:text-[#A8B9AF] leading-tight">
             {user?.role === 'admin' ? 'Quản trị viên' : 'Sinh viên'}
           </span>
         </div>
-        <ChevronDown className={`w-3.5 h-3.5 text-content-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3.5 h-3.5 text-[#52675A] dark:text-[#A8B9AF] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-3 w-72 bg-surface-card border border-surface-border rounded-2xl shadow-card z-50 overflow-hidden animate-slide-up">
+        <div className="absolute right-0 mt-3 w-72 bg-white dark:bg-[#17231F] border border-[#DCE5DC] dark:border-[#2C3B35] rounded-2xl shadow-xl shadow-emerald-950/5 dark:shadow-black/40 z-50 overflow-hidden animate-slide-up">
           {/* Header Banner */}
           <div className="p-4 bg-surface-muted border-b border-surface-border text-content relative overflow-hidden">
             <div className="flex items-center gap-3 relative z-10">

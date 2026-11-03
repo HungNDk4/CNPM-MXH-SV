@@ -96,21 +96,21 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen bg-surface flex flex-col transition-colors duration-200 relative">
       {/* ── Top Header Navigation Bar (Sticky Clean Surface) ── */}
-      <header className="sticky top-0 z-50 bg-surface-card border-b border-surface-border shadow-card transition-colors duration-200">
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#17231F]/95 backdrop-blur-md border-b border-[#DCE5DC] dark:border-[#2C3B35] transition-colors duration-200 shadow-2xs">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
           {/* Brand Logo & Title */}
           <Link
             to="/"
-            className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
+            className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] rounded-xl"
             title="OwlMate"
           >
             <BrandLogo size={38} showText={true} />
           </Link>
 
-          {/* Search stays on member mobile; hide on narrow guest header to prevent overflow. */}
+          {/* Search Bar with neutral background, moderate rounding, and clear focus state */}
           <form
             onSubmit={handleSearchSubmit}
-            className={`flex-1 min-w-0 max-w-lg relative mx-0 sm:mx-2 ${isAuthenticated ? 'block' : 'hidden sm:block'}`}
+            className={`flex-1 min-w-0 max-w-lg relative mx-0 sm:mx-3 ${isAuthenticated ? 'block' : 'hidden sm:block'}`}
             role="search"
           >
             <input
@@ -118,81 +118,81 @@ export default function MainLayout() {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Tìm kiếm..."
-              className="input pl-9 sm:pl-10 pr-8 sm:pr-10 py-1.5 sm:py-2 text-xs sm:text-sm w-full rounded-full bg-[#F2F4EF] dark:bg-[#18191A] border-[#E2E7DE] dark:border-[#3E4042] focus:bg-white dark:focus:bg-[#303132] shadow-2xs"
+              placeholder="Tìm kiếm tài liệu, câu hỏi, đồ án..."
+              className="w-full bg-[#F0F5EF] dark:bg-[#1E2E28] border border-[#DCE5DC] dark:border-[#2C3B35] text-[#123D35] dark:text-[#E2E8F0] placeholder-[#52675A] dark:placeholder-[#A8B9AF] rounded-2xl pl-10 pr-10 py-2 text-xs sm:text-sm focus:bg-white dark:focus:bg-[#17231F] focus:border-[#16A34A] dark:focus:border-[#4ADE80] focus:ring-2 focus:ring-[#16A34A]/20 dark:focus:ring-[#4ADE80]/20 outline-none transition-all shadow-2xs font-medium"
             />
-            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#56614f] dark:text-[#B0B3B8] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-[#52675A] dark:text-[#A8B9AF] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             {searchInput ? (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#52675A] hover:text-[#123D35] dark:text-[#A8B9AF] dark:hover:text-white"
                 aria-label="Xóa từ khóa"
               >
-                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <X className="w-4 h-4" />
               </button>
             ) : (
-              <kbd className="hidden sm:inline-flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 h-5 min-w-[20px] px-1 text-[11px] font-semibold text-[#56614f] dark:text-[#B0B3B8] bg-white dark:bg-[#303132] border border-[#E2E7DE] dark:border-[#3E4042] rounded shadow-2xs pointer-events-none">
+              <kbd className="hidden sm:inline-flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 h-5 min-w-[20px] px-1 text-[11px] font-bold text-[#52675A] dark:text-[#A8B9AF] bg-white dark:bg-[#17231F] border border-[#DCE5DC] dark:border-[#2C3B35] rounded-md shadow-2xs pointer-events-none">
                 /
               </kbd>
             )}
           </form>
 
-          {/* Right Action Bar */}
+          {/* Right Action Bar: Clustered Control Group */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Theme Toggle Button (For guest only; authenticated users switch inside UserMenuDropdown) */}
-            {!isAuthenticated && (
-              <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-                title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-                className="w-10 h-10 flex items-center justify-center text-content-muted hover:text-content hover:bg-surface-muted rounded-xl transition-all cursor-pointer border border-surface-border"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="w-5 h-5 text-[#5bd13a]" aria-hidden="true" />
-                ) : (
-                  <Moon className="w-5 h-5 text-[#69736B]" aria-hidden="true" />
-                )}
-              </button>
-            )}
-
             {isAuthenticated ? (
-              <>
-                {/* Bookmark Shortcut */}
+              <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-2xl bg-[#F0F5EF] dark:bg-[#1E2E28] border border-[#DCE5DC] dark:border-[#2C3B35] shadow-2xs">
+                {/* 1. Bookmark shortcut */}
                 <Link
                   to="/bookmarks"
                   aria-label="Bài viết đã lưu"
-                  className="w-10 h-10 hidden md:flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-surface-muted rounded-xl transition-all"
+                  className="w-9 h-9 hidden md:flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-white dark:hover:bg-[#17231F] rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
                   title="Bài viết đã lưu"
                 >
-                  <Bookmark className="w-5 h-5" />
+                  <Bookmark className="w-4.5 h-4.5" />
                 </Link>
 
-                {/* Notification Dropdown (Desktop & tablet; mobile uses bottom navigation bar) */}
+                {/* 2. Notification Dropdown */}
                 <div className="hidden sm:block">
                   <NotificationDropdown />
                 </div>
 
-                {/* User Menu Dropdown (Grovelyn Image 2 Style) */}
+                {/* 3. Clustered Divider */}
+                <div className="hidden sm:block w-px h-5 bg-[#DCE5DC] dark:bg-[#2C3B35] my-auto mx-0.5" aria-hidden="true" />
+
+                {/* 4. User Menu Dropdown */}
                 <UserMenuDropdown
                   user={user}
                   theme={theme}
                   toggleTheme={toggleTheme}
                   onLogout={handleLogout}
                 />
-              </>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
+                {/* Theme Toggle Button for Guests */}
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
+                  title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
+                  className="w-9 h-9 flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-[#F0F5EF] dark:hover:bg-[#1E2E28] rounded-xl transition-all cursor-pointer border border-[#DCE5DC] dark:border-[#2C3B35]"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="w-4.5 h-4.5 text-[#FFD45C]" aria-hidden="true" />
+                  ) : (
+                    <Moon className="w-4.5 h-4.5 text-[#52675A]" aria-hidden="true" />
+                  )}
+                </button>
                 <Link
                   to="/login"
-                  className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-primary px-3 py-2 rounded-xl transition-colors"
+                  className="text-xs sm:text-sm font-bold text-[#123D35] dark:text-[#E2E8F0] hover:text-[#16A34A] dark:hover:text-[#4ADE80] px-3.5 py-2 rounded-xl transition-colors"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="btn-primary text-xs sm:text-sm px-3.5 sm:px-4 py-2 rounded-xl shadow-xs"
+                  className="text-xs sm:text-sm px-4 py-2 rounded-xl font-bold text-white bg-[#16A34A] hover:bg-[#15803d] dark:bg-[#2ECC71] dark:hover:bg-[#27ae60] dark:text-[#18191A] shadow-xs transition-all active:scale-[0.98]"
                 >
                   Đăng ký
                 </Link>

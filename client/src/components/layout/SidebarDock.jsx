@@ -25,8 +25,8 @@ export default function SidebarDock({ isAuthenticated, user }) {
 
   return (
     <aside
-      className="hidden md:flex flex-col justify-between w-24 py-4 items-center h-[calc(100vh-4rem)] sticky top-16 bg-[#F2F4EF] dark:bg-[#18191A] border-r border-[#E2E7DE] dark:border-[#3E4042] transition-colors duration-200 select-none z-30"
-      aria-label="Thanh điều hướng nhanh"
+      className="hidden md:flex flex-col justify-between w-24 py-4 items-center h-[calc(100vh-4rem)] sticky top-16 bg-[#F0F5EF] dark:bg-[#17231F] border-r border-[#DCE5DC] dark:border-[#2C3B35] transition-colors duration-200 select-none z-30"
+      aria-label="Thanh điều hướng nhanh OwlMate"
     >
       {/* Top Section: Main Nav Icons */}
       <div className="flex flex-col items-center gap-2 w-full px-2">
@@ -38,19 +38,32 @@ export default function SidebarDock({ isAuthenticated, user }) {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center justify-center gap-1.5 w-20 h-[68px] rounded-2xl border transition-colors duration-150 group relative select-none ${
+              className={`flex flex-col items-center justify-center gap-1.5 w-20 h-[68px] rounded-2xl border transition-all duration-200 group relative select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] dark:focus-visible:ring-[#4ADE80] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F0F5EF] dark:focus-visible:ring-offset-[#17231F] ${
                 active
-                  ? 'bg-[#06110a] dark:bg-[#163D29] text-white dark:text-[#2ECC71] border-transparent dark:border-[#163D29] shadow-2xs'
-                  : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-[#E4E6EB] hover:bg-white dark:hover:bg-[#303132]'
+                  ? 'bg-[#123D35] dark:bg-[#244B3C] text-white border-[#123D35] dark:border-[#244B3C] shadow-sm'
+                  : 'border-transparent text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-white/80 dark:hover:bg-[#1F302A] hover:border-[#DCE5DC]/60 dark:hover:border-[#2C3B35]'
               }`}
               title={item.label}
+              aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
             >
+              {/* Bookmark-inspired geometric active ribbon indicator */}
+              {active && (
+                <span
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 w-1.5 h-8 rounded-r-full bg-[#16A34A] dark:bg-[#4ADE80] shadow-xs"
+                  aria-hidden="true"
+                />
+              )}
+
               <Icon
-                className={`w-5 h-5 shrink-0 ${
-                  active ? 'text-[#5bd13a] dark:text-[#2ECC71] stroke-[2.5]' : 'transition-colors'
+                className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-105 duration-150 ${
+                  active ? 'text-[#4ADE80] stroke-[2.4]' : 'stroke-[2]'
                 }`}
+                aria-hidden="true"
               />
-              <span className="text-[11px] leading-tight font-semibold tracking-tight">{item.label}</span>
+              <span className={`text-[11px] leading-tight font-bold tracking-tight ${active ? 'text-white' : ''}`}>
+                {item.label}
+              </span>
             </Link>
           )
         })}
@@ -59,50 +72,65 @@ export default function SidebarDock({ isAuthenticated, user }) {
         {isAuthenticated && user?.role === 'admin' && (
           <Link
             to="/admin"
-            className={`flex flex-col items-center justify-center gap-1.5 w-20 h-[68px] rounded-2xl border transition-colors duration-150 group relative select-none ${
+            className={`flex flex-col items-center justify-center gap-1.5 w-20 h-[68px] rounded-2xl border transition-all duration-200 group relative select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] dark:focus-visible:ring-[#4ADE80] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F0F5EF] dark:focus-visible:ring-offset-[#17231F] ${
               isCurrent('/admin')
-                ? 'bg-[#06110a] dark:bg-[#163D29] text-white dark:text-[#2ECC71] border-transparent dark:border-[#163D29] shadow-2xs'
-                : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-[#E4E6EB] hover:bg-white dark:hover:bg-[#303132]'
+                ? 'bg-[#123D35] dark:bg-[#244B3C] text-white border-[#123D35] dark:border-[#244B3C] shadow-sm'
+                : 'border-transparent text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-white/80 dark:hover:bg-[#1F302A] hover:border-[#DCE5DC]/60 dark:hover:border-[#2C3B35]'
             }`}
-            title="Bảng quản trị"
+            title="Bảng quản trị hệ thống"
+            aria-label="Bảng quản trị"
+            aria-current={isCurrent('/admin') ? 'page' : undefined}
           >
-            <Shield className={`w-5 h-5 shrink-0 ${isCurrent('/admin') ? 'text-[#5bd13a] dark:text-[#2ECC71] stroke-[2.5]' : 'text-amber-500'}`} />
-            <span className="text-[11px] leading-tight font-semibold tracking-tight">Quản trị</span>
+            {isCurrent('/admin') && (
+              <span
+                className="absolute -left-2 top-1/2 -translate-y-1/2 w-1.5 h-8 rounded-r-full bg-[#16A34A] dark:bg-[#4ADE80] shadow-xs"
+                aria-hidden="true"
+              />
+            )}
+            <Shield
+              className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-105 duration-150 ${
+                isCurrent('/admin') ? 'text-[#4ADE80] stroke-[2.4]' : 'text-amber-500 stroke-[2]'
+              }`}
+              aria-hidden="true"
+            />
+            <span className="text-[11px] leading-tight font-bold tracking-tight">Quản trị</span>
           </Link>
         )}
       </div>
 
-      {/* Bottom Section: User Profile Avatar Button (Positioned at bottom of dock) */}
-      <div className="flex flex-col items-center w-full px-2 pt-2 border-t border-[#E2E7DE] dark:border-[#3E4042]">
+      {/* Bottom Section: User Profile Avatar */}
+      <div className="flex flex-col items-center w-full px-2 pt-3 pb-1 border-t border-[#DCE5DC] dark:border-[#2C3B35]">
         {isAuthenticated ? (
           <Link
             to={`/profile/${user?.id || ''}`}
-            className={`group relative flex items-center justify-center w-12 h-12 rounded-full transition-transform active:scale-95 ${
+            className={`group relative flex items-center justify-center w-12 h-12 rounded-full transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] dark:focus-visible:ring-[#4ADE80] ${
               isCurrent('/profile')
-                ? 'ring-2 ring-[#16a34a] dark:ring-[#2ECC71] ring-offset-2 ring-offset-[#F2F4EF] dark:ring-offset-[#18191A]'
-                : 'hover:ring-2 hover:ring-[#16a34a]/40 dark:hover:ring-[#2ECC71]/40 ring-offset-2 ring-offset-[#F2F4EF] dark:ring-offset-[#18191A]'
+                ? 'ring-2 ring-[#16A34A] dark:ring-[#4ADE80] ring-offset-2 ring-offset-[#F0F5EF] dark:ring-offset-[#17231F]'
+                : 'hover:ring-2 hover:ring-[#16A34A]/50 dark:hover:ring-[#4ADE80]/50 ring-offset-2 ring-offset-[#F0F5EF] dark:ring-offset-[#17231F]'
             }`}
-            title="Hồ sơ cá nhân"
+            title={`Hồ sơ cá nhân: ${user?.full_name || 'Thành viên'}`}
             aria-label="Hồ sơ cá nhân"
+            aria-current={isCurrent('/profile') ? 'page' : undefined}
           >
             {user?.avatar_url ? (
               <img
                 src={user.avatar_url}
                 alt={user.full_name || 'Hồ sơ'}
-                className="w-full h-full rounded-full object-cover"
+                className="w-full h-full rounded-full object-cover shadow-2xs"
               />
             ) : (
-              <div className="w-full h-full rounded-full bg-[#16a34a] dark:bg-[#2ECC71] text-white dark:text-[#18191A] font-bold text-sm flex items-center justify-center shadow-2xs">
+              <div className="w-full h-full rounded-full bg-[#123D35] dark:bg-[#244B3C] text-white dark:text-[#4ADE80] font-bold text-sm flex items-center justify-center shadow-2xs">
                 {user?.full_name?.[0]?.toUpperCase() || 'U'}
               </div>
             )}
+            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#16A34A] dark:bg-[#4ADE80] border-2 border-[#F0F5EF] dark:border-[#17231F]" />
           </Link>
         ) : (
           <Link
             to="/login"
-            className="flex items-center justify-center w-12 h-12 rounded-full border border-dashed border-[#56614f]/40 dark:border-[#3E4042] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#16a34a] dark:hover:text-[#2ECC71] hover:border-[#16a34a] transition-colors"
-            title="Hồ sơ cá nhân (Đăng nhập)"
-            aria-label="Hồ sơ cá nhân"
+            className="flex items-center justify-center w-11 h-11 rounded-2xl border border-dashed border-[#52675A]/50 dark:border-[#A8B9AF]/40 text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:border-[#16A34A] dark:hover:border-[#4ADE80] hover:bg-white dark:hover:bg-[#1F302A] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]"
+            title="Đăng nhập tài khoản"
+            aria-label="Đăng nhập tài khoản"
           >
             <User className="w-5 h-5" />
           </Link>

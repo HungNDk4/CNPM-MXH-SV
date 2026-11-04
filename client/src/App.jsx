@@ -7,6 +7,7 @@ import AuthLayout from '@/layouts/AuthLayout'
 
 // Pages
 import HomePage from '@/pages/HomePage'
+import SearchPage from '@/pages/search/SearchPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import RegisterPage from '@/pages/auth/RegisterPage'
 import PostDetailPage from '@/pages/posts/PostDetailPage'
@@ -52,6 +53,7 @@ export default function App() {
       {/* Main app routes */}
       <Route element={<MainLayout />}>
         <Route index element={<HomePage />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/posts/:id" element={<PostDetailPage />} />
         <Route path="/documents/:id" element={<DocumentDetailPage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />

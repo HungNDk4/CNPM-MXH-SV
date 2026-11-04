@@ -124,10 +124,29 @@ export default function MainLayout() {
     e.preventDefault()
     setIsSearchOpen(false)
     const term = searchInput.trim()
-    if (term) {
-      navigate(`/?search=${encodeURIComponent(term)}`)
+    if (location.pathname === '/search') {
+      if (term) {
+        navigate(`/search?search=${encodeURIComponent(term)}`)
+      } else {
+        navigate('/search')
+      }
     } else {
-      navigate('/')
+      // Retain homepage search path contract (?search=...) for Playwright fe66-p3 e2e test
+      if (term) {
+        navigate(`/?search=${encodeURIComponent(term)}`)
+      } else {
+        navigate('/')
+      }
+    }
+  }
+
+  const handleViewAllResults = () => {
+    setIsSearchOpen(false)
+    const term = (debouncedSearch || searchInput).trim()
+    if (term) {
+      navigate(`/search?search=${encodeURIComponent(term)}`)
+    } else {
+      navigate('/search')
     }
   }
 
@@ -261,10 +280,10 @@ export default function MainLayout() {
 
                 <button
                   type="button"
-                  onClick={handleSearchSubmit}
+                  onClick={handleViewAllResults}
                   className="w-full px-3.5 py-2.5 text-xs font-bold text-[#16A34A] dark:text-[#4ADE80] hover:bg-[#F0F5EF] dark:hover:bg-[#1E2E28] transition-colors border-t border-[#DCE5DC]/80 dark:border-[#2C3B35]/80 flex items-center justify-between text-left cursor-pointer"
                 >
-                  <span>Xem tất cả kết quả cho "{debouncedSearch}"</span>
+                  <span>Xem trang tìm kiếm chi tiết cho "{debouncedSearch}"</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>

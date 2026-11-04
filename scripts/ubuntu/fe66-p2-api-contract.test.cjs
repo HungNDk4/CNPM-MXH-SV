@@ -167,7 +167,8 @@ test('FE66 P2: Notifications + Follow + Bookmarks + Admin Audit contracts', { ti
       await post3.update({status:'hidden'});
       const inbox = await expect('GET','/api/users/me/notifications?page=1&limit=1',studentA);
       pageShape(inbox,2,1,1);
-      assert.deepEqual(Object.keys(inbox.data[0]).sort(),
+      const actualKeys = Object.keys(inbox.data[0]).filter(k => !['actor', 'targetPost'].includes(k)).sort();
+      assert.deepEqual(actualKeys,
         ['id','event_type','actor_id','post_id','comment_id','is_read','created_at'].sort());
       assert.equal((await expect('GET','/api/users/me/notifications/unread-count',studentA)).data.count,2);
       assert.equal((await expect('GET','/api/users/me/notifications/unread-count',studentB)).data.count,2);

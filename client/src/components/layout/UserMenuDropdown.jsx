@@ -37,36 +37,33 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-surface-muted transition-all duration-200 border border-transparent hover:border-surface-border"
+        className="flex items-center gap-2 px-2 py-1 min-h-10 rounded-xl hover:bg-white dark:hover:bg-[#17231F] text-[#123D35] dark:text-white transition-all duration-150 border border-transparent hover:border-[#DCE5DC]/60 dark:hover:border-[#2C3B35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
         aria-label="Menu tài khoản"
       >
-        <div className="w-9 h-9 rounded-full avatar-gradient-ring flex items-center justify-center shrink-0 shadow-2xs">
-          <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600 dark:text-primary-300">
-            {user?.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={user.full_name || 'Avatar'}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
-              />
-            ) : (
-              user?.full_name?.[0]?.toUpperCase() || 'U'
-            )}
-          </div>
+        <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 ring-2 ring-emerald-500/30 dark:ring-emerald-400/30 border border-[#16A34A]/40 dark:border-[#4ADE80]/40 shadow-2xs bg-[#123D35] dark:bg-[#244B3C] text-white dark:text-[#4ADE80] flex items-center justify-center text-xs font-bold">
+          <span>{user?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+          {user?.avatar_url && (
+            <img
+              src={user.avatar_url}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+            />
+          )}
         </div>
         <div className="hidden xl:flex flex-col text-left">
-          <span className="text-xs font-bold text-content max-w-[110px] truncate leading-tight">
+          <span className="text-xs font-bold text-[#123D35] dark:text-white max-w-[110px] truncate leading-tight">
             {user?.full_name || 'Thành viên'}
           </span>
-          <span className="text-[11px] font-medium text-content-muted leading-tight">
+          <span className="text-[10px] font-semibold text-[#52675A] dark:text-[#A8B9AF] leading-tight">
             {user?.role === 'admin' ? 'Quản trị viên' : 'Sinh viên'}
           </span>
         </div>
-        <ChevronDown className={`w-3.5 h-3.5 text-content-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3.5 h-3.5 text-[#52675A] dark:text-[#A8B9AF] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-3 w-72 bg-surface-card border border-surface-border rounded-2xl shadow-card z-50 overflow-hidden animate-slide-up">
+        <div className="absolute right-0 mt-3 w-72 bg-white dark:bg-[#17231F] border border-[#DCE5DC] dark:border-[#2C3B35] rounded-2xl shadow-xl shadow-emerald-950/5 dark:shadow-black/40 z-50 overflow-hidden animate-slide-up">
           {/* Header Banner */}
           <div className="p-4 bg-surface-muted border-b border-surface-border text-content relative overflow-hidden">
             <div className="flex items-center gap-3 relative z-10">
@@ -132,13 +129,17 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
             <button
               type="button"
               onClick={toggleTheme}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-content hover:bg-surface-muted transition-colors font-medium text-left cursor-pointer"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-content hover:bg-surface-muted transition-colors font-medium text-left cursor-pointer group active:scale-[0.99]"
             >
               <span className="flex items-center gap-2.5">
-                {theme === 'dark' ? <Sun className="w-4 h-4 text-[#2ECC71]" /> : <Moon className="w-4 h-4 text-[#56614f]" />}
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4 text-[#2ECC71] group-hover:rotate-90 transition-transform duration-300" />
+                ) : (
+                  <Moon className="w-4 h-4 text-[#56614f] group-hover:-rotate-45 transition-transform duration-300" />
+                )}
                 <span>Giao diện {theme === 'dark' ? 'Tối' : 'Sáng'}</span>
               </span>
-              <span className="text-[10px] font-bold text-content-muted bg-surface-muted px-2 py-0.5 rounded-md border border-surface-border">
+              <span className="text-[10px] font-bold text-content-muted bg-surface-muted px-2 py-0.5 rounded-md border border-surface-border group-hover:border-primary-500/40 transition-colors">
                 {theme === 'dark' ? 'Dark' : 'Light'}
               </span>
             </button>
@@ -150,7 +151,7 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
 
             {/* Bài đăng và hoạt động */}
             <Link
-              to="/settings?tab=posts"
+              to="/my-posts"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-content hover:bg-surface-muted transition-colors font-medium"
             >
@@ -170,12 +171,12 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
 
             {user?.role === 'admin' && (
               <Link
-                to="/admin/audit-logs"
+                to="/admin"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors font-semibold"
               >
                 <Shield className="w-4 h-4 text-amber-500" />
-                <span>Nhật ký kiểm duyệt</span>
+                <span>Bảng quản trị hệ thống</span>
               </Link>
             )}
 

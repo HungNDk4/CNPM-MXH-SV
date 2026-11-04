@@ -3,12 +3,12 @@ require('dotenv').config();
 const { assertDisposableEnvironment, assertDatabaseIdentity } = require('./fe66-disposable-guard');
 const dbName = assertDisposableEnvironment();
 const { Op } = require('sequelize');
-const { sequelize, User, Post, Comment, Like, Follow, Bookmark, Notification, Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog } = require('../models');
+const { sequelize, User, Post, Comment, Like, Follow, Bookmark, Notification, Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog, PostImage } = require('../models');
 const MARKER = '[FE66_DISPOSABLE_FIXTURE_V1]';
 const SAMPLE_EMAILS = Array.from({ length: 10 }, (_, i) => 'fe66-student-' + i + '@example.invalid');
 const EXPECTED = { users: 10, posts: 18, comments: 1, likes: 2, follows: 1, bookmarks: 1, notifications: 1 };
 async function inspect(transaction) {
-  for (const model of [Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog]) {
+  for (const model of [Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog, PostImage]) {
     if (await model.count({ transaction })) throw new Error('REFUSED: unrelated data exists in ' + model.tableName);
   }
   const [users, posts, comments, likes, follows, bookmarks, notifications] = await Promise.all([

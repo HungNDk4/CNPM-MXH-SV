@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { postAPI, followAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
 import { useAuthStore } from '@/stores/authStore'
 import InlineComposer from '@/components/feed/InlineComposer'
+import RightAcademicSidebar from '@/components/layout/RightAcademicSidebar'
+import EmptyState from '@/components/common/EmptyState'
 import {
   BookOpen,
   Search,
@@ -62,9 +64,9 @@ export default function HomePage() {
 
   // Query posts with React Query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['posts', effectiveType, searchKeyword, selectedSubject, page, isAuthenticated],
+    queryKey: ['posts', effectiveType, searchKeyword, selectedSubject, page, sortBy, isAuthenticated],
     queryFn: async () => {
-      const params = { page, limit: 10 }
+      const params = { page, limit: 10, sort: sortBy }
       if (effectiveType) params.type = effectiveType
       if (searchKeyword) params.search = searchKeyword
       if (selectedSubject) params.subject = selectedSubject
@@ -88,15 +90,76 @@ export default function HomePage() {
     staleTime: 60000,
   })
 
-  // Dynamic counts for Level 2 filter pills
+  // Persistent category counts cache so tab switching never resets other pills to 0
+  const cachedCountsRef = useRef({ all: 0, document: 0, question: 0, discussion: 0 });
+
+  // Global category counts query so pills remain stable across tab switches
+  // Global category counts query: fetch exact pagination.total per category from backend
+  const { data: categoryCounts } = useQuery({
+    queryKey: ['posts-category-counts', searchKeyword, selectedSubject, isAuthenticated],
+    queryFn: async () => {
+      const baseParams = { page: 1, limit: 10 };
+      if (searchKeyword) baseParams.search = searchKeyword;
+      if (selectedSubject) baseParams.subject = selectedSubject;
+
+      if (!isAuthenticated) {
+        const docRes = await postAPI.getAll({ ...baseParams, type: 'document' });
+        const docTotal = docRes.data?.pagination?.total ?? 0;
+        return { all: docTotal, document: docTotal, question: 0, discussion: 0 };
+      }
+
+      const [allRes, docRes, qRes, disRes] = await Promise.all([
+        postAPI.getAll(baseParams),
+        postAPI.getAll({ ...baseParams, type: 'document' }),
+        postAPI.getAll({ ...baseParams, type: 'question' }),
+        postAPI.getAll({ ...baseParams, type: 'discussion' }),
+      ]);
+
+      return {
+        all: allRes.data?.pagination?.total ?? 0,
+        document: docRes.data?.pagination?.total ?? 0,
+        question: qRes.data?.pagination?.total ?? 0,
+        discussion: disRes.data?.pagination?.total ?? 0,
+      };
+    },
+    staleTime: 60000,
+    keepPreviousData: true,
+    retry: false,
+  });
+
+  // Query real trending topics from DB
+  const { data: trendingData } = useQuery({
+    queryKey: ['trending-topics'],
+    queryFn: async () => {
+      try {
+        const res = await postAPI.getTrendingTopics();
+        return res.data?.data || [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 60000,
+  });
+
+  const trendingTopics = Array.isArray(trendingData) && trendingData.length > 0 ? trendingData : [];
+
+  // Dynamic counts for Level 2 filter pills (preserves counts across tab switches)
   const counts = useMemo(() => {
-    return {
-      all: posts.length,
-      document: posts.filter((p) => p.post_type === 'document').length,
-      question: posts.filter((p) => p.post_type === 'question').length,
-      discussion: posts.filter((p) => p.post_type === 'discussion').length,
+    if (categoryCounts) {
+      cachedCountsRef.current = categoryCounts;
+      return categoryCounts;
     }
-  }, [posts])
+    if (cachedCountsRef.current.all > 0) {
+      return cachedCountsRef.current;
+    }
+    const currentTotal = data?.pagination?.total ?? posts.length;
+    return {
+      all: effectiveType === '' ? currentTotal : 0,
+      document: effectiveType === 'document' ? currentTotal : 0,
+      question: effectiveType === 'question' ? currentTotal : 0,
+      discussion: effectiveType === 'discussion' ? currentTotal : 0,
+    };
+  }, [categoryCounts, data?.pagination?.total, posts.length, effectiveType]);
 
   // Processed posts with stream filtering and sorting
   const displayPosts = useMemo(() => {
@@ -106,21 +169,29 @@ export default function HomePage() {
       const followedIds = new Set((followingData || []).map((f) => f.id || f.following_id))
       list = list.filter((p) => p.author?.id && (followedIds.has(p.author.id) || p.author.id === user?.id))
     } else if (streamTab === 'groups') {
-      list = list.filter((p) => Boolean(p.subject))
+      const projectKeywords = ['đồ án', 'dự án', 'project', 'srs', 'báo cáo', 'tiểu luận', 'bài tập', 'luận văn', 'nghiên cứu', 'tài liệu', 'công nghệ', 'giải thuật', 'hệ điều hành', 'mạng máy tính', 'cơ sở dữ liệu']
+      list = list.filter((p) => {
+        if (selectedSubject) {
+          return (p.subject || '').toLowerCase() === selectedSubject.toLowerCase()
+        }
+        const text = `${p.title || ''} ${p.content || ''} ${p.subject || ''} ${(p.tags || []).join(' ')}`.toLowerCase()
+        return p.post_type === 'document' || projectKeywords.some((kw) => text.includes(kw))
+      })
     }
 
     if (sortBy === 'popular') {
       list.sort((a, b) => {
-        const scoreA = (a.likes_count || 0) + (a.comments_count || 0)
-        const scoreB = (b.likes_count || 0) + (b.comments_count || 0)
-        return scoreB - scoreA
+        const scoreA = (Number(a.like_count) || Number(a.likes_count) || 0) * 2 + (Number(a.comment_count) || Number(a.comments_count) || 0) * 3 + (Number(a.view_count) || 0)
+        const scoreB = (Number(b.like_count) || Number(b.likes_count) || 0) * 2 + (Number(b.comment_count) || Number(b.comments_count) || 0) * 3 + (Number(b.view_count) || 0)
+        if (scoreB !== scoreA) return scoreB - scoreA
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0)
       })
     } else {
       list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
     }
 
     return list
-  }, [posts, streamTab, sortBy, followingData, user?.id])
+  }, [posts, streamTab, sortBy, selectedSubject, followingData, user?.id])
 
   // Featured active students derived safely from feed posts
   const featuredStudents = useMemo(() => {
@@ -163,6 +234,14 @@ export default function HomePage() {
     setSearchParams(nextParams)
     setPage(1)
   }
+
+  const handleTrendingClick = (topicItem) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('search', topicItem.query);
+    setSearchParams(nextParams);
+    setSearchKeyword(topicItem.query);
+    setPage(1);
+  };
 
   const handleSubjectChange = (subjectVal) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -248,13 +327,13 @@ export default function HomePage() {
         <div className="space-y-2 pt-0.5">
           {/* ── TẦNG 1: FEED STREAM TABS & SẮP XẾP (GROVELYN COMMUNITY FEED STYLE) ── */}
           <div className="flex items-center justify-between border-b border-[#E2E7DE] dark:border-[#3E4042] pb-0">
-            <div role="tablist" aria-label="Bảng tin" className="flex min-w-0 gap-5 sm:gap-7 overflow-x-auto [scrollbar-width:none]">
+            <div role="tablist" aria-label="Bảng tin" className="flex min-w-0 gap-3 sm:gap-7 overflow-x-auto [scrollbar-width:none] flex-1 mr-2">
               <button
                 type="button"
                 role="tab"
                 aria-selected={streamTab === 'for-you'}
                 onClick={() => setStreamTab('for-you')}
-                className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-[15px] sm:text-[16px] font-bold transition-all cursor-pointer ${
+                className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                   streamTab === 'for-you'
                     ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
                     : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
@@ -270,7 +349,7 @@ export default function HomePage() {
                     role="tab"
                     aria-selected={streamTab === 'following'}
                     onClick={() => setStreamTab('following')}
-                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-[15px] sm:text-[16px] font-bold transition-all cursor-pointer ${
+                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                       streamTab === 'following'
                         ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
                         : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
@@ -284,7 +363,7 @@ export default function HomePage() {
                     role="tab"
                     aria-selected={streamTab === 'groups'}
                     onClick={() => setStreamTab('groups')}
-                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-[15px] sm:text-[16px] font-bold transition-all cursor-pointer ${
+                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                       streamTab === 'groups'
                         ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
                         : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
@@ -310,6 +389,32 @@ export default function HomePage() {
               </select>
             </label>
           </div>
+
+          {/* ── THANH CHỌN MÔN HỌC TRỰC TIẾP KHI Ở TAB MÔN HỌC & ĐỒ ÁN ── */}
+          {streamTab === 'groups' && (
+            <div className="flex items-center gap-1.5 overflow-x-auto py-1.5 scrollbar-none -mx-1 px-1">
+              <span className="text-[11px] font-bold text-[#56614f] dark:text-[#B0B3B8] shrink-0 mr-1">
+                Lọc môn:
+              </span>
+              {POPULAR_SUBJECTS.map((sub) => {
+                const isSelected = selectedSubject === sub || (sub === 'Tất cả môn' && !selectedSubject)
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => handleSubjectChange(sub)}
+                    className={`text-xs px-3 py-1 rounded-xl transition-all cursor-pointer shrink-0 font-semibold ${
+                      isSelected
+                        ? 'bg-[#16a34a] text-white dark:bg-[#2ECC71] dark:text-[#18191A] shadow-2xs font-bold'
+                        : 'bg-white dark:bg-[#242526] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white border border-[#E2E7DE] dark:border-[#3E4042]'
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {/* ── TẦNG 2: PHÂN LOẠI NỘI DUNG (FILTER PILLS WITH TABULAR COUNTS) ── */}
           <div className="-mx-1 flex max-w-full items-center gap-2 overflow-x-auto px-1 [scrollbar-width:none] py-0.5">
@@ -420,65 +525,48 @@ export default function HomePage() {
             </button>
           </div>
         ) : streamTab === 'following' && displayPosts.length === 0 ? (
-          <div className="card text-center py-16 space-y-4 bg-surface-card border border-surface-border shadow-xs rounded-[20px]">
-            <div className="w-14 h-14 rounded-2xl bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] flex items-center justify-center mx-auto">
-              <Users className="w-7 h-7" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="font-bold text-content text-base sm:text-lg">Chưa có bài viết từ bạn học bạn theo dõi</h3>
-              <p className="text-content-muted text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
-                Khám phá danh sách thành viên tích cực bên cột phải hoặc theo dõi các tác giả chia sẻ tài liệu hữu ích để cập nhật bài viết mới tại đây.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setStreamTab('for-you')}
-              className="btn-primary text-xs sm:text-sm py-2 px-5 rounded-full inline-flex items-center gap-1.5 mx-auto"
-            >
-              <span>Xem bảng tin "Dành cho bạn"</span>
-            </button>
-          </div>
+          <EmptyState
+            variant="profile"
+            title="Chưa có bài viết từ người bạn theo dõi"
+            description="Theo dõi các bạn học và tác giả tích cực chia sẻ tài liệu hữu ích để cập nhật bài viết mới nhất tại đây."
+            actionLabel='Xem bảng tin "Dành cho bạn"'
+            onAction={() => setStreamTab('for-you')}
+          />
         ) : displayPosts.length === 0 ? (
-          <div className="card text-center py-20 space-y-4 bg-surface-card border border-surface-border shadow-card rounded-[20px]">
-            <div className="w-16 h-16 rounded-full bg-surface-muted text-content-muted flex items-center justify-center mx-auto border border-surface-border">
-              <BookOpen className="w-8 h-8" />
-            </div>
-            <h3 className="font-bold text-content text-lg">Không tìm thấy bài viết nào</h3>
-            <p className="text-content-muted text-xs sm:text-sm max-w-md mx-auto">
-              {searchKeyword || selectedSubject
-                ? 'Không có kết quả nào khớp với tiêu chí tìm kiếm của bạn. Hãy thử từ khóa khác nhé!'
-                : 'Hiện chưa có bài viết nào trong danh mục này. Hãy là người đầu tiên chia sẻ kiến thức!'}
-            </p>
-            <div className="flex items-center justify-center gap-2.5 pt-1">
-              {(searchKeyword || selectedSubject) && (
-                <button
-                  type="button"
-                  onClick={() => {
+          <EmptyState
+            variant="feed"
+            title="Bảng tin đang yên ắng"
+            description={
+              searchKeyword || selectedSubject
+                ? 'Không có bài viết nào khớp với tiêu chí tìm kiếm hoặc bộ lọc môn học hiện tại. Hãy thử từ khóa khác nhé!'
+                : 'Hiện chưa có bài viết nào trong danh mục này. Hãy là người đầu tiên khơi nguồn thảo luận!'
+            }
+            actionLabel={
+              searchKeyword || selectedSubject
+                ? 'Đặt lại bộ lọc'
+                : isAuthenticated
+                ? 'Tạo bài viết ngay'
+                : 'Đăng nhập để đăng bài'
+            }
+            actionLink={
+              !(searchKeyword || selectedSubject)
+                ? isAuthenticated
+                  ? '/posts/create'
+                  : '/login'
+                : undefined
+            }
+            onAction={
+              searchKeyword || selectedSubject
+                ? () => {
                     const next = new URLSearchParams(searchParams)
                     next.delete('search')
                     next.delete('subject')
                     setSearchParams(next)
                     setPage(1)
-                  }}
-                  className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl"
-                >
-                  Đặt lại bộ lọc
-                </button>
-              )}
-              {isAuthenticated ? (
-                <Link
-                  to="/posts/create"
-                  className="btn-primary inline-flex items-center gap-2 text-xs sm:text-sm py-2.5 px-5 rounded-full"
-                >
-                  <span>Tạo bài viết ngay</span>
-                </Link>
-              ) : (
-                <Link to="/login" className="btn-primary inline-flex items-center gap-2 text-xs sm:text-sm py-2.5 px-5 rounded-full">
-                  <span>Đăng nhập để đăng bài</span>
-                </Link>
-              )}
-            </div>
-          </div>
+                  }
+                : undefined
+            }
+          />
         ) : (
           <div className="space-y-4">
             {displayPosts.map((post) => (
@@ -520,138 +608,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════
           CỘT PHẢI (SIDE WIDGETS): Môn học, Xu hướng, Bạn bè, Thống kê (Grovelyn Standard: 320px - 340px)
           ═══════════════════════════════════════════════ */}
-      <aside aria-label="Cột bên" className="hidden flex-col gap-4 lg:sticky lg:top-20 lg:flex lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-8">
-        {/* Widget 1: Bộ lọc nhanh theo Môn học (Subject Pills) */}
-        <div className="rounded-[22px] p-5 sm:p-6 space-y-4 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-xs">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-[17px] sm:text-[18px] text-[#06110a] dark:text-white flex items-center gap-2 tracking-tight">
-              <Sparkles className="w-4 h-4 text-[#5bd13a]" />
-              <span>Chủ đề &amp; Môn học</span>
-            </h3>
-            <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8] font-semibold">Khám phá</span>
-          </div>
-
-          <div className="flex flex-wrap gap-2.5 pt-1">
-            {POPULAR_SUBJECTS.map((sub) => {
-              const isSelected = selectedSubject === sub || (sub === 'Tất cả môn' && !selectedSubject)
-              return (
-                <button
-                  key={sub}
-                  type="button"
-                  onClick={() => handleSubjectChange(sub)}
-                  className={`text-xs px-3.5 py-1.5 rounded-xl font-semibold border transition-colors duration-150 cursor-pointer ${
-                    isSelected
-                      ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] border-transparent shadow-2xs'
-                      : 'bg-[#F2F4EF] dark:bg-[#303132] hover:bg-[#E2E7DE] dark:hover:bg-[#262626] text-[#56614f] dark:text-[#B0B3B8] border-[#E2E7DE] dark:border-[#3E4042]'
-                  }`}
-                >
-                  {sub}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Widget 2: Đang được nói nhiều (Trending Topics - Khung mẫu Grovelyn theo ảnh tham chiếu) */}
-        <div className="rounded-[22px] p-5 sm:p-6 space-y-3.5 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-xs">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-[17px] sm:text-[18px] text-[#06110a] dark:text-white flex items-center gap-2 tracking-tight">
-              <TrendingUp className="w-4 h-4 text-[#5bd13a]" />
-              <span>Đang được nói nhiều</span>
-            </h3>
-            <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8] font-semibold">Xu hướng</span>
-          </div>
-
-          <div className="space-y-2.5">
-            {[
-              { topic: 'Đồ án tốt nghiệp', count: 5, query: 'Đồ án tốt nghiệp' },
-              { topic: 'Kiến trúc', count: 5, query: 'Kiến trúc máy tính' },
-              { topic: 'Công nghệ thông tin', count: 4, query: 'Công nghệ phần mềm' },
-              { topic: 'Kỹ thuật phần mềm', count: 3, query: 'Kỹ thuật phần mềm' },
-            ].map((item) => (
-              <div
-                key={item.topic}
-                onClick={() => handleSubjectChange(item.query)}
-                className="flex items-center gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-[#F2F4EF] dark:hover:bg-[#171717] transition-colors cursor-pointer group"
-              >
-                <div className="w-9 h-9 rounded-xl bg-[#EAF5EC] dark:bg-[#163D29] text-[#16a34a] dark:text-[#2ECC71] flex items-center justify-center font-bold text-sm shrink-0 border border-[#bbf7d0]/40 dark:border-[#3E4042]">
-                  #
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-bold text-[#06110a] dark:text-white group-hover:underline truncate">
-                    {item.topic}
-                  </p>
-                  <p className="text-xs text-[#56614f] dark:text-[#B0B3B8]">
-                    {item.count} bài và bình luận
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Widget 3: Tác giả tích cực trong bảng tin */}
-        <div className="rounded-[22px] p-5 sm:p-6 space-y-4 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-xs">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-[17px] sm:text-[18px] text-[#06110a] dark:text-white flex items-center gap-2 tracking-tight">
-              <Users className="w-4 h-4 text-[#5bd13a]" />
-              <span>Thành viên tích cực</span>
-            </h3>
-            <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8] font-medium">Bảng tin</span>
-          </div>
-
-          {featuredStudents.length === 0 ? (
-            <p className="text-xs text-[#56614f] dark:text-[#B0B3B8] py-3 text-center">
-              Chưa có thành viên nào chia sẻ bài viết trong bộ lọc này.
-            </p>
-          ) : (
-            <div className="space-y-2.5">
-              {featuredStudents.map((student) => (
-                <Link
-                  key={student.id}
-                  to={`/profile/${student.id}`}
-                  className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F2F4EF] dark:hover:bg-[#171717] transition-colors group"
-                >
-                  <div className="relative shrink-0">
-                    <div className="w-9 h-9 rounded-full bg-[#F2F4EF] dark:bg-[#303132] border border-[#E2E7DE] dark:border-[#3E4042] flex items-center justify-center overflow-hidden font-bold text-[#06110a] dark:text-[#2ECC71] text-xs">
-                      {student.avatar_url ? (
-                        <img
-                          src={student.avatar_url}
-                          alt={student.full_name || 'U'}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { e.currentTarget.style.display = 'none' }}
-                        />
-                      ) : (
-                        student.full_name?.[0]?.toUpperCase() || 'U'
-                      )}
-                    </div>
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#5bd13a] border-2 border-white dark:border-[#0A0A0A]" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-bold text-[#06110a] dark:text-white group-hover:text-[#16a34a] dark:group-hover:text-[#22c55e] truncate">
-                      {student.full_name}
-                    </p>
-                    <p className="text-xs text-[#56614f] dark:text-[#B0B3B8] truncate">
-                      {student.university ? `${student.university}` : student.major}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Widget 4: Thống kê sinh viên tuần này */}
-        <div className="rounded-[22px] p-5 sm:p-6 space-y-3.5 bg-gradient-to-br from-[#16a34a]/10 via-[#22c55e]/5 to-surface-card border border-[#16a34a]/20 dark:border-[#22c55e]/20 shadow-xs">
-          <div className="flex items-center gap-2 text-[#16a34a] dark:text-[#2ECC71] font-bold text-[15px] tracking-tight">
-            <BarChart3 className="w-4 h-4" />
-            <span>Mạng xã hội học tập</span>
-          </div>
-          <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] leading-relaxed">
-            Hơn <strong className="text-[#06110a] dark:text-white font-bold">1,200+</strong> tài liệu PDF ôn thi và đồ án môn học được sinh viên đóng góp và tải về hoàn toàn miễn phí.
-          </p>
-        </div>
-      </aside>
+      <RightAcademicSidebar onSelectTopic={handleTrendingClick} />
     </div>
   )
 }

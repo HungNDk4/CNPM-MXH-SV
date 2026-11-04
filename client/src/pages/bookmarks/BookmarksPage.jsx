@@ -1,3 +1,4 @@
+import EmptyState from '@/components/common/EmptyState'
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -111,7 +112,7 @@ export default function BookmarksPage() {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} initialBookmarked />
+            <PostCard key={post.id} post={{ ...post, is_bookmarked: true }} initialBookmarked />
           ))}
 
           {/* Pagination */}

@@ -63,7 +63,7 @@ async function listBookmarks(req, res, next) {
     });
     res.json({
       success: true,
-      data: rows.map(bookmark => toSafePost(bookmark.post)),
+      data: rows.map(bookmark => ({ ...toSafePost(bookmark.post), is_bookmarked: true })),
       pagination: { total: count, page, limit, totalPages: Math.ceil(count / limit) },
     });
   } catch (error) { next(error); }

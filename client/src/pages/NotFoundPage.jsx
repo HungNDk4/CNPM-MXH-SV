@@ -1,3 +1,4 @@
+import BrandLogo from '@/components/common/BrandLogo'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Compass } from 'lucide-react'
 

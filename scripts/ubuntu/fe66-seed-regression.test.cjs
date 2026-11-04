@@ -12,7 +12,7 @@ const mysql = serverRequire('mysql2/promise');
 const expectedDB = assertDisposableEnvironment();
 const serverRoot = path.resolve(__dirname, '../../server');
 const tables = [
-  'users', 'posts', 'comments', 'likes', 'user_follows', 'bookmarks', 'notifications',
+  'users', 'posts', 'post_images', 'comments', 'likes', 'user_follows', 'bookmarks', 'notifications',
   'orders', 'document_access', 'document_files', 'refresh_tokens', 'moderation_audit_logs'
 ];
 const fixtureCounts = { users: 10, posts: 18, comments: 1, likes: 2, user_follows: 1, bookmarks: 1, notifications: 1 };

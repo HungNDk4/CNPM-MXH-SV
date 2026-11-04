@@ -11,11 +11,17 @@ import { useThemeStore } from '@/stores/themeStore'
 useThemeStore.getState().initTheme()
 
 const queryClient = new QueryClient({
-
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,   // 5 phút
-      retry: 1,
+      retry: (failureCount, error) => {
+        // Deterministic client errors (HTTP 4xx) should never be retried
+        const status = error?.response?.status
+        if (status && status >= 400 && status < 500) {
+          return false
+        }
+        return failureCount < 1
+      },
     },
   },
 })
@@ -23,7 +29,7 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <App />
         <Toaster
           position="top-right"

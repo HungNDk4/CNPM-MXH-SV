@@ -26,8 +26,10 @@ import {
   ShieldCheck,
   ArrowRight,
   User,
+  Flag,
 } from 'lucide-react'
 import Badge, { TYPE_BADGE_CONFIG } from '@/components/common/Badge'
+import ReportPostModal from '@/components/post/ReportPostModal'
 
 const MAX_COMMENT = 2000
 const TYPE_CONFIG = {
@@ -93,8 +95,8 @@ function BookmarkButton({ postId, initialBookmarked = false }) {
       disabled={toggle.isPending}
       className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer group active:scale-95 ${
         bookmarked
-          ? 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 shadow-2xs font-semibold'
-          : 'text-slate-700 dark:text-slate-200 hover:text-amber-600 hover:bg-amber-50/50 dark:hover:bg-amber-950/20'
+          ? 'text-amber-800 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/60 dark:hover:bg-amber-900/80 border border-amber-300 dark:border-amber-700 shadow-xs font-bold'
+          : 'text-slate-700 dark:text-slate-200 hover:text-amber-800 dark:hover:text-amber-300 hover:bg-amber-100/80 dark:hover:bg-amber-950/60'
       }`}
       aria-label={bookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
     >
@@ -151,8 +153,8 @@ function LikeButton({ targetType, targetId, initialLiked = false, initialCount }
         type="button"
         className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer group active:scale-95 ${
           liked
-            ? 'text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 shadow-2xs font-semibold'
-            : 'text-slate-700 dark:text-slate-200 hover:text-rose-600 hover:bg-rose-50/50 dark:hover:bg-rose-950/20'
+            ? 'text-rose-700 dark:text-rose-200 bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/60 dark:hover:bg-rose-900/80 border border-rose-300 dark:border-rose-700 shadow-xs font-bold'
+            : 'text-slate-700 dark:text-slate-200 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-100/80 dark:hover:bg-rose-950/60'
         }`}
         aria-label={'Thích hoặc bỏ thích ' + item}
         aria-pressed={liked === null ? 'mixed' : liked}
@@ -487,6 +489,7 @@ export default function PostDetailPage() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({ title: '', content: '', subject: '', tags: '' })
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
 
   const isAdmin = user?.role === 'admin'
 
@@ -765,7 +768,7 @@ export default function PostDetailPage() {
                 </div>
 
                 {/* FE-05: Owner/Admin actions */}
-                {canModify && (
+                {canModify ? (
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -787,6 +790,16 @@ export default function PostDetailPage() {
                       <span>{deletePostMutation.isPending ? 'Đang xóa...' : 'Xóa bài viết'}</span>
                     </button>
                   </div>
+                ) : user && (
+                  <button
+                    type="button"
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 text-slate-500 hover:text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    aria-label="Báo cáo bài viết"
+                  >
+                    <Flag className="w-3.5 h-3.5" />
+                    <span>Báo cáo</span>
+                  </button>
                 )}
               </div>
 
@@ -975,6 +988,14 @@ export default function PostDetailPage() {
           </div>
         </aside>
       </div>
+
+      {/* Report Modal */}
+      <ReportPostModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        postId={post.id}
+        postTitle={post.title}
+      />
     </main>
   )
 }

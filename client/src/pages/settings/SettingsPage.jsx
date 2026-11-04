@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -24,6 +24,8 @@ import {
   GraduationCap,
   BookOpen,
   Camera,
+  UploadCloud,
+  Loader2,
 } from 'lucide-react'
 
 const FAQ_ITEMS = [
@@ -105,6 +107,59 @@ export default function SettingsPage() {
   const [avatarMode, setAvatarMode] = useState('character') // 'character' | 'custom' | 'initials'
   const [avatarPreview, setAvatarPreview] = useState('')
   const [customAvatarInput, setCustomAvatarInput] = useState('')
+  const [pendingAvatarFile, setPendingAvatarFile] = useState(null)
+  const settingsFileInputRef = useRef(null)
+
+  const handleDeviceUploadSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Ảnh đại diện không được vượt quá 2 MB.')
+      return
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Chỉ chấp nhận ảnh định dạng JPG, PNG hoặc WebP.')
+      return
+    }
+
+    if (pendingAvatarFile && avatarPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(avatarPreview)
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    setPendingAvatarFile(file)
+    setAvatarPreview(previewUrl)
+    setAvatarMode('custom')
+  }
+
+  // Upload Avatar mutation for file from device
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file) => {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      return (await userAPI.uploadAvatar(formData)).data
+    },
+    onSuccess: (res) => {
+      const newAvatarUrl = res.data?.avatar_url || res.data?.user?.avatar_url
+      if (pendingAvatarFile && avatarPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(avatarPreview)
+      }
+      setPendingAvatarFile(null)
+      setAvatarPreview(newAvatarUrl)
+      setCustomAvatarInput(newAvatarUrl)
+      updateUser({ avatar_url: newAvatarUrl })
+      queryClient.invalidateQueries({ queryKey: ['my-profile'] })
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      toast.success('Đã lưu ảnh đại diện thành công!')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể tải lên ảnh đại diện.')
+    },
+  })
 
 
   // Sync profile data to form state
@@ -137,6 +192,10 @@ export default function SettingsPage() {
 
   // Save Avatar mutation
   const handleSaveAvatar = (newUrl) => {
+    if (pendingAvatarFile) {
+      uploadAvatarMutation.mutate(pendingAvatarFile)
+      return
+    }
     const finalUrl = newUrl !== undefined ? newUrl : avatarPreview
     updateProfileMutation.mutate(
       { avatar_url: finalUrl },
@@ -303,14 +362,27 @@ export default function SettingsPage() {
                 <div className="mt-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
                   {/* Live preview */}
                   <div className="flex flex-col items-center">
-                    <div className="relative group">
+                    <input
+                      ref={settingsFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleDeviceUploadSelect}
+                    />
+                    <div
+                      className="relative group cursor-pointer"
+                      onClick={() => settingsFileInputRef.current?.click()}
+                      title="Nhấn để tải ảnh từ thiết bị"
+                    >
                       <img
                         src={avatarPreview || user?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=Felix'}
                         alt="Preview Avatar"
                         className="w-24 h-24 rounded-full border-4 border-slate-100 dark:border-[#3E4042] shadow-sm object-cover bg-slate-100 dark:bg-[#303132]"
+                        onError={(e) => { e.currentTarget.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=Felix' }}
                       />
-                      <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Camera className="w-6 h-6 text-white" />
+                      <div className="absolute inset-0 rounded-full bg-black/35 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-[11px] font-medium">
+                        <Camera className="w-5 h-5 mb-0.5" />
+                        <span>Tải ảnh</span>
                       </div>
                     </div>
                     <span className="text-[11px] text-slate-400 dark:text-[#B0B3B8] mt-2 font-medium">Xem trước</span>
@@ -381,11 +453,36 @@ export default function SettingsPage() {
                     )}
 
                     {avatarMode === 'custom' && (
-                      <div className="space-y-2">
-                        <label className="text-xs font-semibold text-slate-700 dark:text-[#E4E6EB]">
-                          Đường dẫn ảnh đại diện (URL)
-                        </label>
-                        <div className="flex gap-2">
+                      <div className="space-y-3">
+                        <div className="p-3 rounded-xl border border-dashed border-slate-200 dark:border-[#3E4042] bg-slate-50/50 dark:bg-[#1f2021] flex flex-col sm:flex-row items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                              <UploadCloud className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                {pendingAvatarFile ? pendingAvatarFile.name : 'Tải ảnh từ máy tính / điện thoại'}
+                              </p>
+                              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                {pendingAvatarFile
+                                  ? `${(pendingAvatarFile.size / 1024).toFixed(1)} KB • Sẵn sàng lưu`
+                                  : 'Tối đa 2 MB • Định dạng JPG, PNG hoặc WebP'}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => settingsFileInputRef.current?.click()}
+                            className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-[#3E4042] text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-[#2e2f30] transition-colors shrink-0 cursor-pointer"
+                          >
+                            {pendingAvatarFile ? 'Đổi tệp khác' : 'Chọn tệp'}
+                          </button>
+                        </div>
+
+                        <div className="space-y-1.5 pt-1">
+                          <label htmlFor="avatar_url" className="text-xs font-semibold text-slate-700 dark:text-[#E4E6EB] block">
+                            Hoặc liên kết ảnh trực tuyến (HTTPS)
+                          </label>
                           <input
                             id="avatar_url"
                             type="url"
@@ -393,11 +490,12 @@ export default function SettingsPage() {
                             value={customAvatarInput}
                             onChange={(e) => {
                               setCustomAvatarInput(e.target.value)
+                              if (pendingAvatarFile) setPendingAvatarFile(null)
                               if (e.target.value.startsWith('http')) {
                                 setAvatarPreview(e.target.value)
                               }
                             }}
-                            className="flex-1 text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-[#3E4042] bg-white dark:bg-[#303132] text-slate-900 dark:text-[#E4E6EB] focus:outline-none focus:ring-1 focus:ring-primary-500"
+                            className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-[#3E4042] bg-white dark:bg-[#303132] text-slate-900 dark:text-[#E4E6EB] focus:outline-none focus:ring-1 focus:ring-primary-500"
                           />
                         </div>
                       </div>
@@ -413,11 +511,20 @@ export default function SettingsPage() {
                       <button
                         type="button"
                         onClick={() => handleSaveAvatar(avatarPreview)}
-                        disabled={updateProfileMutation.isPending}
-                        className="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                        disabled={updateProfileMutation.isPending || uploadAvatarMutation.isPending}
+                        className="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
                       >
-                        <Check className="w-3.5 h-3.5" />
-                        {updateProfileMutation.isPending ? 'Đang lưu...' : 'Lưu ảnh đại diện'}
+                        {updateProfileMutation.isPending || uploadAvatarMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            Đang lưu...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            Lưu ảnh đại diện
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>

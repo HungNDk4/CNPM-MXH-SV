@@ -323,6 +323,7 @@ export default function SearchPage() {
         </div>
       ) : posts.length === 0 ? (
         <EmptyState
+          variant="search"
           icon={Search}
           title="Không tìm thấy bài viết phù hợp"
           description={

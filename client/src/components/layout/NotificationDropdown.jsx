@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificationAPI } from '@/services/api'
+import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
 import {
   Bell,
@@ -46,17 +47,27 @@ export default function NotificationDropdown() {
   const dropdownRef = useRef(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const token = useAuthStore((state) => state.accessToken)
 
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ['unread-notifications-count'],
     queryFn: async () => (await notificationAPI.getUnreadCount()).data.data.count,
-    refetchInterval: 30000,
+    enabled: Boolean(isAuthenticated && token),
+    refetchInterval: (query) => {
+      if (!isAuthenticated || query.state.error?.response?.status === 401) {
+        return false
+      }
+      return 30000
+    },
+    retry: false,
   })
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications-list'],
     queryFn: async () => (await notificationAPI.getAll({ page: 1, limit: 10 })).data.data,
-    enabled: open,
+    enabled: Boolean(open && isAuthenticated && token),
+    retry: false,
   })
 
   const markAll = useMutation({

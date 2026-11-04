@@ -25,6 +25,7 @@ import AdminAuditPage from '@/pages/admin/AdminAuditPage'
 import AdminContentPage from '@/pages/admin/AdminContentPage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import MascotGalleryPage from '@/pages/MascotGalleryPage'
 
 // Route bảo vệ (cần đăng nhập)
 const ProtectedRoute = ({ children }) => {
@@ -54,6 +55,7 @@ export default function App() {
       <Route element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/mascot-gallery" element={<MascotGalleryPage />} />
         <Route path="/posts/:id" element={<PostDetailPage />} />
         <Route path="/documents/:id" element={<DocumentDetailPage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />

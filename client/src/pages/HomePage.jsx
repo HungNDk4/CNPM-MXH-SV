@@ -5,6 +5,8 @@ import { postAPI, followAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
 import { useAuthStore } from '@/stores/authStore'
 import InlineComposer from '@/components/feed/InlineComposer'
+import RightAcademicSidebar from '@/components/layout/RightAcademicSidebar'
+import EmptyState from '@/components/common/EmptyState'
 import {
   BookOpen,
   Search,
@@ -523,65 +525,48 @@ export default function HomePage() {
             </button>
           </div>
         ) : streamTab === 'following' && displayPosts.length === 0 ? (
-          <div className="card text-center py-16 space-y-4 bg-surface-card border border-surface-border shadow-xs rounded-[20px]">
-            <div className="w-14 h-14 rounded-2xl bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] flex items-center justify-center mx-auto">
-              <Users className="w-7 h-7" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="font-bold text-content text-base sm:text-lg">Chưa có bài viết từ bạn học bạn theo dõi</h3>
-              <p className="text-content-muted text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
-                Khám phá danh sách thành viên tích cực bên cột phải hoặc theo dõi các tác giả chia sẻ tài liệu hữu ích để cập nhật bài viết mới tại đây.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setStreamTab('for-you')}
-              className="btn-primary text-xs sm:text-sm py-2 px-5 rounded-full inline-flex items-center gap-1.5 mx-auto"
-            >
-              <span>Xem bảng tin "Dành cho bạn"</span>
-            </button>
-          </div>
+          <EmptyState
+            variant="profile"
+            title="Chưa có bài viết từ người bạn theo dõi"
+            description="Theo dõi các bạn học và tác giả tích cực chia sẻ tài liệu hữu ích để cập nhật bài viết mới nhất tại đây."
+            actionLabel='Xem bảng tin "Dành cho bạn"'
+            onAction={() => setStreamTab('for-you')}
+          />
         ) : displayPosts.length === 0 ? (
-          <div className="card text-center py-20 space-y-4 bg-surface-card border border-surface-border shadow-card rounded-[20px]">
-            <div className="w-16 h-16 rounded-full bg-surface-muted text-content-muted flex items-center justify-center mx-auto border border-surface-border">
-              <BookOpen className="w-8 h-8" />
-            </div>
-            <h3 className="font-bold text-content text-lg">Không tìm thấy bài viết nào</h3>
-            <p className="text-content-muted text-xs sm:text-sm max-w-md mx-auto">
-              {searchKeyword || selectedSubject
-                ? 'Không có kết quả nào khớp với tiêu chí tìm kiếm của bạn. Hãy thử từ khóa khác nhé!'
-                : 'Hiện chưa có bài viết nào trong danh mục này. Hãy là người đầu tiên chia sẻ kiến thức!'}
-            </p>
-            <div className="flex items-center justify-center gap-2.5 pt-1">
-              {(searchKeyword || selectedSubject) && (
-                <button
-                  type="button"
-                  onClick={() => {
+          <EmptyState
+            variant="feed"
+            title="Bảng tin đang yên ắng"
+            description={
+              searchKeyword || selectedSubject
+                ? 'Không có bài viết nào khớp với tiêu chí tìm kiếm hoặc bộ lọc môn học hiện tại. Hãy thử từ khóa khác nhé!'
+                : 'Hiện chưa có bài viết nào trong danh mục này. Hãy là người đầu tiên khơi nguồn thảo luận!'
+            }
+            actionLabel={
+              searchKeyword || selectedSubject
+                ? 'Đặt lại bộ lọc'
+                : isAuthenticated
+                ? 'Tạo bài viết ngay'
+                : 'Đăng nhập để đăng bài'
+            }
+            actionLink={
+              !(searchKeyword || selectedSubject)
+                ? isAuthenticated
+                  ? '/posts/create'
+                  : '/login'
+                : undefined
+            }
+            onAction={
+              searchKeyword || selectedSubject
+                ? () => {
                     const next = new URLSearchParams(searchParams)
                     next.delete('search')
                     next.delete('subject')
                     setSearchParams(next)
                     setPage(1)
-                  }}
-                  className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl"
-                >
-                  Đặt lại bộ lọc
-                </button>
-              )}
-              {isAuthenticated ? (
-                <Link
-                  to="/posts/create"
-                  className="btn-primary inline-flex items-center gap-2 text-xs sm:text-sm py-2.5 px-5 rounded-full"
-                >
-                  <span>Tạo bài viết ngay</span>
-                </Link>
-              ) : (
-                <Link to="/login" className="btn-primary inline-flex items-center gap-2 text-xs sm:text-sm py-2.5 px-5 rounded-full">
-                  <span>Đăng nhập để đăng bài</span>
-                </Link>
-              )}
-            </div>
-          </div>
+                  }
+                : undefined
+            }
+          />
         ) : (
           <div className="space-y-4">
             {displayPosts.map((post) => (
@@ -623,139 +608,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════
           CỘT PHẢI (SIDE WIDGETS): Môn học, Xu hướng, Bạn bè, Thống kê (Grovelyn Standard: 320px - 340px)
           ═══════════════════════════════════════════════ */}
-      <aside aria-label="Cột bên" className="hidden flex-col gap-4 lg:sticky lg:top-20 lg:flex lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-8">
-        {/* Widget 1: Bộ lọc nhanh theo Môn học (Subject Pills) */}
-        <div className="rounded-[22px] p-5 sm:p-6 space-y-4 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-xs">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-[17px] sm:text-[18px] text-[#06110a] dark:text-white flex items-center gap-2 tracking-tight">
-              <Sparkles className="w-4 h-4 text-[#5bd13a]" />
-              <span>Chủ đề &amp; Môn học</span>
-            </h3>
-            <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8] font-semibold">Khám phá</span>
-          </div>
-
-          <div className="flex flex-wrap gap-2.5 pt-1">
-            {POPULAR_SUBJECTS.map((sub) => {
-              const isSelected = selectedSubject === sub || (sub === 'Tất cả môn' && !selectedSubject)
-              return (
-                <button
-                  key={sub}
-                  type="button"
-                  onClick={() => handleSubjectChange(sub)}
-                  className={`text-xs px-3.5 py-1.5 rounded-xl font-semibold border transition-colors duration-150 cursor-pointer ${
-                    isSelected
-                      ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] border-transparent shadow-2xs'
-                      : 'bg-[#F2F4EF] dark:bg-[#303132] hover:bg-[#E2E7DE] dark:hover:bg-[#262626] text-[#56614f] dark:text-[#B0B3B8] border-[#E2E7DE] dark:border-[#3E4042]'
-                  }`}
-                >
-                  {sub}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Widget 2: Đang được nói nhiều (Trending Topics - Khung mẫu Grovelyn theo ảnh tham chiếu) */}
-        <div className="rounded-[22px] p-5 sm:p-6 space-y-3.5 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-xs">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-[17px] sm:text-[18px] text-[#06110a] dark:text-white flex items-center gap-2 tracking-tight">
-              <TrendingUp className="w-4 h-4 text-[#5bd13a]" />
-              <span>Đang được nói nhiều</span>
-            </h3>
-            <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8] font-semibold">Xu hướng</span>
-          </div>
-
-          <div className="space-y-2.5">
-            {trendingTopics.length === 0 ? (
-              <p className="text-xs text-[#56614f] dark:text-[#B0B3B8] py-2 text-center">
-                Chưa có chủ đề nổi bật nào.
-              </p>
-            ) : (
-              trendingTopics.map((item) => (
-                <div
-                  key={item.topic}
-                  onClick={() => handleTrendingClick(item)}
-                  className="flex items-center gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-[#F2F4EF] dark:hover:bg-[#171717] transition-colors cursor-pointer group"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-[#EAF5EC] dark:bg-[#163D29] text-[#16a34a] dark:text-[#2ECC71] flex items-center justify-center font-bold text-sm shrink-0 border border-[#bbf7d0]/40 dark:border-[#3E4042]">
-                    #
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-bold text-[#06110a] dark:text-white group-hover:underline truncate">
-                      #{item.topic}
-                    </p>
-                    <p className="text-xs text-[#56614f] dark:text-[#B0B3B8]">
-                      {item.count} bài viết
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Widget 3: Tác giả tích cực trong bảng tin */}
-        <div className="rounded-[22px] p-5 sm:p-6 space-y-4 bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-xs">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-[17px] sm:text-[18px] text-[#06110a] dark:text-white flex items-center gap-2 tracking-tight">
-              <Users className="w-4 h-4 text-[#5bd13a]" />
-              <span>Thành viên tích cực</span>
-            </h3>
-            <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8] font-medium">Bảng tin</span>
-          </div>
-
-          {featuredStudents.length === 0 ? (
-            <p className="text-xs text-[#56614f] dark:text-[#B0B3B8] py-3 text-center">
-              Chưa có thành viên nào chia sẻ bài viết trong bộ lọc này.
-            </p>
-          ) : (
-            <div className="space-y-2.5">
-              {featuredStudents.map((student) => (
-                <Link
-                  key={student.id}
-                  to={`/profile/${student.id}`}
-                  className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F2F4EF] dark:hover:bg-[#171717] transition-colors group"
-                >
-                  <div className="relative shrink-0">
-                    <div className="w-9 h-9 rounded-full bg-[#F2F4EF] dark:bg-[#303132] border border-[#E2E7DE] dark:border-[#3E4042] flex items-center justify-center overflow-hidden font-bold text-[#06110a] dark:text-[#2ECC71] text-xs">
-                      {student.avatar_url ? (
-                        <img
-                          src={student.avatar_url}
-                          alt={student.full_name || 'U'}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { e.currentTarget.style.display = 'none' }}
-                        />
-                      ) : (
-                        student.full_name?.[0]?.toUpperCase() || 'U'
-                      )}
-                    </div>
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#5bd13a] border-2 border-white dark:border-[#0A0A0A]" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-bold text-[#06110a] dark:text-white group-hover:text-[#16a34a] dark:group-hover:text-[#22c55e] truncate">
-                      {student.full_name}
-                    </p>
-                    <p className="text-xs text-[#56614f] dark:text-[#B0B3B8] truncate">
-                      {student.university ? `${student.university}` : student.major}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Widget 4: Thống kê sinh viên tuần này */}
-        <div className="rounded-[22px] p-5 sm:p-6 space-y-3.5 bg-gradient-to-br from-[#16a34a]/10 via-[#22c55e]/5 to-surface-card border border-[#16a34a]/20 dark:border-[#22c55e]/20 shadow-xs">
-          <div className="flex items-center gap-2 text-[#16a34a] dark:text-[#2ECC71] font-bold text-[15px] tracking-tight">
-            <BarChart3 className="w-4 h-4" />
-            <span>Mạng xã hội học tập</span>
-          </div>
-          <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] leading-relaxed">
-            Hơn <strong className="text-[#06110a] dark:text-white font-bold">{counts.document || 0}</strong> tài liệu PDF ôn thi và đồ án môn học được sinh viên đóng góp và tải về hoàn toàn miễn phí.
-          </p>
-        </div>
-      </aside>
+      <RightAcademicSidebar onSelectTopic={handleTrendingClick} />
     </div>
   )
 }

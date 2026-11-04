@@ -1,17 +1,17 @@
-import { useState, useRef, useMemo, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { likeAPI, bookmarkAPI, commentAPI } from '@/services/api'
+import { likeAPI, bookmarkAPI, commentAPI, postAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
 import {
   FileText,
   MessageSquare,
   Heart,
-  Check,
   Bookmark,
   BookmarkCheck,
   Share2,
+  Check,
   DownloadCloud,
   Send,
   Folder,
@@ -19,8 +19,10 @@ import {
   CornerDownRight,
   HelpCircle,
   Trash2,
+  Flag,
 } from 'lucide-react'
 import Badge from '@/components/common/Badge'
+import ReportPostModal from '@/components/post/ReportPostModal'
 
 /**
  * Format relative timestamp in Vietnamese (e.g. "Vừa xong", "15 phút trước", "2 giờ trước")
@@ -28,17 +30,17 @@ import Badge from '@/components/common/Badge'
 function formatRelativeTime(dateString) {
   if (!dateString) return ''
   const date = new Date(dateString)
-  if (isNaN(date.getTime())) return ''
+  if (Number.isNaN(date.getTime())) return ''
   const now = new Date()
-  const diffInSeconds = Math.floor((now - date) / 1000)
+  const diffSec = Math.floor((now - date) / 1000)
 
-  if (diffInSeconds < 60) return 'Vừa xong'
-  const diffInMinutes = Math.floor(diffInSeconds / 60)
-  if (diffInMinutes < 60) return `${diffInMinutes} phút trước`
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) return `${diffInHours} giờ trước`
-  const diffInDays = Math.floor(diffInHours / 24)
-  if (diffInDays < 7) return `${diffInDays} ngày trước`
+  if (diffSec < 60) return 'Vừa xong'
+  const diffMin = Math.floor(diffSec / 60)
+  if (diffMin < 60) return `${diffMin} phút trước`
+  const diffHours = Math.floor(diffMin / 60)
+  if (diffHours < 24) return `${diffHours} giờ trước`
+  const diffDays = Math.floor(diffHours / 24)
+  if (diffDays < 7) return `${diffDays} ngày trước`
 
   return date.toLocaleDateString('vi-VN', {
     day: '2-digit',
@@ -49,21 +51,30 @@ function formatRelativeTime(dateString) {
 
 export default function PostCard({ post, initialBookmarked = false, onDelete }) {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const { user: currentUser, isAuthenticated } = useAuthStore()
+
+  // Input ref for comment composer auto-focus
   const commentInputRef = useRef(null)
 
+  // Like & Bookmark state
   const [likesCount, setLikesCount] = useState(Number(post.like_count) || 0)
-  const [isLiked, setIsLiked] = useState(post.is_liked !== undefined ? Boolean(post.is_liked) : null)
+  const [isLiked, setIsLiked] = useState(post.is_liked !== undefined ? Boolean(post.is_liked) : false)
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked || (post.is_bookmarked !== undefined ? Boolean(post.is_bookmarked) : false))
   const [commentText, setCommentText] = useState('')
   const [replyingTo, setReplyingTo] = useState(null) // { id: number, authorName: string }
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [showComments, setShowComments] = useState(true)
 
   // Sync state if props change (from optimized feed query)
   useEffect(() => {
-    if (typeof post.like_count === 'number') setLikesCount(post.like_count)
-    if (typeof post.is_liked === 'boolean') setIsLiked(post.is_liked)
-    if (typeof post.is_bookmarked === 'boolean') setIsBookmarked(initialBookmarked || post.is_bookmarked)
-  }, [post.like_count, post.is_liked, post.is_bookmarked, initialBookmarked])
+    if (typeof post.is_liked === 'boolean') {
+      setIsLiked(post.is_liked)
+    }
+    if (typeof post.is_bookmarked === 'boolean') {
+      setIsBookmarked(post.is_bookmarked)
+    }
+  }, [post.is_liked, post.is_bookmarked])
 
   const isFree = !post.price || parseFloat(post.price) === 0
   const postUrl = post.post_type === 'document' ? `/documents/${post.id}` : `/posts/${post.id}`
@@ -79,27 +90,12 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
     ? post.tags.split(',').map((t) => t.trim()).filter(Boolean)
     : []
 
-  // Fetch verified like count from real API
-  const { data: realLikeCount } = useQuery({
-    queryKey: ['post-like-count', post.id],
-    queryFn: async () => {
-      try {
-        const res = await likeAPI.count('post', post.id)
-        return res.data?.data?.count ?? 0
-      } catch {
-        return 0
-      }
-    },
-    enabled: Boolean(isAuthenticated || post.post_type === 'document'),
-    staleTime: 30000,
-  })
-
-  // Synchronize like count when real API data returns
+  // Synchronize local like count directly from post DTO
   useEffect(() => {
-    if (typeof realLikeCount === 'number') {
-      setLikesCount(realLikeCount)
+    if (typeof post.like_count === 'number') {
+      setLikesCount(post.like_count)
     }
-  }, [realLikeCount])
+  }, [post.like_count])
 
   // Fetch comments to populate inline thread & exact real comment count
   const { data: rawComments = [] } = useQuery({
@@ -107,12 +103,12 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
     queryFn: async () => {
       try {
         const res = await commentAPI.getByPost(post.id)
-        return res.data?.data || []
+        return Array.isArray(res.data?.data) ? res.data.data : []
       } catch {
         return []
       }
     },
-    enabled: Boolean(isAuthenticated || post.post_type === 'document'),
+    enabled: true, // Always enabled so comments load reliably for everyone
     staleTime: 30000,
   })
 
@@ -173,6 +169,8 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
       setCommentText('')
       setReplyingTo(null)
       qc.invalidateQueries({ queryKey: ['post-comments', post.id] })
+      qc.invalidateQueries({ queryKey: ['fe01-comments', post.id] })
+      qc.invalidateQueries({ queryKey: ['posts'] })
       toast.success('Đã gửi bình luận!')
     },
     onError: (err) => {
@@ -241,8 +239,16 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
     })
   }
 
-  // Display the primary conversation thread (first root comment)
-  const featuredComment = uniqueComments.length > 0 ? uniqueComments[0] : null
+  const handleCommentButtonClick = (e) => {
+    e.preventDefault()
+    setShowComments(true)
+    setTimeout(() => {
+      commentInputRef.current?.focus()
+    }, 50)
+  }
+
+  // Display top root comments (up to 2 in feed, rest linked to detail page)
+  const displayComments = uniqueComments.slice(0, 2)
 
   return (
     <article className="scroll-mt-24 overflow-hidden rounded-[22px] border border-[#E2E7DE] dark:border-[#3E4042] bg-white dark:bg-[#242526] p-4 sm:p-5 shadow-xs transition-all hover:border-[#16a34a]/30 dark:hover:border-[#22c55e]/30">
@@ -318,15 +324,30 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
           >
             <Share2 className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />
           </button>
+          {currentUser && currentUser.id !== (post.author?.id || post.user_id) && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setIsReportModalOpen(true)
+              }}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#56614f] dark:text-[#B0B3B8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all duration-200 active:scale-90 cursor-pointer"
+              title="Báo cáo bài viết"
+              aria-label="Báo cáo bài viết"
+            >
+              <Flag className="w-4 h-4" />
+            </button>
+          )}
           {onDelete && (currentUser?.id === (post.author?.id || post.user_id) || currentUser?.role === 'admin') && (
             <button
               type="button"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                onDelete(post.id, post.title)
+                onDelete(post.id)
               }}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#56614f] dark:text-[#B0B3B8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all duration-200 active:scale-90 cursor-pointer"
               title="Xóa bài viết"
               aria-label="Xóa bài viết"
             >
@@ -336,16 +357,15 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
         </div>
       </div>
 
-      {/* ── Post Content Section ── */}
-      <div className="mt-3 space-y-1.5">
-        <Link to={postUrl} className="block group/title">
-          <h2 className="font-bold text-[#06110a] dark:text-[#E4E6EB] group-hover/title:text-[#16a34a] dark:group-hover/title:text-[#22c55e] transition-colors line-clamp-2 text-[17.5px] sm:text-[18.5px] leading-snug tracking-tight">
+      {/* ── Main Body: Title & Content Preview ── */}
+      <div className="mt-3">
+        <Link to={postUrl} className="group/title block">
+          <h3 className="text-base sm:text-[17px] font-bold text-[#06110a] dark:text-[#E4E6EB] group-hover/title:text-[#16a34a] dark:group-hover/title:text-[#22c55e] transition-colors leading-snug line-clamp-2">
             {post.title}
-          </h2>
+          </h3>
         </Link>
-
         {post.content && (
-          <p className="text-[13.5px] sm:text-[14px] text-[#4b5563] dark:text-[#B0B3B8] line-clamp-3 leading-relaxed">
+          <p className="mt-1 text-[13.5px] sm:text-[14px] text-[#4b5563] dark:text-[#B0B3B8] line-clamp-3 leading-relaxed">
             {post.content}
           </p>
         )}
@@ -415,7 +435,11 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
       {post.post_type === 'question' && (
         <div className="mt-2.5 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/40 text-amber-800 dark:text-amber-300 text-xs font-semibold">
           <HelpCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-          <span>Câu hỏi thảo luận bài tập cần trợ giúp</span>
+          <span>
+            {totalComments === 0
+              ? 'Chưa có câu trả lời - Hãy là người đầu tiên giải đáp!'
+              : `${totalComments} câu trả lời từ cộng đồng sinh viên`}
+          </span>
         </div>
       )}
 
@@ -470,7 +494,7 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
         </div>
       </div>
 
-      {/* ── 3-Action Grid Bar (Clean, Minimal, Direct to Discussion) ── */}
+      {/* ── 3-Action Grid Bar (Bold & Saturated Contrast Buttons) ── */}
       <div className="mt-2 grid grid-cols-3 gap-1.5 border-t pt-1 border-[#E2E7DE] dark:border-[#3E4042]">
         {/* Like Button */}
         <button
@@ -479,24 +503,25 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
           disabled={likeMutation.isPending}
           className={`group flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-all duration-200 cursor-pointer active:scale-95 ${
             isLiked
-              ? 'text-rose-600 dark:text-rose-400 bg-rose-50/70 dark:bg-rose-950/40 shadow-2xs font-bold'
-              : 'text-[#56614f] dark:text-[#B0B3B8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/60 dark:hover:bg-rose-950/20'
+              ? 'text-rose-700 dark:text-rose-200 bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/60 dark:hover:bg-rose-900/80 border border-rose-300 dark:border-rose-700 shadow-xs font-bold'
+              : 'text-[#374151] dark:text-[#D1D5DB] hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-100/80 dark:hover:bg-rose-950/60'
           }`}
           aria-label={isLiked ? 'Bỏ thích' : 'Thích bài viết'}
         >
-          <Heart className={`w-4 h-4 transition-all duration-200 group-hover:scale-115 active:scale-125 ${isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'group-hover:text-rose-500'}`} />
+          <Heart className={`w-4 h-4 transition-all duration-200 group-hover:scale-115 active:scale-125 ${isLiked ? 'fill-rose-600 text-rose-600 scale-110' : 'group-hover:text-rose-600'}`} />
           <span>Thích</span>
         </button>
 
-        {/* Comment Button (Links directly to post discussion page) */}
-        <Link
-          to={postUrl}
-          className="group flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-all duration-200 text-[#56614f] dark:text-[#B0B3B8] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/60 dark:hover:bg-blue-950/20 active:scale-95 cursor-pointer"
+        {/* Comment Button (Toggles inline discussion / focuses comment composer) */}
+        <button
+          type="button"
+          onClick={handleCommentButtonClick}
+          className="group flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-all duration-200 text-[#374151] dark:text-[#D1D5DB] hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100/80 dark:hover:bg-blue-950/60 active:scale-95 cursor-pointer"
           aria-label="Xem bình luận"
         >
-          <MessageSquare className="w-4 h-4 transition-transform duration-200 group-hover:scale-115 group-hover:text-blue-500" />
+          <MessageSquare className="w-4 h-4 transition-transform duration-200 group-hover:scale-115 group-hover:text-blue-600" />
           <span>Bình luận</span>
-        </Link>
+        </button>
 
         {/* Bookmark Button (Keep exact test aria-label hook) */}
         <button
@@ -505,179 +530,191 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
           disabled={bookmarkMutation.isPending}
           className={`group flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-all duration-200 cursor-pointer active:scale-95 ${
             isBookmarked
-              ? 'text-amber-600 dark:text-amber-400 bg-amber-50/70 dark:bg-amber-950/40 shadow-2xs font-bold'
-              : 'text-[#56614f] dark:text-[#B0B3B8] hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50/60 dark:hover:bg-amber-950/20'
+              ? 'text-amber-800 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/60 dark:hover:bg-amber-900/80 border border-amber-300 dark:border-amber-700 shadow-xs font-bold'
+              : 'text-[#374151] dark:text-[#D1D5DB] hover:text-amber-800 dark:hover:text-amber-300 hover:bg-amber-100/80 dark:hover:bg-amber-950/60'
           }`}
           aria-label={isBookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
         >
           {isBookmarked ? (
-            <BookmarkCheck className="w-4 h-4 fill-amber-500 text-amber-600 transition-transform duration-200 group-hover:scale-115" aria-hidden="true" />
+            <BookmarkCheck className="w-4 h-4 fill-amber-600 text-amber-600 transition-transform duration-200 group-hover:scale-115" aria-hidden="true" />
           ) : (
-            <Bookmark className="w-4 h-4 transition-transform duration-200 group-hover:scale-115 group-hover:text-amber-500" aria-hidden="true" />
+            <Bookmark className="w-4 h-4 transition-transform duration-200 group-hover:scale-115 group-hover:text-amber-600" aria-hidden="true" />
           )}
           <span>{isBookmarked ? 'Bỏ lưu' : 'Lưu'}</span>
         </button>
       </div>
 
       {/* ── Inline Quick Comment & Discussion Thread Area ── */}
-      <div className="mt-2.5 pt-2.5 border-t border-[#E2E7DE] dark:border-[#3E4042] space-y-3">
-        {/* Featured Parent Comment & Downward Branching Replies */}
-        {featuredComment && (
-          <div className="relative pl-3">
-            {/* Thread line leading to quick composer */}
-            <div className="absolute left-6 top-7 bottom-0 w-[1.5px] bg-[#E2E7DE] dark:bg-[#3E4042]" />
-
-            {/* Parent Comment Header & Body */}
-            <div className="flex items-start gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-xs font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
-                {featuredComment.author?.avatar_url ? (
-                  <img
-                    src={featuredComment.author.avatar_url}
-                    alt={featuredComment.author.full_name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.currentTarget.style.display = 'none' }}
-                  />
-                ) : (
-                  featuredComment.author?.full_name?.[0]?.toUpperCase() || 'U'
-                )}
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-xs font-bold text-[#06110a] dark:text-[#e4e6eb]">
-                    {featuredComment.author?.full_name || 'Thành viên'}
-                  </span>
-                  <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8]">
-                    · {formatRelativeTime(featuredComment.created_at)}
-                  </span>
-                </div>
-
-                <p className="text-xs sm:text-[13px] text-[#1f2937] dark:text-[#d1d5db] mt-0.5 leading-relaxed break-words">
-                  {featuredComment.content}
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() => handleReplyClick(featuredComment, featuredComment.id)}
-                  className="mt-1 text-[11px] font-semibold text-[#16a34a] dark:text-[#22c55e] hover:underline cursor-pointer"
-                >
-                  Trả lời
-                </button>
-              </div>
-            </div>
-
-            {/* Downward Branching Replies ("trỏ xuống" branch under parent comment) */}
-            {featuredComment.replies && featuredComment.replies.length > 0 && (
-              <div className="ml-5 pl-4 border-l-2 border-[#16a34a]/30 dark:border-[#22c55e]/30 mt-2 space-y-2">
-                {featuredComment.replies.map((reply) => (
-                  <div key={reply.id} className="relative flex items-start gap-2 pt-1">
-                    <div className="w-6 h-6 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-[10px] font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
-                      {reply.author?.avatar_url ? (
+      {showComments && (
+        <div className="mt-2.5 pt-2.5 border-t border-[#E2E7DE] dark:border-[#3E4042] space-y-3">
+          {/* Display Comments List (top comments and their replies) */}
+          {displayComments.length > 0 && (
+            <div className="space-y-3 pl-1">
+              {displayComments.map((comment) => (
+                <div key={comment.id} className="relative pl-2.5">
+                  {/* Parent Comment Header & Body */}
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-xs font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
+                      {comment.author?.avatar_url ? (
                         <img
-                          src={reply.author.avatar_url}
-                          alt={reply.author.full_name}
+                          src={comment.author.avatar_url}
+                          alt={comment.author.full_name}
                           className="w-full h-full object-cover"
                           onError={(e) => { e.currentTarget.style.display = 'none' }}
                         />
                       ) : (
-                        reply.author?.full_name?.[0]?.toUpperCase() || 'U'
+                        comment.author?.full_name?.[0]?.toUpperCase() || 'U'
                       )}
                     </div>
+
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[11.5px] font-bold text-[#06110a] dark:text-[#e4e6eb]">
-                          {reply.author?.full_name || 'Thành viên'}
+                        <span className="text-xs font-bold text-[#06110a] dark:text-[#e4e6eb]">
+                          {comment.author?.full_name || 'Thành viên'}
                         </span>
-                        <span className="text-[10px] text-[#56614f] dark:text-[#B0B3B8]">
-                          · {formatRelativeTime(reply.created_at)}
+                        <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8]">
+                          · {formatRelativeTime(comment.created_at)}
                         </span>
                       </div>
-                      <p className="text-xs text-[#1f2937] dark:text-[#d1d5db] leading-relaxed break-words">
-                        {reply.content}
+
+                      <p className="text-xs sm:text-[13px] text-[#1f2937] dark:text-[#d1d5db] mt-0.5 leading-relaxed break-words">
+                        {comment.content}
                       </p>
+
                       <button
                         type="button"
-                        onClick={() => handleReplyClick(reply, featuredComment.id)}
-                        className="mt-0.5 text-[10.5px] font-semibold text-[#16a34a] dark:text-[#22c55e] hover:underline cursor-pointer"
+                        onClick={() => handleReplyClick(comment, comment.id)}
+                        className="mt-1 text-[11px] font-semibold text-[#16a34a] dark:text-[#22c55e] hover:underline cursor-pointer"
                       >
                         Trả lời
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* More comments link directing straight to discussion */}
-        {totalComments > (featuredComment ? (1 + (featuredComment.replies?.length || 0)) : 0) && (
-          <div className="pl-12 text-xs">
-            <Link
-              to={postUrl}
-              className="font-semibold text-[#56614f] dark:text-[#B0B3B8] hover:text-[#16a34a] dark:hover:text-[#22c55e] transition-colors"
-            >
-              Xem tất cả {totalComments} bình luận trong bài viết...
-            </Link>
-          </div>
-        )}
+                  {/* Downward Branching Replies */}
+                  {comment.replies && comment.replies.length > 0 && (
+                    <div className="ml-5 pl-4 border-l-2 border-[#16a34a]/30 dark:border-[#22c55e]/30 mt-2 space-y-2">
+                      {comment.replies.map((reply) => (
+                        <div key={reply.id} className="relative flex items-start gap-2 pt-1">
+                          <div className="w-6 h-6 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-[10px] font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
+                            {reply.author?.avatar_url ? (
+                              <img
+                                src={reply.author.avatar_url}
+                                alt={reply.author.full_name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.currentTarget.style.display = 'none' }}
+                              />
+                            ) : (
+                              reply.author?.full_name?.[0]?.toUpperCase() || 'U'
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[11.5px] font-bold text-[#06110a] dark:text-[#e4e6eb]">
+                                {reply.author?.full_name || 'Thành viên'}
+                              </span>
+                              <span className="text-[10px] text-[#56614f] dark:text-[#B0B3B8]">
+                                · {formatRelativeTime(reply.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-[#1f2937] dark:text-[#d1d5db] leading-relaxed break-words">
+                              {reply.content}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => handleReplyClick(reply, comment.id)}
+                              className="mt-0.5 text-[10.5px] font-semibold text-[#16a34a] dark:text-[#22c55e] hover:underline cursor-pointer"
+                            >
+                              Trả lời
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
-        {/* Replying Banner Indicator */}
-        {replyingTo && (
-          <div className="flex items-center justify-between text-[11px] text-[#15803d] dark:text-[#4ade80] bg-[#dcfce7]/70 dark:bg-[#14532d]/40 px-3 py-1 rounded-lg border border-[#bbf7d0] dark:border-[#166534] ml-3 mr-1">
-            <span>Đang trả lời <strong>@{replyingTo.authorName}</strong></span>
-            <button
-              type="button"
-              onClick={() => {
-                setReplyingTo(null)
-                setCommentText('')
-              }}
-              className="hover:text-red-500 font-bold ml-2 text-xs cursor-pointer"
-              title="Hủy trả lời"
-            >
-              × Hủy
-            </button>
-          </div>
-        )}
+          {/* More comments link directing to full post discussion */}
+          {totalComments > displayComments.length && (
+            <div className="pl-3 text-xs">
+              <Link
+                to={postUrl}
+                className="font-bold text-[#16a34a] dark:text-[#4ade80] hover:underline inline-flex items-center gap-1 transition-colors"
+              >
+                <span>Xem toàn bộ {totalComments} bình luận trong bài viết</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          )}
 
-        {/* Quick Reply Composer Row (Pill Input + Green Submit Button) */}
-        <form onSubmit={handleCommentSubmit} className="flex items-center gap-2 pl-3">
-          {/* Current User Avatar */}
-          <div className="w-8 h-8 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-xs font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
-            {currentUser?.avatar_url ? (
-              <img
-                src={currentUser.avatar_url}
-                alt={currentUser.full_name || 'Bạn'}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
+          {/* Replying Banner Indicator */}
+          {replyingTo && (
+            <div className="flex items-center justify-between text-[11px] text-[#15803d] dark:text-[#4ade80] bg-[#dcfce7]/70 dark:bg-[#14532d]/40 px-3 py-1 rounded-lg border border-[#bbf7d0] dark:border-[#166534] ml-3 mr-1">
+              <span>Đang trả lời <strong>@{replyingTo.authorName}</strong></span>
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyingTo(null)
+                  setCommentText('')
+                }}
+                className="hover:text-red-500 font-bold ml-2 text-xs cursor-pointer"
+                title="Hủy trả lời"
+              >
+                × Hủy
+              </button>
+            </div>
+          )}
+
+          {/* Quick Reply Composer Row (Pill Input + Green Submit Button) */}
+          <form onSubmit={handleCommentSubmit} className="flex items-center gap-2 pl-3">
+            {/* Current User Avatar */}
+            <div className="w-8 h-8 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-xs font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
+              {currentUser?.avatar_url ? (
+                <img
+                  src={currentUser.avatar_url}
+                  alt={currentUser.full_name || 'Bạn'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+              ) : (
+                currentUser?.full_name?.[0]?.toUpperCase() || 'B'
+              )}
+            </div>
+
+            {/* Pill-shaped text input */}
+            <div className="flex-1 flex items-center rounded-full bg-[#f2f4ef] dark:bg-[#18191a] border border-[#e2e7de] dark:border-[#3e4042] px-3.5 py-1 focus-within:border-[#16a34a] dark:focus-within:border-[#22c55e] transition-colors">
+              <input
+                ref={commentInputRef}
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder={replyingTo ? `Trả lời @${replyingTo.authorName}...` : 'Trả lời nhanh trong luồng...'}
+                className="w-full bg-transparent text-xs sm:text-[13px] text-[#06110a] dark:text-white placeholder-[#8c9688] dark:placeholder-[#70757d] outline-none"
               />
-            ) : (
-              currentUser?.full_name?.[0]?.toUpperCase() || 'B'
-            )}
-          </div>
+              <button
+                type="submit"
+                disabled={!commentText.trim() || commentMutation.isPending}
+                className="w-7 h-7 rounded-full bg-[#22c55e] hover:bg-[#16a34a] disabled:opacity-40 disabled:hover:bg-[#22c55e] text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer shadow-2xs ml-1"
+                aria-label="Gửi trả lời"
+                title="Gửi bình luận"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
-          {/* Pill-shaped text input */}
-          <div className="flex-1 flex items-center rounded-full bg-[#f2f4ef] dark:bg-[#18191a] border border-[#e2e7de] dark:border-[#3e4042] px-3.5 py-1 focus-within:border-[#16a34a] dark:focus-within:border-[#22c55e] transition-colors">
-            <input
-              ref={commentInputRef}
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder={replyingTo ? `Trả lời @${replyingTo.authorName}...` : 'Trả lời trong luồng...'}
-              className="w-full bg-transparent text-xs sm:text-[13px] text-[#06110a] dark:text-white placeholder-[#8c9688] dark:placeholder-[#70757d] outline-none"
-            />
-            <button
-              type="submit"
-              disabled={!commentText.trim() || commentMutation.isPending}
-              className="w-7 h-7 rounded-full bg-[#22c55e] hover:bg-[#16a34a] disabled:opacity-40 disabled:hover:bg-[#22c55e] text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer shadow-2xs ml-1"
-              aria-label="Gửi trả lời"
-              title="Gửi bình luận"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </form>
-      </div>
+      {/* Report Modal */}
+      <ReportPostModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        postId={post.id}
+        postTitle={post.title}
+      />
     </article>
   )
 }

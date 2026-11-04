@@ -507,7 +507,8 @@ export default function PostDetailPage() {
     retry: false,
   })
 
-  const canModify = authenticated && post && (Number(user?.id) === Number(post.user_id) || user?.role === 'admin')
+  const isSuppressed = Boolean(post && post.status && post.status !== 'active')
+  const canModify = authenticated && post && !isSuppressed && (Number(user?.id) === Number(post.user_id) || user?.role === 'admin')
 
   const startEdit = () => {
     setEditForm({
@@ -852,10 +853,17 @@ export default function PostDetailPage() {
 
               {/* Post Footer Interaction */}
               <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <LikeButton targetType="post" targetId={post.id} initialLiked={post.is_liked} initialCount={post.like_count} />
-                  <BookmarkButton postId={post.id} initialBookmarked={post.is_bookmarked} />
-                </div>
+                {isSuppressed ? (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/60">
+                    <Lock className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Bài viết đang {post.status === 'hidden' ? 'bị ẩn' : 'đã xóa'} • {post.like_count ?? 0} lượt thích (chỉ đọc)</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <LikeButton targetType="post" targetId={post.id} initialLiked={post.is_liked} initialCount={post.like_count} />
+                    <BookmarkButton postId={post.id} initialBookmarked={post.is_bookmarked} />
+                  </div>
+                )}
                 <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-medium">
                   <Eye className="w-4 h-4" />
                   <span>{post.view_count ?? 0} lượt xem</span>
@@ -865,7 +873,21 @@ export default function PostDetailPage() {
           )}
 
           {/* Comments Section */}
-          <Comments postId={post.id} />
+          {isSuppressed ? (
+            <div className="card p-6 border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 rounded-2xl flex items-start gap-3.5 text-amber-900 dark:text-amber-200 text-sm">
+              <Lock className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div className="space-y-1">
+                <div className="font-semibold text-amber-950 dark:text-amber-100">
+                  Khu vực tương tác và bình luận tạm khóa
+                </div>
+                <div className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                  Bài viết này đang ở trạng thái <span className="font-mono font-bold text-amber-950 dark:text-amber-100">[{post.status}]</span>. Bạn đang xem với tư cách Quản trị viên phục vụ công tác kiểm duyệt. Theo quy định bảo mật hệ thống, tính năng thích, lưu và bình luận không khả dụng trên nội dung chưa được kích hoạt.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Comments postId={post.id} />
+          )}
         </div>
 
         {/* ── CỘT PHẢI: TÁC GIẢ & MÔN HỌC (GROVELYN BENTO SIDEBAR: 4 Cols) ── */}

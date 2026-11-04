@@ -59,20 +59,25 @@ export default function MainLayout() {
     }
 
     let isMounted = true
+    let timer = null
+
     const fetchUnread = async () => {
       try {
         const res = await notificationAPI.getUnreadCount()
         if (isMounted) setUnreadCount(res.data?.data?.count || 0)
-      } catch {
-        // silent fail for polling
+      } catch (err) {
+        // If 401 Unauthorized occurs, stop further polling to avoid console spam
+        if (err.response?.status === 401) {
+          if (timer) clearInterval(timer)
+        }
       }
     }
 
     fetchUnread()
-    const timer = setInterval(fetchUnread, 30000)
+    timer = setInterval(fetchUnread, 30000)
     return () => {
       isMounted = false
-      clearInterval(timer)
+      if (timer) clearInterval(timer)
     }
   }, [isAuthenticated])
 

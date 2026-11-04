@@ -92,17 +92,37 @@ export default function HomePage() {
   const cachedCountsRef = useRef({ all: 0, document: 0, question: 0, discussion: 0 });
 
   // Global category counts query so pills remain stable across tab switches
-  const { data: allCategoryData } = useQuery({
+  // Global category counts query: fetch exact pagination.total per category from backend
+  const { data: categoryCounts } = useQuery({
     queryKey: ['posts-category-counts', searchKeyword, selectedSubject, isAuthenticated],
     queryFn: async () => {
-      const params = { page: 1, limit: 100 };
-      if (searchKeyword) params.search = searchKeyword;
-      if (selectedSubject) params.subject = selectedSubject;
-      if (!isAuthenticated) params.type = 'document';
-      return (await postAPI.getAll(params)).data;
+      const baseParams = { page: 1, limit: 10 };
+      if (searchKeyword) baseParams.search = searchKeyword;
+      if (selectedSubject) baseParams.subject = selectedSubject;
+
+      if (!isAuthenticated) {
+        const docRes = await postAPI.getAll({ ...baseParams, type: 'document' });
+        const docTotal = docRes.data?.pagination?.total ?? 0;
+        return { all: docTotal, document: docTotal, question: 0, discussion: 0 };
+      }
+
+      const [allRes, docRes, qRes, disRes] = await Promise.all([
+        postAPI.getAll(baseParams),
+        postAPI.getAll({ ...baseParams, type: 'document' }),
+        postAPI.getAll({ ...baseParams, type: 'question' }),
+        postAPI.getAll({ ...baseParams, type: 'discussion' }),
+      ]);
+
+      return {
+        all: allRes.data?.pagination?.total ?? 0,
+        document: docRes.data?.pagination?.total ?? 0,
+        question: qRes.data?.pagination?.total ?? 0,
+        discussion: disRes.data?.pagination?.total ?? 0,
+      };
     },
     staleTime: 60000,
     keepPreviousData: true,
+    retry: false,
   });
 
   // Query real trending topics from DB
@@ -123,27 +143,21 @@ export default function HomePage() {
 
   // Dynamic counts for Level 2 filter pills (preserves counts across tab switches)
   const counts = useMemo(() => {
-    const list = allCategoryData?.data || (effectiveType === '' ? posts : null);
-    if (list && list.length > 0) {
-      const newCounts = {
-        all: allCategoryData?.pagination?.total ?? list.length,
-        document: list.filter((p) => p.post_type === 'document').length,
-        question: list.filter((p) => p.post_type === 'question').length,
-        discussion: list.filter((p) => p.post_type === 'discussion').length,
-      };
-      cachedCountsRef.current = newCounts;
-      return newCounts;
+    if (categoryCounts) {
+      cachedCountsRef.current = categoryCounts;
+      return categoryCounts;
     }
     if (cachedCountsRef.current.all > 0) {
       return cachedCountsRef.current;
     }
+    const currentTotal = data?.pagination?.total ?? posts.length;
     return {
-      all: posts.length,
-      document: posts.filter((p) => p.post_type === 'document').length,
-      question: posts.filter((p) => p.post_type === 'question').length,
-      discussion: posts.filter((p) => p.post_type === 'discussion').length,
+      all: effectiveType === '' ? currentTotal : 0,
+      document: effectiveType === 'document' ? currentTotal : 0,
+      question: effectiveType === 'question' ? currentTotal : 0,
+      discussion: effectiveType === 'discussion' ? currentTotal : 0,
     };
-  }, [allCategoryData, posts, effectiveType]);
+  }, [categoryCounts, data?.pagination?.total, posts.length, effectiveType]);
 
   // Processed posts with stream filtering and sorting
   const displayPosts = useMemo(() => {

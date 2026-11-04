@@ -12,6 +12,7 @@
 5. Không commit `.env`, secret, token, thẻ thanh toán, dữ liệu người dùng, file upload. Không sửa thông số production/sandbox để chạy tắt.
 6. Không implement thanh toán thật, chuyển tiền/rút tiền hoặc công bố tài liệu có phí khi chưa có task và security acceptance riêng.
 7. Nếu chưa rõ nghiệp vụ, ghi câu hỏi vào PR / `docs/DECISIONS.md`; không ngầm coi quyết định đề xuất là đã được nhóm duyệt.
+8. Đối với những chức năng chưa quen thuộc, đừng viết từ con số 0, hãy tìm kiếm các dự án mã nguồn mở trên GitHub để so sánh ý tưởng trước khi bắt tay vào làm.
 
 ## Nguyên tắc code hiện tại
 - `client/`: React + Vite + Tailwind; dùng `src/services/api.js` và `src/lib/axios.js` cho API.

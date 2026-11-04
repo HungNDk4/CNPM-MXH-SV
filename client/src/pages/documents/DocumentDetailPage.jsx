@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { documentAPI, postAPI } from '@/services/api'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { documentAPI, postAPI, commentAPI, likeAPI, bookmarkAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
 import {
@@ -17,14 +17,34 @@ import {
   Sparkles,
   DownloadCloud,
   Eye,
+  Heart,
+  Bookmark,
+  BookmarkCheck,
+  MessageSquare,
+  CornerDownRight,
+  Send,
+  Trash2,
 } from 'lucide-react'
-import { LikeButton, BookmarkButton, FollowButton, Comments } from '@/pages/posts/PostDetailPage'
+
+const MAX_COMMENT = 2000
 
 export default function DocumentDetailPage() {
   const { id } = useParams()
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const qc = useQueryClient()
+  const { user: currentUser, isAuthenticated } = useAuthStore()
   const [downloading, setDownloading] = useState(false)
 
+  // Local engagement state initialized from post data
+  const [likesCount, setLikesCount] = useState(0)
+  const [isLiked, setIsLiked] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+
+  // Comment input states
+  const [rootCommentText, setRootCommentText] = useState('')
+  const [replyingToId, setReplyingToId] = useState(null)
+  const [replyText, setReplyText] = useState('')
+
+  // Query document metadata
   const { data: post, isLoading, isError, error } = useQuery({
     queryKey: ['document-detail', id],
     queryFn: async () => {
@@ -32,7 +52,141 @@ export default function DocumentDetailPage() {
       return response.data.data
     },
     retry: false,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   })
+
+  // Synchronize local like and bookmark state when post data arrives
+  useEffect(() => {
+    if (post) {
+      setLikesCount(Number(post.like_count) || 0)
+      setIsLiked(Boolean(post.is_liked))
+      setIsBookmarked(Boolean(post.is_bookmarked))
+    }
+  }, [post])
+
+  // Query comments for this document with staleTime to avoid triggering unwanted refresh during auth rotation
+  const { data: rawComments = [], isLoading: isLoadingComments } = useQuery({
+    queryKey: ['document-comments', id],
+    queryFn: async () => {
+      try {
+        const res = await commentAPI.getByPost(id)
+        return res.data?.data || []
+      } catch {
+        return []
+      }
+    },
+    enabled: Boolean(id),
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+  })
+
+  // Like mutation
+  const likeMutation = useMutation({
+    mutationFn: () => likeAPI.toggle('post', post.id),
+    onSuccess: (res) => {
+      const nowLiked = Boolean(res.data?.liked)
+      setIsLiked(nowLiked)
+      setLikesCount((prev) => (nowLiked ? prev + 1 : Math.max(0, prev - 1)))
+      qc.invalidateQueries({ queryKey: ['posts'] })
+      qc.invalidateQueries({ queryKey: ['post-like-count', post.id] })
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể cập nhật lượt thích.')
+    },
+  })
+
+  // Bookmark mutation
+  const bookmarkMutation = useMutation({
+    mutationFn: () => (isBookmarked ? bookmarkAPI.remove(post.id) : bookmarkAPI.save(post.id)),
+    onSuccess: (res) => {
+      const saved = Boolean(res.data?.data?.bookmarked)
+      setIsBookmarked(saved)
+      qc.invalidateQueries({ queryKey: ['bookmarks'] })
+      qc.invalidateQueries({ queryKey: ['posts'] })
+      toast.success(saved ? 'Đã lưu tài liệu!' : 'Đã bỏ lưu tài liệu.')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể lưu tài liệu.')
+    },
+  })
+
+  // Comment submission mutation
+  const commentMutation = useMutation({
+    mutationFn: ({ content, parent_id }) => commentAPI.create({ post_id: post.id, content, parent_id }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['document-comments', id] })
+      qc.invalidateQueries({ queryKey: ['post-comments', id] })
+      qc.invalidateQueries({ queryKey: ['posts'] })
+      setRootCommentText('')
+      setReplyText('')
+      setReplyingToId(null)
+      toast.success('Bình luận đã được gửi.')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể gửi bình luận.')
+    },
+  })
+
+  // Comment delete mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId) => commentAPI.delete(commentId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['document-comments', id] })
+      qc.invalidateQueries({ queryKey: ['post-comments', id] })
+      qc.invalidateQueries({ queryKey: ['posts'] })
+      toast.success('Đã xóa bình luận.')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể xóa bình luận.')
+    },
+  })
+
+  const handleLikeClick = () => {
+    if (!isAuthenticated) {
+      toast.error('Vui lòng đăng nhập để thích tài liệu.')
+      return
+    }
+    likeMutation.mutate()
+  }
+
+  const handleBookmarkClick = () => {
+    if (!isAuthenticated) {
+      toast.error('Vui lòng đăng nhập để lưu tài liệu.')
+      return
+    }
+    bookmarkMutation.mutate()
+  }
+
+  const handleRootCommentSubmit = (e) => {
+    e.preventDefault()
+    if (!isAuthenticated) {
+      toast.error('Vui lòng đăng nhập để bình luận.')
+      return
+    }
+    const trimmed = rootCommentText.trim()
+    if (!trimmed) return
+    commentMutation.mutate({ content: trimmed, parent_id: null })
+  }
+
+  const handleReplySubmit = (e, parentId) => {
+    e.preventDefault()
+    if (!isAuthenticated) {
+      toast.error('Vui lòng đăng nhập để trả lời.')
+      return
+    }
+    const trimmed = replyText.trim()
+    if (!trimmed) return
+    commentMutation.mutate({ content: trimmed, parent_id: parentId })
+  }
+
+  const handleDeleteComment = (commentId) => {
+    if (window.confirm('Bạn muốn xóa bình luận này?')) {
+      deleteCommentMutation.mutate(commentId)
+    }
+  }
 
   const download = async () => {
     if (!isAuthenticated || !post || downloading) return
@@ -94,6 +248,9 @@ export default function DocumentDetailPage() {
       </div>
     )
   }
+
+  const commentsList = Array.isArray(rawComments) ? rawComments : []
+  const totalCommentsCount = commentsList.length + commentsList.reduce((acc, c) => acc + (c.replies?.length || 0), 0)
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -241,17 +398,52 @@ export default function DocumentDetailPage() {
             {/* Engagement Action Bar */}
             <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3 flex-wrap">
-                <LikeButton
-                  targetType="post"
-                  targetId={post.id}
-                  initialLiked={post.is_liked}
-                  initialCount={post.like_count}
-                />
-                <BookmarkButton
-                  postId={post.id}
-                  initialBookmarked={post.is_bookmarked}
-                />
+                {/* Like Button */}
+                <button
+                  type="button"
+                  onClick={handleLikeClick}
+                  disabled={likeMutation.isPending}
+                  className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer group active:scale-95 ${
+                    isLiked
+                      ? 'text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 shadow-2xs font-semibold'
+                      : 'text-slate-700 dark:text-slate-200 hover:text-rose-600 hover:bg-rose-50/50 dark:hover:bg-rose-950/20'
+                  }`}
+                  aria-label={isLiked ? 'Bỏ thích' : 'Thích tài liệu'}
+                >
+                  <Heart
+                    className={`w-4 h-4 transition-transform duration-200 group-hover:scale-115 active:scale-125 ${
+                      isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400 group-hover:text-rose-500'
+                    }`}
+                  />
+                  <span>{isLiked ? 'Đã thích' : 'Thích'}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium ml-1">
+                    ({likesCount})
+                  </span>
+                </button>
+
+                {/* Bookmark Button */}
+                {isAuthenticated && (
+                  <button
+                    type="button"
+                    onClick={handleBookmarkClick}
+                    disabled={bookmarkMutation.isPending}
+                    className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer group active:scale-95 ${
+                      isBookmarked
+                        ? 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 shadow-2xs font-semibold'
+                        : 'text-slate-700 dark:text-slate-200 hover:text-amber-600 hover:bg-amber-50/50 dark:hover:bg-amber-950/20'
+                    }`}
+                    aria-label={isBookmarked ? 'Bỏ lưu tài liệu' : 'Lưu tài liệu'}
+                  >
+                    {isBookmarked ? (
+                      <BookmarkCheck className="w-4 h-4 text-amber-600 dark:text-amber-400 fill-amber-500 transition-transform duration-200 group-hover:scale-115" />
+                    ) : (
+                      <Bookmark className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-amber-500 transition-transform duration-200 group-hover:scale-115" />
+                    )}
+                    <span>{isBookmarked ? 'Đã lưu' : 'Lưu tài liệu'}</span>
+                  </button>
+                )}
               </div>
+
               <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-medium">
                 <Eye className="w-4 h-4" />
                 <span>{post.view_count ?? 0} lượt xem</span>
@@ -259,8 +451,214 @@ export default function DocumentDetailPage() {
             </div>
           </article>
 
-          {/* Comments Section */}
-          <Comments postId={post.id} isDocument={true} />
+          {/* ── Comments Section ── */}
+          <section className="card p-5 sm:p-7 space-y-6" aria-label="Bình luận và thảo luận tài liệu">
+            <div className="flex items-center justify-between pb-3 border-b border-surface-border">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <span>Bình luận ({totalCommentsCount})</span>
+              </h2>
+            </div>
+
+            {/* Comment Form or Guest Login Prompt */}
+            {!isAuthenticated ? (
+              <div className="p-4 rounded-2xl bg-surface-muted/60 border border-surface-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                  Đăng nhập để tham gia thảo luận và gửi bình luận về tài liệu này.
+                </p>
+                <Link to="/login" className="btn-primary text-xs py-2 px-4 rounded-xl shrink-0 inline-flex items-center justify-center">
+                  Đăng nhập ngay
+                </Link>
+              </div>
+            ) : (
+              <form onSubmit={handleRootCommentSubmit} className="space-y-3">
+                <label htmlFor="document-root-comment" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  Viết bình luận của bạn
+                </label>
+                <textarea
+                  id="document-root-comment"
+                  className="input resize-y text-xs sm:text-sm rounded-2xl"
+                  rows={3}
+                  value={rootCommentText}
+                  onChange={(e) => setRootCommentText(e.target.value)}
+                  maxLength={MAX_COMMENT}
+                  placeholder="Tham gia thảo luận hoặc đặt câu hỏi về tài liệu này..."
+                  required
+                />
+                <div className="flex justify-between items-center">
+                  <span className="text-[11px] text-slate-400">Tối đa 2.000 ký tự</span>
+                  <button
+                    type="submit"
+                    disabled={commentMutation.isPending || !rootCommentText.trim()}
+                    className="btn-primary text-xs sm:text-sm py-2 px-5 rounded-xl inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>{commentMutation.isPending ? 'Đang gửi...' : 'Gửi bình luận'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Comments List */}
+            {isLoadingComments ? (
+              <p className="text-center text-slate-400 text-xs py-6">Đang tải bình luận...</p>
+            ) : commentsList.length === 0 ? (
+              <div className="text-center py-8 space-y-2 text-slate-400">
+                <MessageSquare className="w-8 h-8 mx-auto opacity-50" />
+                <p className="text-xs">Chưa có bình luận nào cho tài liệu này. Hãy là người đầu tiên trao đổi!</p>
+              </div>
+            ) : (
+              <ul className="space-y-4 pt-1" aria-label="Danh sách bình luận tài liệu">
+                {commentsList.map((comment) => {
+                  const canRemoveRoot = currentUser?.id && (Number(currentUser.id) === Number(comment.user_id) || currentUser.role === 'admin')
+                  const isReplying = replyingToId === comment.id
+                  const replies = Array.isArray(comment.replies) ? comment.replies : []
+
+                  return (
+                    <li key={comment.id} className="space-y-3">
+                      <div className="rounded-2xl p-4 sm:p-5 space-y-3 bg-surface-card border border-surface-border shadow-xs">
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-full avatar-gradient-ring p-[1.5px] shrink-0">
+                              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600 aspect-square">
+                                {comment.author?.avatar_url ? (
+                                  <img
+                                    src={comment.author.avatar_url}
+                                    alt={comment.author.full_name || 'Thành viên'}
+                                    className="w-full h-full object-cover rounded-full"
+                                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                                  />
+                                ) : (
+                                  comment.author?.full_name?.[0]?.toUpperCase() || 'U'
+                                )}
+                              </div>
+                            </div>
+                            <div className="min-w-0">
+                              <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                                {comment.author?.full_name || 'Thành viên'}
+                              </span>
+                              {comment.created_at && (
+                                <span className="text-[11px] text-slate-400 ml-2">
+                                  {new Date(comment.created_at).toLocaleDateString('vi-VN')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {canRemoveRoot && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteComment(comment.id)}
+                              disabled={deleteCommentMutation.isPending}
+                              className="text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 p-1.5 rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
+                              aria-label={'Xóa bình luận #' + comment.id}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Xóa</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <p className="whitespace-pre-wrap break-words text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed pl-0.5">
+                          {comment.content}
+                        </p>
+
+                        {/* Reply trigger button */}
+                        {isAuthenticated && (
+                          <div className="pt-1 border-t border-surface-border/50">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReplyingToId(isReplying ? null : comment.id)
+                                setReplyText('')
+                              }}
+                              className="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950/40 py-1 px-2.5 rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <CornerDownRight className="w-3.5 h-3.5" />
+                              <span>{isReplying ? 'Hủy' : 'Trả lời'}</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Inline Reply Form */}
+                        {isReplying && (
+                          <form onSubmit={(e) => handleReplySubmit(e, comment.id)} className="space-y-2 pt-2 border-t border-surface-border">
+                            <textarea
+                              className="input resize-y text-xs sm:text-sm rounded-xl"
+                              rows={2}
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              placeholder="Viết câu trả lời..."
+                              required
+                            />
+                            <div className="flex justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setReplyingToId(null)}
+                                className="btn-secondary text-xs py-1 px-3 rounded-xl cursor-pointer"
+                              >
+                                Hủy
+                              </button>
+                              <button
+                                type="submit"
+                                disabled={commentMutation.isPending || !replyText.trim()}
+                                className="btn-primary text-xs py-1 px-4 rounded-xl cursor-pointer"
+                              >
+                                Gửi trả lời
+                              </button>
+                            </div>
+                          </form>
+                        )}
+                      </div>
+
+                      {/* Nested Replies */}
+                      {replies.length > 0 && (
+                        <ul className="ml-4 sm:ml-8 space-y-2.5 pl-3 border-l-2 border-emerald-500/20 dark:border-emerald-500/30">
+                          {replies.map((reply) => {
+                            const canRemoveReply = currentUser?.id && (Number(currentUser.id) === Number(reply.user_id) || currentUser.role === 'admin')
+                            return (
+                              <li key={reply.id} className="rounded-2xl p-3.5 space-y-2 bg-surface-muted/50 border border-surface-border shadow-2xs">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="w-7 h-7 rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600 border border-surface-border shrink-0 aspect-square">
+                                      {reply.author?.avatar_url ? (
+                                        <img src={reply.author.avatar_url} alt={reply.author.full_name} className="w-full h-full object-cover" />
+                                      ) : (
+                                        reply.author?.full_name?.[0]?.toUpperCase() || 'U'
+                                      )}
+                                    </div>
+                                    <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                                      {reply.author?.full_name || 'Thành viên'}
+                                    </span>
+                                  </div>
+                                  {canRemoveReply && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteComment(reply.id)}
+                                      disabled={deleteCommentMutation.isPending}
+                                      className="text-xs text-slate-400 hover:text-rose-600 p-1 rounded transition-colors cursor-pointer"
+                                      aria-label={'Xóa câu trả lời #' + reply.id}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap break-words pl-0.5">
+                                  {reply.content}
+                                </p>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </section>
         </div>
 
         {/* ── Right Column: Author Bento, Info & Safety Standards (4 Cols) ── */}
@@ -284,26 +682,25 @@ export default function DocumentDetailPage() {
                 </div>
               </div>
               <div className="min-w-0 flex-1">
-                <Link
-                  to={post.author?.id ? `/profile/${post.author.id}` : '#'}
-                  className="font-bold text-sm sm:text-base text-content hover:text-[#16a34a] dark:hover:text-[#22c55e] transition-colors block truncate"
-                >
-                  {post.author?.full_name || 'Sinh viên'}
-                </Link>
+                {post.author?.id ? (
+                  <Link
+                    to={'/profile/' + post.author.id}
+                    className="font-bold text-sm sm:text-base text-content hover:text-[#16a34a] dark:hover:text-[#22c55e] transition-colors block truncate"
+                  >
+                    {post.author?.full_name || 'Sinh viên'}
+                  </Link>
+                ) : (
+                  <span className="font-bold text-sm sm:text-base text-content block truncate">
+                    {post.author?.full_name || 'Sinh viên'}
+                  </span>
+                )}
                 <p className="text-xs text-content-muted truncate">
                   {post.author?.university && post.author?.major
-                    ? `${post.author.university} · ${post.author.major}`
+                    ? post.author.university + ' · ' + post.author.major
                     : post.author?.university || post.author?.major || 'Tác giả tài liệu'}
                 </p>
               </div>
             </div>
-
-            {/* Follow action (for other users) */}
-            {post.author?.id && (
-              <div className="pt-2 border-t border-surface-border/60">
-                <FollowButton authorId={post.author.id} />
-              </div>
-            )}
           </div>
 
           {/* Safety Standards Card */}

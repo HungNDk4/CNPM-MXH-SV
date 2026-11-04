@@ -58,7 +58,7 @@ const stamp = (value) => {
   })
 }
 
-export function BookmarkButton({ postId, initialBookmarked = false }) {
+function BookmarkButton({ postId, initialBookmarked = false }) {
   const qc = useQueryClient()
   const authenticated = useAuthStore((state) => state.isAuthenticated)
   const [bookmarked, setBookmarked] = useState(Boolean(initialBookmarked))
@@ -77,7 +77,6 @@ export function BookmarkButton({ postId, initialBookmarked = false }) {
       qc.invalidateQueries({ queryKey: ['bookmarks'] })
       qc.invalidateQueries({ queryKey: ['posts'] })
       qc.invalidateQueries({ queryKey: ['post-detail', String(postId)] })
-      qc.invalidateQueries({ queryKey: ['document-detail', String(postId)] })
       toast.success(isSaved ? 'Đã lưu bài viết!' : 'Đã bỏ lưu bài viết.')
     },
     onError: (err) => {
@@ -109,7 +108,7 @@ export function BookmarkButton({ postId, initialBookmarked = false }) {
   )
 }
 
-export function LikeButton({ targetType, targetId, initialLiked = false, initialCount }) {
+function LikeButton({ targetType, targetId, initialLiked = false, initialCount }) {
   const qc = useQueryClient()
   const [liked, setLiked] = useState(typeof initialLiked === 'boolean' ? initialLiked : null)
   const key = ['fe01-likes', targetType, targetId]
@@ -129,21 +128,14 @@ export function LikeButton({ targetType, targetId, initialLiked = false, initial
   })
 
   const toggle = useMutation({
-    mutationFn: async () => {
-      if (!authenticated) {
-        toast.error('Vui lòng đăng nhập để thích.')
-        throw new Error('Unauthenticated')
-      }
-      return (await likeAPI.toggle(targetType, targetId)).data
-    },
+    mutationFn: () => likeAPI.toggle(targetType, targetId),
     onSuccess: (response) => {
-      const isNowLiked = Boolean(response.liked)
+      const isNowLiked = Boolean(response.data.liked)
       setLiked(isNowLiked)
       qc.invalidateQueries({ queryKey: key })
       if (targetType === 'post') {
         qc.invalidateQueries({ queryKey: ['posts'] })
         qc.invalidateQueries({ queryKey: ['post-detail', String(targetId)] })
-        qc.invalidateQueries({ queryKey: ['document-detail', String(targetId)] })
         qc.invalidateQueries({ queryKey: ['post-like-count', targetId] })
       }
     },
@@ -183,7 +175,7 @@ export function LikeButton({ targetType, targetId, initialLiked = false, initial
   )
 }
 
-export function FollowButton({ authorId }) {
+function FollowButton({ authorId }) {
   const qc = useQueryClient()
   const { data: followStats, isLoading } = useQuery({
     queryKey: ['follow-stats', authorId],
@@ -376,7 +368,7 @@ function CommentItem({ comment, user, depth, create, remove }) {
   )
 }
 
-export function Comments({ postId, isDocument = false }) {
+function Comments({ postId }) {
   const qc = useQueryClient()
   const user = useAuthStore((state) => state.user)
   const authenticated = useAuthStore((state) => state.isAuthenticated)
@@ -386,7 +378,7 @@ export function Comments({ postId, isDocument = false }) {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: key,
     queryFn: async () => (await commentAPI.getByPost(postId)).data.data,
-    enabled: Boolean(postId && (authenticated || isDocument)),
+    enabled: Boolean(postId && authenticated),
     retry: false,
   })
 

@@ -13,13 +13,12 @@ import {
   Loader2,
   AlertCircle,
   Calendar,
-  User,
   ShieldCheck,
-  FileCheck,
-  Lock,
   Sparkles,
   DownloadCloud,
+  Eye,
 } from 'lucide-react'
+import { LikeButton, BookmarkButton, FollowButton, Comments } from '@/pages/posts/PostDetailPage'
 
 export default function DocumentDetailPage() {
   const { id } = useParams()
@@ -105,134 +104,210 @@ export default function DocumentDetailPage() {
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* ── Main Document View (8 Cols) ── */}
-        <article className="lg:col-span-8 card p-6 sm:p-8 space-y-6">
-          {/* Header Badges */}
-          <div className="flex justify-between gap-3 items-center flex-wrap">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] border border-[#bbf7d0] dark:border-[#166534]">
-              <FileText className="w-4 h-4 text-emerald-500" />
-              <span>Tài liệu PDF sinh viên</span>
-            </span>
-            <span className="badge-free inline-flex items-center gap-1.5 px-3 py-1 text-xs">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Miễn phí tải</span>
-            </span>
-          </div>
+        {/* ── Left Column: Main Document View & Comments (8 Cols) ── */}
+        <div className="lg:col-span-8 space-y-6">
+          <article className="card p-6 sm:p-8 space-y-6">
+            {/* Header Badges */}
+            <div className="flex justify-between gap-3 items-center flex-wrap">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] border border-[#bbf7d0] dark:border-[#166534]">
+                <FileText className="w-4 h-4 text-emerald-500" />
+                <span>Tài liệu PDF sinh viên</span>
+              </span>
+              <span className="badge-free inline-flex items-center gap-1.5 px-3 py-1 text-xs">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Miễn phí tải</span>
+              </span>
+            </div>
 
-          {/* Title (Heading hook for tests) */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white break-words leading-tight tracking-tight">
-            {post.title}
-          </h1>
+            {/* Title (Heading hook for tests) */}
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white break-words leading-tight tracking-tight">
+              {post.title}
+            </h1>
 
-          {/* Author Card */}
-          <div className="flex items-center gap-3.5 py-4 border-y border-surface-border">
-            <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
-              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600 aspect-square">
-                {post.author?.avatar_url ? (
-                  <img
-                    src={post.author.avatar_url}
-                    alt={post.author.full_name || 'Tác giả'}
-                    className="w-full h-full object-cover rounded-full aspect-square"
-                    onError={(e) => { e.currentTarget.style.display = 'none' }}
-                  />
+            {/* Author Card */}
+            <div className="flex items-center gap-3.5 py-4 border-y border-surface-border">
+              <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
+                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600 aspect-square">
+                  {post.author?.avatar_url ? (
+                    <img
+                      src={post.author.avatar_url}
+                      alt={post.author.full_name || 'Tác giả'}
+                      className="w-full h-full object-cover rounded-full aspect-square"
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  ) : (
+                    post.author?.full_name?.[0]?.toUpperCase() || 'S'
+                  )}
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                {post.author?.id ? (
+                  <Link
+                    to={'/profile/' + post.author.id}
+                    className="font-bold text-slate-900 dark:text-white hover:text-[#16a34a] dark:hover:text-[#22c55e] transition-colors break-words text-sm sm:text-base block truncate"
+                  >
+                    {post.author.full_name || 'Sinh viên'}
+                  </Link>
                 ) : (
-                  post.author?.full_name?.[0]?.toUpperCase() || 'S'
+                  <p className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
+                    {post.author?.full_name || 'Sinh viên'}
+                  </p>
+                )}
+                {post.created_at && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Đăng ngày {new Date(post.created_at).toLocaleDateString('vi-VN')}</span>
+                  </p>
                 )}
               </div>
             </div>
-            <div>
-              <p className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
-                {post.author?.full_name || 'Sinh viên'}
-              </p>
-              {post.created_at && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Đăng ngày {new Date(post.created_at).toLocaleDateString('vi-VN')}</span>
-                </p>
-              )}
-            </div>
-          </div>
 
-          {/* Subject info */}
-          {post.subject && (
-            <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-primary-50/50 dark:bg-primary-950/20 border border-primary-200/50 text-sm font-semibold text-primary-700 dark:text-primary-300">
-              <BookOpen className="w-4 h-4 text-primary-500" />
-              <span>Môn học: <strong className="font-bold">{post.subject}</strong></span>
-            </div>
-          )}
-
-          {/* Content Description */}
-          {post.content && (
-            <div className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
-              {post.content}
-            </div>
-          )}
-
-          {/* Tags */}
-          {Array.isArray(post.tags) && post.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {post.tags.map((tag, idx) => (
-                <span className="text-xs font-mono bg-surface-muted text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full border border-surface-border" key={idx}>
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Download Action Section */}
-          <div className="pt-6 border-t border-surface-border space-y-4">
-            {isAuthenticated ? (
-              <div className="card p-5 bg-surface-card border border-surface-border flex flex-col sm:flex-row items-center justify-between gap-4 shadow-card">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-[#16a34a] dark:bg-[#22c55e] text-white dark:text-[#06110a] flex items-center justify-center shadow-2xs shrink-0">
-                    <DownloadCloud className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-content text-sm">Tài liệu đã sẵn sàng</h4>
-                    <p className="text-xs text-content-muted">File định dạng PDF (tối đa 10 MB)</p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn-primary px-6 py-3 text-sm font-bold rounded-xl inline-flex items-center gap-2 self-stretch sm:self-auto justify-center"
-                  onClick={download}
-                  disabled={downloading}
-                >
-                  {downloading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Đang tải PDF...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      <span>Tải PDF xuống</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            ) : (
-              <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-3">
-                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>Bạn cần đăng nhập tài khoản sinh viên để tải file PDF.</span>
-                </p>
-                <Link to="/login" className="btn-primary text-xs sm:text-sm inline-block">
-                  Đăng nhập để tải
-                </Link>
+            {/* Subject info */}
+            {post.subject && (
+              <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-primary-50/50 dark:bg-primary-950/20 border border-primary-200/50 text-sm font-semibold text-primary-700 dark:text-primary-300">
+                <BookOpen className="w-4 h-4 text-primary-500" />
+                <span>Môn học: <strong className="font-bold">{post.subject}</strong></span>
               </div>
             )}
 
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center sm:text-left">
-              File được kiểm duyệt an toàn, truyền tải qua giao thức riêng tư và không để lộ liên kết công khai.
-            </p>
-          </div>
-        </article>
+            {/* Content Description */}
+            {post.content && (
+              <div className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
+                {post.content}
+              </div>
+            )}
 
-        {/* ── Right Column: Info & Safety Standards (4 Cols) ── */}
-        <aside className="lg:col-span-4 space-y-5">
-          <div className="card p-5 space-y-3.5 bg-gradient-to-b from-surface-card to-surface-muted/50">
+            {/* Tags */}
+            {Array.isArray(post.tags) && post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {post.tags.map((tag, idx) => (
+                  <span className="text-xs font-mono bg-surface-muted text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full border border-surface-border" key={idx}>
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Download Action Section */}
+            <div className="pt-6 border-t border-surface-border space-y-4">
+              {isAuthenticated ? (
+                <div className="card p-5 bg-surface-card border border-surface-border flex flex-col sm:flex-row items-center justify-between gap-4 shadow-card">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-[#16a34a] dark:bg-[#22c55e] text-white dark:text-[#06110a] flex items-center justify-center shadow-2xs shrink-0">
+                      <DownloadCloud className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-content text-sm">Tài liệu đã sẵn sàng</h4>
+                      <p className="text-xs text-content-muted">File định dạng PDF (tối đa 10 MB)</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-primary px-6 py-3 text-sm font-bold rounded-xl inline-flex items-center gap-2 self-stretch sm:self-auto justify-center"
+                    onClick={download}
+                    disabled={downloading}
+                  >
+                    {downloading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Đang tải PDF...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        <span>Tải PDF xuống</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-3">
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>Bạn cần đăng nhập tài khoản sinh viên để tải file PDF.</span>
+                  </p>
+                  <Link to="/login" className="btn-primary text-xs sm:text-sm inline-block">
+                    Đăng nhập để tải
+                  </Link>
+                </div>
+              )}
+
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center sm:text-left">
+                File được kiểm duyệt an toàn, truyền tải qua giao thức riêng tư và không để lộ liên kết công khai.
+              </p>
+            </div>
+
+            {/* Engagement Action Bar */}
+            <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <LikeButton
+                  targetType="post"
+                  targetId={post.id}
+                  initialLiked={post.is_liked}
+                  initialCount={post.like_count}
+                />
+                <BookmarkButton
+                  postId={post.id}
+                  initialBookmarked={post.is_bookmarked}
+                />
+              </div>
+              <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+                <Eye className="w-4 h-4" />
+                <span>{post.view_count ?? 0} lượt xem</span>
+              </span>
+            </div>
+          </article>
+
+          {/* Comments Section */}
+          <Comments postId={post.id} isDocument={true} />
+        </div>
+
+        {/* ── Right Column: Author Bento, Info & Safety Standards (4 Cols) ── */}
+        <aside className="lg:col-span-4 space-y-5 sticky top-20">
+          {/* Author Bento Card */}
+          <div className="card p-5 space-y-4 bg-surface-card border border-surface-border rounded-[20px] shadow-xs">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-content-muted">Tác giả tài liệu</div>
+            <div className="flex items-center gap-3.5">
+              <div className="w-14 h-14 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
+                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71] aspect-square">
+                  {post.author?.avatar_url ? (
+                    <img
+                      src={post.author.avatar_url}
+                      alt={post.author.full_name || 'Tác giả'}
+                      className="w-full h-full object-cover rounded-full aspect-square"
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  ) : (
+                    post.author?.full_name?.[0]?.toUpperCase() || 'U'
+                  )}
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <Link
+                  to={post.author?.id ? `/profile/${post.author.id}` : '#'}
+                  className="font-bold text-sm sm:text-base text-content hover:text-[#16a34a] dark:hover:text-[#22c55e] transition-colors block truncate"
+                >
+                  {post.author?.full_name || 'Sinh viên'}
+                </Link>
+                <p className="text-xs text-content-muted truncate">
+                  {post.author?.university && post.author?.major
+                    ? `${post.author.university} · ${post.author.major}`
+                    : post.author?.university || post.author?.major || 'Tác giả tài liệu'}
+                </p>
+              </div>
+            </div>
+
+            {/* Follow action (for other users) */}
+            {post.author?.id && (
+              <div className="pt-2 border-t border-surface-border/60">
+                <FollowButton authorId={post.author.id} />
+              </div>
+            )}
+          </div>
+
+          {/* Safety Standards Card */}
+          <div className="card p-5 space-y-3.5 bg-gradient-to-b from-surface-card to-surface-muted/50 rounded-[20px] border border-surface-border">
             <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
               <ShieldCheck className="w-5 h-5 text-emerald-500" />
               <span>Tiêu chuẩn bảo mật tài liệu</span>
@@ -244,13 +319,14 @@ export default function DocumentDetailPage() {
             </ul>
           </div>
 
-          <div className="card p-5 space-y-3">
+          {/* Study Suggestions Card */}
+          <div className="card p-5 space-y-3 rounded-[20px] border border-surface-border">
             <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
               <Sparkles className="w-4 h-4 text-amber-500" />
               <span>Gợi ý học tập</span>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Sau khi tham khảo tài liệu, bạn có thể chia sẻ câu hỏi hoặc ghi chú ôn tập lên bảng tin để thảo luận cùng bạn bè.
+              Sau khi tham khảo tài liệu, bạn có thể tham gia bình luận trao đổi bên dưới hoặc chia sẻ ghi chú lên bảng tin để thảo luận cùng bạn bè.
             </p>
           </div>
         </aside>

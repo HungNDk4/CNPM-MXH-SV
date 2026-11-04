@@ -19,6 +19,7 @@ const {
 const { authenticate, optionalAuthenticate, authorize } = require('../middlewares/auth.middleware');
 const { moderatePost, listModerationAuditLogs, listAdminPosts, getAdminPostById } = require('../controllers/moderation.controller');
 const { saveBookmark, removeBookmark, listBookmarks } = require('../controllers/bookmark.controller');
+const { createPostReport } = require('../controllers/report.controller');
 const { createError } = require('../middlewares/error.middleware');
 
 const uploadPostImages = multer({
@@ -71,6 +72,7 @@ router.get('/:id', optionalAuthenticate, getPostById);
 
 // Protected routes
 router.post('/', authenticate, parsePostUpload, createPost);
+router.post('/:id/report', authenticate, createPostReport);
 router.post('/:id/images', authenticate, parsePostUpload, uploadImagesForPost);
 router.put('/:id', authenticate, updatePost);
 router.delete('/:id', authenticate, deletePost);

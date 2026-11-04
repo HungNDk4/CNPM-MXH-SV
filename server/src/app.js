@@ -11,6 +11,7 @@ const postRoutes    = require('./routes/post.routes');
 const documentRoutes = require('./routes/document.routes');
 const commentRoutes = require('./routes/comment.routes');
 const likeRoutes    = require('./routes/like.routes');
+const adminRoutes   = require('./routes/admin.routes');
 
 const { errorHandler } = require('./middlewares/error.middleware');
 
@@ -59,6 +60,11 @@ app.use('/uploads/post-images', express.static(path.join(__dirname, '../uploads/
   index: false,
   maxAge: '1d',
 }));
+app.use('/uploads/avatars', express.static(path.join(__dirname, '../uploads/avatars'), {
+  dotfiles: 'ignore',
+  index: false,
+  maxAge: '7d',
+}));
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -72,6 +78,7 @@ app.use('/api/posts',    postRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/likes',    likeRoutes);
+app.use('/api/admin',    adminRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────
 app.use('*', (req, res) => {

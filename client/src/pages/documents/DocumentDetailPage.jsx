@@ -578,16 +578,15 @@ export default function DocumentDetailPage() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-9 h-9 rounded-full avatar-gradient-ring p-[1.5px] shrink-0">
-                              <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600 aspect-square">
-                                {comment.author?.avatar_url ? (
+                              <div className="relative w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600 aspect-square">
+                                <span>{comment.author?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                                {comment.author?.avatar_url && (
                                   <img
                                     src={comment.author.avatar_url}
-                                    alt={comment.author.full_name || 'Thành viên'}
-                                    className="w-full h-full object-cover rounded-full"
+                                    alt=""
+                                    className="absolute inset-0 w-full h-full object-cover rounded-full"
                                     onError={(e) => { e.currentTarget.style.display = 'none' }}
                                   />
-                                ) : (
-                                  comment.author?.full_name?.[0]?.toUpperCase() || 'U'
                                 )}
                               </div>
                             </div>
@@ -679,11 +678,10 @@ export default function DocumentDetailPage() {
                               <li key={reply.id} className="rounded-2xl p-3.5 space-y-2 bg-surface-muted/50 border border-surface-border shadow-2xs">
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className="w-7 h-7 rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600 border border-surface-border shrink-0 aspect-square">
-                                      {reply.author?.avatar_url ? (
-                                        <img src={reply.author.avatar_url} alt={reply.author.full_name} className="w-full h-full object-cover" />
-                                      ) : (
-                                        reply.author?.full_name?.[0]?.toUpperCase() || 'U'
+                                    <div className="relative w-7 h-7 rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600 border border-surface-border shrink-0 aspect-square">
+                                      <span>{reply.author?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                                      {reply.author?.avatar_url && (
+                                        <img src={reply.author.avatar_url} alt="" className="absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                                       )}
                                     </div>
                                     <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
@@ -726,16 +724,15 @@ export default function DocumentDetailPage() {
             <div className="text-[11px] font-bold uppercase tracking-wider text-content-muted">Tác giả tài liệu</div>
             <div className="flex items-center gap-3.5">
               <div className="w-14 h-14 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
-                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71] aspect-square">
-                  {post.author?.avatar_url ? (
+                <div className="relative w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71] aspect-square">
+                  <span>{post.author?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                  {post.author?.avatar_url && (
                     <img
                       src={post.author.avatar_url}
-                      alt={post.author.full_name || 'Tác giả'}
-                      className="w-full h-full object-cover rounded-full aspect-square"
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover rounded-full aspect-square"
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
-                  ) : (
-                    post.author?.full_name?.[0]?.toUpperCase() || 'U'
                   )}
                 </div>
               </div>

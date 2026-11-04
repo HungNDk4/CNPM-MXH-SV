@@ -89,16 +89,15 @@ function FollowUsersModal({ type, userId, onClose }) {
                 className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-muted transition-colors group"
               >
                 <div className="w-10 h-10 rounded-full avatar-gradient-ring p-[1.5px] shrink-0">
-                  <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600">
-                    {u.avatar_url ? (
+                  <div className="relative w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600">
+                    <span>{u.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                    {u.avatar_url && (
                       <img
                         src={u.avatar_url}
-                        alt={u.full_name}
-                        className="w-full h-full object-cover"
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
                         onError={(e) => { e.currentTarget.style.display = 'none' }}
                       />
-                    ) : (
-                      u.full_name?.[0]?.toUpperCase() || 'U'
                     )}
                   </div>
                 </div>
@@ -550,18 +549,17 @@ export default function ProfilePage() {
                   onClick={() => isOwner && avatarFileInputRef.current?.click()}
                   title={isOwner ? 'Nhấn để đổi ảnh đại diện' : undefined}
                 >
-                  {profile.avatar_url ? (
+                  <span>{initialLetter}</span>
+                  {profile.avatar_url && (
                     <img
                       src={profile.avatar_url}
-                      alt={profile.full_name}
-                      className="w-full h-full object-cover"
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
-                  ) : (
-                    <span>{initialLetter}</span>
                   )}
                   {isOwner && (
-                    <div className="absolute inset-0 rounded-full bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold gap-1">
+                    <div className="absolute inset-0 rounded-full bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold gap-1 z-10">
                       <Camera className="w-5 h-5" />
                       <span>Đổi ảnh</span>
                     </div>

@@ -133,18 +133,18 @@ export default function SidebarDock({ isAuthenticated, user }) {
             aria-label="Hồ sơ cá nhân"
             aria-current={isCurrent('/profile') ? 'page' : undefined}
           >
-            {user?.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={user.full_name || 'Hồ sơ'}
-                className="w-full h-full rounded-full object-cover shadow-2xs"
-              />
-            ) : (
-              <div className="w-full h-full rounded-full bg-[#123D35] dark:bg-[#244B3C] text-white dark:text-[#4ADE80] font-bold text-sm flex items-center justify-center shadow-2xs">
-                {user?.full_name?.[0]?.toUpperCase() || 'U'}
-              </div>
-            )}
-            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#16A34A] dark:bg-[#4ADE80] border-2 border-[#F0F5EF] dark:border-[#17231F]" />
+            <div className="relative w-full h-full rounded-full overflow-hidden bg-[#123D35] dark:bg-[#244B3C] text-white dark:text-[#4ADE80] font-bold text-sm flex items-center justify-center shadow-2xs">
+              <span>{user?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+              {user?.avatar_url && (
+                <img
+                  src={user.avatar_url}
+                  alt=""
+                  className="absolute inset-0 w-full h-full rounded-full object-cover shadow-2xs"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+              )}
+            </div>
+            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#16A34A] dark:bg-[#4ADE80] border-2 border-[#F0F5EF] dark:border-[#17231F] z-10" />
           </Link>
         ) : (
           <Link

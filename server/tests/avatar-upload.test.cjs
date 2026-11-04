@@ -30,6 +30,7 @@ const {
 
 const BASE_URL = 'http://localhost:5000';
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
+const { User } = require('../src/models');
 const studentToken = jwt.sign({ id: 2, role: 'student' }, JWT_ACCESS_SECRET, { expiresIn: '1h' });
 
 // Synthesize structured test buffers
@@ -232,6 +233,7 @@ async function runTests() {
   console.log(`TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log(`====================================================\n`);
 
+  await User.update({ avatar_url: null }, { where: { id: 2 } });
   if (failed > 0) process.exit(1);
 }
 

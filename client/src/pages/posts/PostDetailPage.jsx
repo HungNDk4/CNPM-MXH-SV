@@ -910,16 +910,15 @@ export default function PostDetailPage() {
             <div className="text-[11px] font-bold uppercase tracking-wider text-content-muted">Tác giả bài viết</div>
             <div className="flex items-center gap-3.5">
               <div className="w-14 h-14 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
-                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71] aspect-square">
-                  {post.author?.avatar_url ? (
+                <div className="relative w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71] aspect-square">
+                  <span>{post.author?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                  {post.author?.avatar_url && (
                     <img
                       src={post.author.avatar_url}
-                      alt={post.author.full_name || 'Tác giả'}
-                      className="w-full h-full object-cover rounded-full aspect-square"
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover rounded-full aspect-square"
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
-                  ) : (
-                    post.author?.full_name?.[0]?.toUpperCase() || 'U'
                   )}
                 </div>
               </div>

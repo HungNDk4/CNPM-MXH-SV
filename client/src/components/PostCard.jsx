@@ -263,16 +263,15 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
                 className="block"
                 title={`Xem trang cá nhân ${post.author?.full_name || 'Tác giả'}`}
               >
-                <div className="w-11 h-11 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center overflow-hidden text-sm font-bold text-[#16a34a] dark:text-[#2ECC71] border border-[#e2e7de] dark:border-[#3e4042] shrink-0 aspect-square">
-                  {post.author?.avatar_url ? (
+                <div className="relative w-11 h-11 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center overflow-hidden text-sm font-bold text-[#16a34a] dark:text-[#2ECC71] border border-[#e2e7de] dark:border-[#3e4042] shrink-0 aspect-square">
+                  <span>{post.author?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                  {post.author?.avatar_url && (
                     <img
                       src={post.author.avatar_url}
-                      alt={post.author.full_name || 'Tác giả'}
-                      className="w-full h-full object-cover rounded-full aspect-square"
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover rounded-full aspect-square"
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
-                  ) : (
-                    post.author?.full_name?.[0]?.toUpperCase() || 'U'
                   )}
                 </div>
               </Link>
@@ -554,16 +553,15 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
                 <div key={comment.id} className="relative pl-2.5">
                   {/* Parent Comment Header & Body */}
                   <div className="flex items-start gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-xs font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
-                      {comment.author?.avatar_url ? (
+                    <div className="relative w-8 h-8 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-xs font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
+                      <span>{comment.author?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                      {comment.author?.avatar_url && (
                         <img
                           src={comment.author.avatar_url}
-                          alt={comment.author.full_name}
-                          className="w-full h-full object-cover"
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-cover"
                           onError={(e) => { e.currentTarget.style.display = 'none' }}
                         />
-                      ) : (
-                        comment.author?.full_name?.[0]?.toUpperCase() || 'U'
                       )}
                     </div>
 
@@ -596,16 +594,15 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
                     <div className="ml-5 pl-4 border-l-2 border-[#16a34a]/30 dark:border-[#22c55e]/30 mt-2 space-y-2">
                       {comment.replies.map((reply) => (
                         <div key={reply.id} className="relative flex items-start gap-2 pt-1">
-                          <div className="w-6 h-6 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-[10px] font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
-                            {reply.author?.avatar_url ? (
+                          <div className="relative w-6 h-6 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-[10px] font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
+                            <span>{reply.author?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                            {reply.author?.avatar_url && (
                               <img
                                 src={reply.author.avatar_url}
-                                alt={reply.author.full_name}
-                                className="w-full h-full object-cover"
+                                alt=""
+                                className="absolute inset-0 w-full h-full object-cover"
                                 onError={(e) => { e.currentTarget.style.display = 'none' }}
                               />
-                            ) : (
-                              reply.author?.full_name?.[0]?.toUpperCase() || 'U'
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -671,16 +668,15 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
           {/* Quick Reply Composer Row (Pill Input + Green Submit Button) */}
           <form onSubmit={handleCommentSubmit} className="flex items-center gap-2 pl-3">
             {/* Current User Avatar */}
-            <div className="w-8 h-8 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-xs font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
-              {currentUser?.avatar_url ? (
+            <div className="relative w-8 h-8 rounded-full bg-[#f2f4ef] dark:bg-[#303132] flex items-center justify-center shrink-0 overflow-hidden text-xs font-bold text-[#16a34a] border border-[#e2e7de] dark:border-[#3e4042]">
+              <span>{currentUser?.full_name?.[0]?.toUpperCase() || 'B'}</span>
+              {currentUser?.avatar_url && (
                 <img
                   src={currentUser.avatar_url}
-                  alt={currentUser.full_name || 'Bạn'}
-                  className="w-full h-full object-cover"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
                   onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
-              ) : (
-                currentUser?.full_name?.[0]?.toUpperCase() || 'B'
               )}
             </div>
 

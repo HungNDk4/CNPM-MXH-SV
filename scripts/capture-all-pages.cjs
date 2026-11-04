@@ -169,3 +169,4 @@ run().catch(err => {
   console.error('Fatal error during capture script:', err);
   process.exit(1);
 });
+

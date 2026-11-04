@@ -40,18 +40,15 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
         className="flex items-center gap-2 px-2 py-1 min-h-10 rounded-xl hover:bg-white dark:hover:bg-[#17231F] text-[#123D35] dark:text-white transition-all duration-150 border border-transparent hover:border-[#DCE5DC]/60 dark:hover:border-[#2C3B35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
         aria-label="Menu tài khoản"
       >
-        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 ring-2 ring-emerald-500/30 dark:ring-emerald-400/30 border border-[#16A34A]/40 dark:border-[#4ADE80]/40 shadow-2xs">
-          {user?.avatar_url ? (
+        <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 ring-2 ring-emerald-500/30 dark:ring-emerald-400/30 border border-[#16A34A]/40 dark:border-[#4ADE80]/40 shadow-2xs bg-[#123D35] dark:bg-[#244B3C] text-white dark:text-[#4ADE80] flex items-center justify-center text-xs font-bold">
+          <span>{user?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+          {user?.avatar_url && (
             <img
               src={user.avatar_url}
-              alt={user.full_name || 'Avatar'}
-              className="w-full h-full object-cover"
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
               onError={(e) => { e.currentTarget.style.display = 'none' }}
             />
-          ) : (
-            <div className="w-full h-full bg-[#123D35] dark:bg-[#244B3C] text-white dark:text-[#4ADE80] flex items-center justify-center text-xs font-bold">
-              {user?.full_name?.[0]?.toUpperCase() || 'U'}
-            </div>
           )}
         </div>
         <div className="hidden xl:flex flex-col text-left">

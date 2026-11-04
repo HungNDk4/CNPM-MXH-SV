@@ -312,11 +312,11 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
           <button
             type="button"
             onClick={handleShareClick}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#56614f] dark:text-[#B0B3B8] hover:bg-[#f2f4ef] dark:hover:bg-[#303132] transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#56614f] dark:text-[#B0B3B8] hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all duration-200 active:scale-90 cursor-pointer group"
             title="Sao chép liên kết bài viết"
             aria-label="Chia sẻ liên kết bài viết"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />
           </button>
           {onDelete && (currentUser?.id === (post.author?.id || post.user_id) || currentUser?.role === 'admin') && (
             <button
@@ -477,24 +477,24 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
           type="button"
           onClick={handleLikeClick}
           disabled={likeMutation.isPending}
-          className={`flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-colors hover:bg-[#F2F4EF] dark:hover:bg-[#303132] cursor-pointer ${
+          className={`group flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-all duration-200 cursor-pointer active:scale-95 ${
             isLiked
-              ? 'text-rose-600 dark:text-rose-400'
-              : 'text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
+              ? 'text-rose-600 dark:text-rose-400 bg-rose-50/70 dark:bg-rose-950/40 shadow-2xs font-bold'
+              : 'text-[#56614f] dark:text-[#B0B3B8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/60 dark:hover:bg-rose-950/20'
           }`}
           aria-label={isLiked ? 'Bỏ thích' : 'Thích bài viết'}
         >
-          <Heart className={`w-4 h-4 transition-transform active:scale-125 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+          <Heart className={`w-4 h-4 transition-all duration-200 group-hover:scale-115 active:scale-125 ${isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'group-hover:text-rose-500'}`} />
           <span>Thích</span>
         </button>
 
         {/* Comment Button (Links directly to post discussion page) */}
         <Link
           to={postUrl}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-colors hover:bg-[#F2F4EF] dark:hover:bg-[#303132] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white cursor-pointer"
+          className="group flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-all duration-200 text-[#56614f] dark:text-[#B0B3B8] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/60 dark:hover:bg-blue-950/20 active:scale-95 cursor-pointer"
           aria-label="Xem bình luận"
         >
-          <MessageSquare className="w-4 h-4" />
+          <MessageSquare className="w-4 h-4 transition-transform duration-200 group-hover:scale-115 group-hover:text-blue-500" />
           <span>Bình luận</span>
         </Link>
 
@@ -503,17 +503,17 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
           type="button"
           onClick={handleBookmarkClick}
           disabled={bookmarkMutation.isPending}
-          className={`flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-colors hover:bg-[#F2F4EF] dark:hover:bg-[#303132] cursor-pointer ${
+          className={`group flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] sm:text-[14px] font-semibold transition-all duration-200 cursor-pointer active:scale-95 ${
             isBookmarked
-              ? 'text-amber-600 dark:text-amber-400'
-              : 'text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
+              ? 'text-amber-600 dark:text-amber-400 bg-amber-50/70 dark:bg-amber-950/40 shadow-2xs font-bold'
+              : 'text-[#56614f] dark:text-[#B0B3B8] hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50/60 dark:hover:bg-amber-950/20'
           }`}
           aria-label={isBookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
         >
           {isBookmarked ? (
-            <BookmarkCheck className="w-4 h-4 fill-amber-500 text-amber-600" aria-hidden="true" />
+            <BookmarkCheck className="w-4 h-4 fill-amber-500 text-amber-600 transition-transform duration-200 group-hover:scale-115" aria-hidden="true" />
           ) : (
-            <Bookmark className="w-4 h-4" aria-hidden="true" />
+            <Bookmark className="w-4 h-4 transition-transform duration-200 group-hover:scale-115 group-hover:text-amber-500" aria-hidden="true" />
           )}
           <span>{isBookmarked ? 'Bỏ lưu' : 'Lưu'}</span>
         </button>

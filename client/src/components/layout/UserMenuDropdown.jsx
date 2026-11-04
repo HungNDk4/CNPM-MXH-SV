@@ -40,7 +40,7 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
         className="flex items-center gap-2 px-2 py-1 min-h-10 rounded-xl hover:bg-white dark:hover:bg-[#17231F] text-[#123D35] dark:text-white transition-all duration-150 border border-transparent hover:border-[#DCE5DC]/60 dark:hover:border-[#2C3B35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
         aria-label="Menu tài khoản"
       >
-        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-[#16A34A]/40 dark:border-[#4ADE80]/40 shadow-2xs">
+        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 ring-2 ring-emerald-500/30 dark:ring-emerald-400/30 border border-[#16A34A]/40 dark:border-[#4ADE80]/40 shadow-2xs">
           {user?.avatar_url ? (
             <img
               src={user.avatar_url}
@@ -132,13 +132,17 @@ export default function UserMenuDropdown({ user, theme, toggleTheme, onLogout })
             <button
               type="button"
               onClick={toggleTheme}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-content hover:bg-surface-muted transition-colors font-medium text-left cursor-pointer"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-content hover:bg-surface-muted transition-colors font-medium text-left cursor-pointer group active:scale-[0.99]"
             >
               <span className="flex items-center gap-2.5">
-                {theme === 'dark' ? <Sun className="w-4 h-4 text-[#2ECC71]" /> : <Moon className="w-4 h-4 text-[#56614f]" />}
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4 text-[#2ECC71] group-hover:rotate-90 transition-transform duration-300" />
+                ) : (
+                  <Moon className="w-4 h-4 text-[#56614f] group-hover:-rotate-45 transition-transform duration-300" />
+                )}
                 <span>Giao diện {theme === 'dark' ? 'Tối' : 'Sáng'}</span>
               </span>
-              <span className="text-[10px] font-bold text-content-muted bg-surface-muted px-2 py-0.5 rounded-md border border-surface-border">
+              <span className="text-[10px] font-bold text-content-muted bg-surface-muted px-2 py-0.5 rounded-md border border-surface-border group-hover:border-primary-500/40 transition-colors">
                 {theme === 'dark' ? 'Dark' : 'Light'}
               </span>
             </button>

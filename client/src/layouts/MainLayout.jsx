@@ -179,12 +179,12 @@ export default function MainLayout() {
                   onClick={toggleTheme}
                   aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
                   title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
-                  className="w-9 h-9 hidden sm:flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-[#F0F5EF] dark:hover:bg-[#1E2E28] rounded-xl transition-all cursor-pointer border border-[#DCE5DC] dark:border-[#2C3B35]"
+                  className="w-9 h-9 hidden sm:flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-[#F0F5EF] dark:hover:bg-[#1E2E28] rounded-xl transition-all cursor-pointer border border-[#DCE5DC] dark:border-[#2C3B35] group active:scale-95"
                 >
                   {theme === 'dark' ? (
-                    <Sun className="w-4.5 h-4.5 text-[#FFD45C]" aria-hidden="true" />
+                    <Sun className="w-4.5 h-4.5 text-[#FFD45C] group-hover:rotate-90 transition-transform duration-300" aria-hidden="true" />
                   ) : (
-                    <Moon className="w-4.5 h-4.5 text-[#52675A]" aria-hidden="true" />
+                    <Moon className="w-4.5 h-4.5 text-[#52675A] group-hover:-rotate-45 transition-transform duration-300" aria-hidden="true" />
                   )}
                 </button>
                 <Link
@@ -203,6 +203,8 @@ export default function MainLayout() {
             )}
           </div>
         </div>
+        {/* Subtle Brand Identity Gradient Accent Line (OwlMate Signature) */}
+        <div className="h-[2px] w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500 opacity-80" />
       </header>
 
       {/* ── Main App Body (with Slim Dock on Left) ── */}

@@ -102,10 +102,11 @@ export default function NotificationDropdown() {
         aria-label="Thông báo"
         className="relative w-9 h-9 flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-white dark:hover:bg-[#17231F] rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
       >
-        <Bell className="w-4.5 h-4.5" aria-hidden="true" />
+        <Bell className={`w-4.5 h-4.5 transition-transform duration-200 ${unreadCount > 0 ? 'text-[#16A34A] dark:text-[#4ADE80]' : ''}`} aria-hidden="true" />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 bg-rose-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-xs">
-            {unreadCount > 9 ? '9+' : unreadCount}
+            <span className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-60 pointer-events-none" />
+            <span className="relative z-10">{unreadCount > 9 ? '9+' : unreadCount}</span>
           </span>
         )}
       </button>

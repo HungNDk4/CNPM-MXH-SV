@@ -91,17 +91,17 @@ function BookmarkButton({ postId, initialBookmarked = false }) {
       type="button"
       onClick={() => toggle.mutate()}
       disabled={toggle.isPending}
-      className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm flex items-center gap-2 rounded-xl transition-all cursor-pointer ${
+      className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer group active:scale-95 ${
         bookmarked
-          ? 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40'
-          : ''
+          ? 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 shadow-2xs font-semibold'
+          : 'text-slate-700 dark:text-slate-200 hover:text-amber-600 hover:bg-amber-50/50 dark:hover:bg-amber-950/20'
       }`}
       aria-label={bookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
     >
       {bookmarked ? (
-        <BookmarkCheck className="w-4 h-4 text-amber-600 dark:text-amber-400 fill-amber-500" aria-hidden="true" />
+        <BookmarkCheck className="w-4 h-4 text-amber-600 dark:text-amber-400 fill-amber-500 transition-transform duration-200 group-hover:scale-115" aria-hidden="true" />
       ) : (
-        <Bookmark className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+        <Bookmark className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-amber-500 transition-transform duration-200 group-hover:scale-115" aria-hidden="true" />
       )}
       <span>{toggle.isPending ? 'Đang lưu...' : bookmarked ? 'Đã lưu' : 'Lưu bài'}</span>
     </button>
@@ -149,10 +149,10 @@ function LikeButton({ targetType, targetId, initialLiked = false, initialCount }
     <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm">
       <button
         type="button"
-        className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 rounded-xl transition-all cursor-pointer ${
+        className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer group active:scale-95 ${
           liked
-            ? 'text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40'
-            : 'text-slate-700 dark:text-slate-200 hover:text-rose-600'
+            ? 'text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 shadow-2xs font-semibold'
+            : 'text-slate-700 dark:text-slate-200 hover:text-rose-600 hover:bg-rose-50/50 dark:hover:bg-rose-950/20'
         }`}
         aria-label={'Thích hoặc bỏ thích ' + item}
         aria-pressed={liked === null ? 'mixed' : liked}
@@ -161,8 +161,8 @@ function LikeButton({ targetType, targetId, initialLiked = false, initialCount }
         disabled={toggle.isPending}
       >
         <Heart
-          className={`w-4 h-4 transition-transform active:scale-125 ${
-            liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400'
+          className={`w-4 h-4 transition-transform duration-200 group-hover:scale-115 active:scale-125 ${
+            liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400 group-hover:text-rose-500'
           }`}
           aria-hidden="true"
         />

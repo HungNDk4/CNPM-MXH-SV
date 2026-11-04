@@ -739,7 +739,7 @@ export default function ProfilePage() {
               <strong className="text-[#06110a] dark:text-white font-bold tabular-nums">
                 {followStats?.followers ?? 0}
               </strong>
-              <span>người theo dõi</span>
+              <span>Người theo dõi</span>
             </button>
             <span className="text-[#dce2d9] dark:text-[#3e4042]">·</span>
             <button
@@ -752,7 +752,7 @@ export default function ProfilePage() {
               <strong className="text-[#06110a] dark:text-white font-bold tabular-nums">
                 {followStats?.following ?? 0}
               </strong>
-              <span>đang theo dõi</span>
+              <span>Đang theo dõi</span>
             </button>
           </div>
         </div>

@@ -228,6 +228,13 @@ CREATE TABLE IF NOT EXISTS notifications (
 ) ENGINE=InnoDB;
 
 -- ----------------------------------------------------------------
+-- Seed: Admin user mặc định (password: Admin@123)
+-- ----------------------------------------------------------------
+INSERT INTO users (full_name, email, password_hash, role)
+VALUES ('Administrator', 'admin@studynet.vn',
+        '$2b$12$examplehashplaceholder000000000000000000000', 'admin');
+
+-- ----------------------------------------------------------------
 -- 12. POST REPORTS & MODERATION QUEUE
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS post_reports (
@@ -244,10 +251,3 @@ CREATE TABLE IF NOT EXISTS post_reports (
   UNIQUE KEY uq_post_reports_reporter_post (reporter_id, post_id),
   INDEX idx_post_reports_status_created (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------------------------------------------
--- Seed: Admin user mặc định (password: Admin@123)
--- ----------------------------------------------------------------
-INSERT INTO users (full_name, email, password_hash, role)
-VALUES ('Administrator', 'admin@studynet.vn',
-        '$2b$12$examplehashplaceholder000000000000000000000', 'admin');

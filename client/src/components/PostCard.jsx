@@ -388,9 +388,9 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
                   </span>
                   <span className="text-[11px] text-[#56614f] dark:text-[#B0B3B8]">Bản mới nhất</span>
                 </div>
-                <h4 className="text-sm font-bold text-[#06110a] dark:text-[#E4E6EB] truncate max-w-sm mt-0.5">
+                <p className="text-sm font-bold text-[#06110a] dark:text-[#E4E6EB] truncate max-w-sm mt-0.5">
                   {post.title}
-                </h4>
+                </p>
               </div>
             </div>
 

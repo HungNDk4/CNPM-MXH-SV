@@ -7,6 +7,7 @@ The older rows below preserve historical branch snapshots and **do not** authori
 |---|---|---|---|---|---|---|
 | WT-H17-PLAN-20261110 | Hunny-17 / AI docs support | docs/hunny17-resume-worktree-20261110 | Draft docs PR → integration @ 955bee98c91f | **NO** (GitHub connector only) | REMOTE DOCS / REVIEW | One coherent plan/control update; no runtime or local worktree claim |
 | WT-HND-PR86 | HungNDk4 (existing PR author) | feat/post-management-admin-analytics-20261103 | Open PR #86 → integration; head f8c9625da21 | **UNKNOWN** | OPEN / OWNER LOCK | Mixed client/server/database changes; Hunny-17 review only, do not push or edit |
+| WT-H17-PR88 | Hunny-17 (review fix author); PR #86 original owner remains HungNDk4 | fix/pr86-review-ui-gates-20261110 | **Draft stacked PR #88** → PR #86 branch, head 1f565543b830a17c6e3b5e27cddd3f48a4e56b54 | **NO** (remote only) | REVIEW / CI PENDING | Only three UI files and new read-only cloud preflight note; requires original author to review before integration |
 | WT-H17-UX01 | Hunny-17 (proposed) | **NOT CREATED** | Future issue #80; after #86 disposition | **NO** | BLOCKED | Proposed `fix/ux01-my-posts-api`; no placeholder branch |
 | WT-H17-ADM02 | Hunny-17 (proposed) | **NOT CREATED** | Future issue #79 after contract approval | **NO** | PLANNED | Proposed `feat/adm02-account-moderation-api`; no placeholder branch |
 | WT-H17-CLOUD | Both humans + Hunny-17 (review proposed) | **NOT CREATED** | Issues #75/#78/#32; cloud preflight read-only first | **NO** | BLOCKED | No Render/TiDB operation authorized |
@@ -32,6 +33,23 @@ As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branc
 | WT-CONTRACT | Codex drafts for Human A; Human A + Human B review pending | docs/api-contract-v1-20261021 | Issue #11 docs PR -> integration/team-dev-20261020 at dffe5ae | YES, this session: work/CNPM-MXH-SV; branch/HEAD/status/worktree verified | REVIEW | Dedicated contract branch; doc/mocks/control handoff only, no product changes. Published SHA/PR in Issue #11. Not member B's checkout or proof of approval. |
 
 | WT-E2E01 | AI (QA-03; Human A review) | test/e2e01-fullstack-20261021 | Draft PR #30 → integration/team-dev-20261020 | Canonical remote verified; separate local scratch audit verified | REVIEW | Browser/full-stack test on disposable CI MySQL 8; 12 checkpoints PASS at 31a5467, local teammate worktree unverified, no cloud. |
+
+
+### 2026-11-10 — canonical file edit lock (reviewed scope; do not overwrite existing PRs)
+
+| Scope / exact file groups | Active exclusive writer or lock | Hunny-17 allowed action now | Unlock condition |
+|---|---|---|---|
+| `feat/post-management-admin-analytics-20261103`, PR #86: existing `client/**`, `server/**`, `database/**`, `docs/ops/SESSION_LOG.md` changed in its diff | **HungNDk4**, current PR author | **READ/REVIEW only** on original branch, no direct push or rewrite | Author accepts focused PR #88, preserves history, PR #86 reviewed and merged |
+| `client/src/pages/admin/AdminPostsPage.jsx`, `client/src/pages/settings/SettingsPage.jsx`, `client/src/pages/notifications/NotificationsPage.jsx` review changes | **Hunny-17** on separate Draft stacked PR #88 only | Code only on `fix/pr86-review-ui-gates-20261110`, targeted 3-file remediation | HungNDk4 reviews patch and merges into #86; do not edit parent PR directly |
+| `docs/ops/PR86_REMEDIATION_CLOUD_PREFLIGHT_20261110.md` | Hunny-17, same PR #88 | Read-only GitHub-evidence report, no Render/TiDB write | Attach approved operator evidence in a separate release decision |
+| `docs/ops/HUNNY17_NEXT_WORK_PLAN_20261110.md`, `WORKTREE_REGISTRY.md`, `WORKTREE_PLAYBOOK.md`, `TASK_BOARD.md`, `CURRENT_STATE.md`, `SESSION_LOG.md` | **Hunny-17** on Draft PR #87; `SESSION_LOG.md` shared with #86 | Docs updates on PR #87 only; **append** history and retain both branches' entries during merge | Two human reviewers approve, explicit merge order; never overwrite existing log |
+| `server/src/controllers/post.controller.js`, `server/src/routes/post.routes.js`, `server/src/models/index.js` / related backend for BE-11 | **LOCKED by open PR #86** | Do not create/push BE-11 code branch; prepare API contract for Issue #80 only | #86 patch reviewed and integrated; recheck exact source SHA before branch |
+| `server/src/app.js`, `server/src/routes/admin.routes.js`, `server/src/models/index.js`, auth/session/models for ADM-02 | **LOCKED by open PR #86** | Design Issue #79, **do not** mutate these until approved baseline | #86 merge + ADM-02 contract and reviewer approval |
+| `database/schema.sql`, `database/migrations/*` | **LOCKED by PR #86 / cloud operator release gates** | No unilateral migration, schema update, destructive SQL or TiDB write | Separate migration review, backup, operator acceptance |
+| `.github/workflows/ci.yml`, shared `client/src/services/api.js` | **Single editor by each PR handoff** | Review only until author/coordinator confirms exclusive editor | Explicit file handoff + CI in same approved PR |
+| Render/TiDB/Vercel Blob live configuration and datasets | **Authorized human cloud operator**, not Git branch owner | Read-only preparation, never tokens/secret disclosure | Explicit workspace, read-only access, schema/backup and release approval |
+
+**Authority boundaries:** user direction confirms Hunny-17's role and these no-overlap locks for this workflow, but does **not** count as HungNDk4 accepting #88 or as independent human PR sign-off. A remote branch is not a physical worktree; all local paths/dirty statuses are UNKNOWN until checked on the owner's machine. No placeholder implementation branch while source lock is active.
 
 ## Fields required when confirming a real local worktree
 - Worktree ID, owner, machine alias (optional), **local path** (relative/sanitized), branch, base/head SHA, current PR, lock/dirty status, timestamp checked.

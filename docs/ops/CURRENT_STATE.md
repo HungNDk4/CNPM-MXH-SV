@@ -1,4 +1,14 @@
 # CURRENT STATE — Read this before taking action
+## 2026-11-10 — QA-06 execution checkpoint (most recent, before earlier notes)
+
+- **Original PR #86:** HungNDk4, open/unmerged at `f8c9625da21a9ba28bc444e2740901f1cd1176bc`, source audit with eight findings on [review comment](https://github.com/HungNDk4/CNPM-MXH-SV/pull/86#issuecomment-6747782694). 9/9 Actions PASS but not new targeted suite/cloud acceptance.
+- **Focused fix Draft PR #88:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/88, stacked *on PR #86 branch*, separate branch `fix/pr86-review-ui-gates-20261110` at `1f565543b830a17c6e3b5e27cddd3f48a4e56b54`. Three Frontend fix files + read-only cloud preflight note. Do **not** push to PR #86 directly or merge without HungNDk4 approval.
+- **PR #87:** docs/worktree control remains Draft. Exact previous HEAD 42b24aa GitHub Actions 9/9 SUCCESS. Further docs updates need new exact-HEAD CI before approval.
+- **File ownership:** see [WORKTREE_REGISTRY.md](WORKTREE_REGISTRY.md) 2026-11-10 file lock matrix. Current PR #86 shared files are locked; BE-11 issue #80 and ADM-02 issue #79 are **not yet authorized to start coding** on overlapping paths.
+- **Cloud:** [PR #88 read-only gate](PR86_REMEDIATION_CLOUD_PREFLIGHT_20261110.md) is proposed in the stacked PR (not integrated into this docs base). Render/TiDB live access, schema, backup and deployed SHA **NOT VERIFIED**; no SQL/deploy.
+- **Local worktrees:** no person-specific physical worktree seen; remote only.
+- **NEXT_SESSION_ACTIONS:** check #88 exact-HEAD CI and get HungNDk4 review/merge into #86; then review #86 full scope, migrate docs history without clobbering, and only after locked file release begin BE-11/ADM-02 implementation on fresh single-task branch.
+
 ## 2026-11-10 — ACTIVE CHECKPOINT (overrides stale historical snapshots below)
 
 - **Plan:** [HUNNY17_NEXT_WORK_PLAN_20261110.md](HUNNY17_NEXT_WORK_PLAN_20261110.md); continuation task statuses in [TASK_BOARD.md](TASK_BOARD.md) under 2026-11-10. This is a docs-only proposed handoff, not feature approval.

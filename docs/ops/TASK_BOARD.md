@@ -1,6 +1,21 @@
 # TASK BOARD — canonical status and ownership
 Baseline 2026-10-17 · status states: `TODO | IN_PROGRESS | BLOCKED | REVIEW | DONE | DEFERRED`.
 **This is the only canonical status table.** A phase gate does not become PASS just because associated documents exist.
+
+## 2026-11-10 — Hunny-17 continuation lanes (current scoped plan; earlier rows below are historical unless re-verified)
+
+**Source:** [HUNNY17_NEXT_WORK_PLAN_20261110.md](HUNNY17_NEXT_WORK_PLAN_20261110.md). Hunny-17 accepted Core Backend *role*; these planned task IDs do not imply code implementation, new branches or teammate acceptance. PR #86 still belongs to HungNDk4, is open at `f8c9625da21`; `main` is not the development baseline. Statuses are as of GitHub source inspection on 2026-11-10; re-fetch before action.
+
+| Task ID | Priority | Scope / acceptance summary | Owner (proposed) | Status | Dependency | Evidence / PR |
+|---|---|---|---|---|---|---|
+| OPS-08 | P0 | Harmonize continuation plan, logical branch/worktree and file boundaries (docs only) | Hunny-17 + AI docs; reviewer pending | REVIEW | Integration base SHA verified | Docs branch `docs/hunny17-resume-worktree-20261110`; local worktree NOT VERIFIED |
+| QA-06 | P0 | Independent source/security/API/DB review of unmerged #86; identify exact tests/migration/overlap | Hunny-17 reviewer proposed; #86 author HungNDk4 | TODO | PR #86 stays owned by its author | #86 current HEAD `f8c9625`, last CI success not full release signoff |
+| OPS-09 | P0 | Cloud schema preflight, backup, release acceptance for #75/#78/#32 (no automatic deploy) | Both humans + Hunny-17 Core Backend proposed | BLOCKED | Render/TiDB access, human approval, release candidate | PR #85 already integration-merged; cloud migration/smoke NOT VERIFIED |
+| BE-11 | P1 | UX-01 owner-only paginated My Posts contract and tests, no duplicate My Stats | Hunny-17 Core Backend proposed | BLOCKED | Review #86, approved API/UI ownership | Issue #80; #86 owns related Post/UI changes |
+| QA-07 | P1 | COM-01 #81 post-report transaction and authorization acceptance, not duplicate implementation | Hunny-17 Core Backend review proposed | BLOCKED | Disposition of #86 and scoped DB/browser tests | #86 contains Report model/routes/UI/tests; NOT merged |
+| BE-12 | P1 | ADM-02 #79 safe account list/lock/unlock, audit, session invalidation | Hunny-17 Core Backend proposed | TODO | G0/G1 file locks and API/schema contract approval | Issue #79; no dedicated implementation PR verified |
+| DOCS-04 | P1 | Reconcile stale #15–18/old drafts, report traceability and final handoff | Two humans (ownership pending) | TODO | Approved merged baseline and release evidence | No closing action performed |
+
 Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend at role level**; `Human B` = other teammate, **Frontend + Analysis/Design proposed and pending own acceptance of task scope**; `AI` = assistant executing only on explicitly allowed branches. Existing `Owner (proposed)` column is older planning data, **NOT task acceptance** and is not auto-changed by role selection. Exact package mapping in `docs/CORE_BACKEND_TEAM_HANDOFF_20261020.md`. `UNASSIGNED` means not accepted.
 
 | Task ID | Priority | Scope / acceptance summary | Owner (proposed) | Status | Dependency | Evidence / PR |

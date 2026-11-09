@@ -342,3 +342,14 @@ Entries are appended at the bottom in chronological order (oldest first). Do not
 **Verification:**
 - `cd client && npm run build`: **PASS** (4.64s, 2096 modules, 0 errors).
 - `node scripts/check-project-control.mjs`: **PASS** (51 task rows validated).
+
+## SESSION-20261110-H17-OPS08 — Continuation plan and remote-only worktree agreement
+
+**Actor:** AI via authorized GitHub connector at user's request. **Task:** OPS-08. **State:** docs drafted/pushed for human review, not human-approved implementation.
+**Verified baseline:** `main` `0993a42154fe` (untouched); `integration/team-dev-20261020` `955bee98c91f`; PR #86 by HungNDk4 OPEN `f8c9625da21` (do not edit).
+**Docs-only branch:** `docs/hunny17-resume-worktree-20261110`, based on exact integration SHA above; single coherent commit, Draft PR to integration (see branch/PR HEAD for exact commit).
+**Files:** HUNNY17_NEXT_WORK_PLAN_20261110.md, TASK_BOARD.md, CURRENT_STATE.md, WORKTREE_REGISTRY.md, WORKTREE_PLAYBOOK.md, SESSION_LOG.md. No `client/`, `server/`, `database/`, `.github/` source/config or `.gitignore` changes.
+**Remote source audit:** PR #86 contains report model/routes/UI/migration plus admin/personal-post features; ADM-02 still proposed; #75/#78/#32 cloud release not accepted. Plan avoids duplicate report implementation and shared file writes.
+**Worktree:** **LOCAL WORKTREE NOT CREATED/NOT INSPECTED**; only logical remote branch recorded. No local reset/clean/prune, no other branch modified.
+**Tests:** no runtime, DB, Chromium or cloud tests performed for this docs change. Static control integrity and GitHub CI status should be verified on exact new PR SHA after publishing; until confirmed, `NOT RUN`. Human review `PENDING`.
+**Next:** review docs/ownership, then QA-06 inspect #86 source/security/schema/targeted tests; cloud preflight separately read-only after access authorization.

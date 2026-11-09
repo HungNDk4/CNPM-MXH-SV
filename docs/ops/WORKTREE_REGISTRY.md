@@ -1,4 +1,16 @@
 # WORKTREE REGISTRY — branch ownership, not proof of local folders
+## Active 2026-11-10 logical ownership (remote-only, no local worktree confirmed)
+
+The older rows below preserve historical branch snapshots and **do not** authorize new writes. Source baseline `integration/team-dev-20261020` @ `955bee98c91f` is shared/read-only for new task branches; `main` is stale. See [HUNNY17_NEXT_WORK_PLAN_20261110.md](HUNNY17_NEXT_WORK_PLAN_20261110.md) and [WORKTREE_PLAYBOOK.md](WORKTREE_PLAYBOOK.md).
+
+| Worktree ID | Owner | Branch | PR / base | Local path verified? | State | Notes |
+|---|---|---|---|---|---|---|
+| WT-H17-PLAN-20261110 | Hunny-17 / AI docs support | docs/hunny17-resume-worktree-20261110 | Draft docs PR → integration @ 955bee98c91f | **NO** (GitHub connector only) | REMOTE DOCS / REVIEW | One coherent plan/control update; no runtime or local worktree claim |
+| WT-HND-PR86 | HungNDk4 (existing PR author) | feat/post-management-admin-analytics-20261103 | Open PR #86 → integration; head f8c9625da21 | **UNKNOWN** | OPEN / OWNER LOCK | Mixed client/server/database changes; Hunny-17 review only, do not push or edit |
+| WT-H17-UX01 | Hunny-17 (proposed) | **NOT CREATED** | Future issue #80; after #86 disposition | **NO** | BLOCKED | Proposed `fix/ux01-my-posts-api`; no placeholder branch |
+| WT-H17-ADM02 | Hunny-17 (proposed) | **NOT CREATED** | Future issue #79 after contract approval | **NO** | PLANNED | Proposed `feat/adm02-account-moderation-api`; no placeholder branch |
+| WT-H17-CLOUD | Both humans + Hunny-17 (review proposed) | **NOT CREATED** | Issues #75/#78/#32; cloud preflight read-only first | **NO** | BLOCKED | No Render/TiDB operation authorized |
+
 As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branch is not a physically created worktree on either member's PC.
 
 | Worktree ID | Owner | Branch | PR / base | Local path verified? | State | Notes |

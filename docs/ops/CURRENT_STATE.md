@@ -1,4 +1,13 @@
 # CURRENT STATE — Read this before taking action
+## 2026-11-10 — ACTIVE CHECKPOINT (overrides stale historical snapshots below)
+
+- **Plan:** [HUNNY17_NEXT_WORK_PLAN_20261110.md](HUNNY17_NEXT_WORK_PLAN_20261110.md); continuation task statuses in [TASK_BOARD.md](TASK_BOARD.md) under 2026-11-10. This is a docs-only proposed handoff, not feature approval.
+- **GitHub source-of-truth as inspected:** `main` = `0993a42154fe` (old); `integration/team-dev-20261020` = `955bee98c91f` (merged #77/#82/#84/#85). HungNDk4 PR #86 remains OPEN, unmerged, at `f8c9625da21`; do not touch its branch or merge automatically.
+- **Immediate next work:** OPS-08 docs review → QA-06 PR #86 source/CI/DB/security review. OPS-09 cloud preflight independently BLOCKED on Render/TiDB, backup and human deployment approval. BE-11/QA-07 depend on #86 disposition; BE-12 needs own frozen backend contract.
+- **Local environment:** **NO local worktree inspected or created here**; GitHub-only docs branch is remote, path unknown. Never delete or reset teammate worktrees. Follow [WORKTREE_PLAYBOOK.md](WORKTREE_PLAYBOOK.md) and [WORKTREE_REGISTRY.md](WORKTREE_REGISTRY.md).
+- **No source/runtime effect:** no `client/`, `server/`, `database/`, CI workflow, `.gitignore`, Render, TiDB or `main` modifications in this docs package. Test and cloud execution = **NOT RUN** for this plan. Exact PR CI result must be checked after publication.
+- **NEXT_SESSION_ACTIONS:** fetch latest branches/PRs/CI, verify selected task ownership, review #86 without editing its branch; only then propose task-specific branch/worktree and tests. Older 2026-10-17/21 status blocks are audit history, not current verdict.
+
 ## 2026-10-21 E2E-01 — latest GitHub verification (read first)
 
 - Integration baseline `integration/team-dev-20261020` confirmed at `7bbe302623191d5f28e967424ae529df307a13e7`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. On integration, PDF security/API/React PRs #20/#21/#23/#24/#25/#26/#27/#29 have been merged; historical older rows/paragraphs below are not current source assertions.

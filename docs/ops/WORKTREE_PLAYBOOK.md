@@ -1,4 +1,27 @@
 # Git Worktree Playbook — Windows / GitHub Desktop / AI
+## ACTIVE RULES — 2026-11-10 (supersede old examples that base new work on main)
+
+1. `integration/team-dev-20261020` (verified `955bee98c91f`) is the reviewed **remote source baseline**, **not** a writable feature worktree. `main` still at `0993a421`, so older instructions below using `origin/main` must **not** be used for new November tasks until main catches up via approved team integration.
+2. **Do not create another clone or worktree per chat.** Reuse existing clean task worktree; create at most one new *sibling* directory per accepted task and unique branch, after checking its status and ownership. No physical worktree has been verified by this GitHub-only plan.
+3. Before a new code branch, check open PR #86 (`feat/post-management-admin-analytics-20261103`, owned by HungNDk4) for overlapping `server/`, `database/`, `client/src/services/api.js`, `server/src/app.js`, tests and schema. Lock shared files to exactly one editor and establish merge order. Code review is read-only until approved.
+4. Stage **specific files only**, one cohesive commit per bounded task when practical; tests and doc updates belong in same PR. No `git add .` as default, no duplicate modules/test runners, no file churn solely for aesthetics, no stale notes presented as current evidence.
+5. Do not reset/clean/force-push/delete other worktrees; never run destructive worktree prune/cleanup without checking local status and owner. `node_modules`, builds, uploads, .env, dumps, local screenshots/logs are generated artifacts and must not be committed.
+6. A GitHub-created branch is remote-only. Physical worktree setup must be performed and evidenced separately on the user's PC. Owner, path, dirty status and base SHA enter [WORKTREE_REGISTRY.md](WORKTREE_REGISTRY.md) only after verified.
+
+### Read-only local check (PowerShell)
+
+```powershell
+git fetch origin
+git status --short
+git branch --show-current
+git rev-parse HEAD
+git worktree list --porcelain
+```
+
+Only after task approval, example ADM-02 separate worktree: `git worktree add -b feat/adm02-account-moderation-api ../CNPM-MXH-SV-wt-adm02 origin/integration/team-dev-20261020`. This is a **sample command, not evidence of execution**. If local branch name exists or is checked out elsewhere, STOP rather than force reuse.
+
+See [HUNNY17_NEXT_WORK_PLAN_20261110.md](HUNNY17_NEXT_WORK_PLAN_20261110.md) for source owner matrix, dependency gates and no-trash procedure. Historical instructions below are retained for audit.
+
 **Objective:** one repository, independent local directories and branches for Human A, Human B and AI sessions. A remote branch is NOT a local git worktree. This guide never claims to have created folders on anyone's PC.
 
 ## Concepts

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { adminAPI } from '@/services/api'
 import AdminLayoutNav from '@/components/admin/AdminLayoutNav'
+import Modal from '@/components/common/Modal'
 import Badge from '@/components/common/Badge'
 import {
   Search,
@@ -44,6 +45,8 @@ export default function AdminPostsPage() {
   const [typeFilter, setTypeFilter] = useState('all') // 'all' | 'question' | 'document' | 'discussion'
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
+  const [pendingModeration, setPendingModeration] = useState(null)
+  const [moderationReason, setModerationReason] = useState('')
 
   // Build query params
   const params = useMemo(() => {
@@ -70,8 +73,10 @@ export default function AdminPostsPage() {
 
   // Moderation mutation
   const moderateMutation = useMutation({
-    mutationFn: ({ postId, status }) => adminAPI.moderatePost(postId, status),
-    onSuccess: (res, vars) => {
+    mutationFn: ({ postId, status, reason }) => adminAPI.moderatePost(postId, status, reason),
+    onSuccess: (res) => {
+      setPendingModeration(null)
+      setModerationReason('')
       toast.success(res.data.message || 'Cập nhật trạng thái kiểm duyệt thành công!')
       queryClient.invalidateQueries({ queryKey: ['admin-posts'] })
       queryClient.invalidateQueries({ queryKey: ['admin-overview'] })
@@ -84,14 +89,21 @@ export default function AdminPostsPage() {
   })
 
   const handleModerate = (postId, title, targetStatus) => {
-    const actionName = targetStatus === 'hidden' ? 'ẨN' : 'XÓA'
-    if (
-      window.confirm(
-        `Bạn có chắc chắn muốn ${actionName} bài viết #${postId} ("${title}")?\n\nLưu ý: Hành động này sẽ được ghi vào nhật ký kiểm duyệt.`
-      )
-    ) {
-      moderateMutation.mutate({ postId, status: targetStatus })
-    }
+    setPendingModeration({ postId, title, status: targetStatus })
+    setModerationReason('')
+  }
+
+  const submitModeration = (event) => {
+    event.preventDefault()
+    const reason = moderationReason.trim()
+    if (!pendingModeration || moderateMutation.isPending || reason.length < 5 || reason.length > 500) return
+    moderateMutation.mutate({ ...pendingModeration, reason })
+  }
+
+  const closeModeration = () => {
+    if (moderateMutation.isPending) return
+    setPendingModeration(null)
+    setModerationReason('')
   }
 
   const handleSearchSubmit = (e) => {
@@ -417,6 +429,47 @@ export default function AdminPostsPage() {
           </div>
         )}
       </div>
+      <Modal
+        isOpen={pendingModeration !== null}
+        onClose={closeModeration}
+        title={pendingModeration?.status === 'hidden' ? 'Xác nhận ẩn bài viết' : 'Xác nhận xóa bài viết'}
+        icon={ShieldAlert}
+      >
+        <form onSubmit={submitModeration} className="space-y-4">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Bài viết #{pendingModeration?.postId}: <strong>{pendingModeration?.title}</strong>
+          </p>
+          <div className="space-y-1.5">
+            <label htmlFor="admin-post-moderation-reason" className="block text-sm font-semibold">
+              Lý do kiểm duyệt (5–500 ký tự)
+            </label>
+            <textarea
+              id="admin-post-moderation-reason"
+              value={moderationReason}
+              onChange={(event) => setModerationReason(event.target.value)}
+              maxLength={500}
+              minLength={5}
+              required
+              rows={3}
+              autoFocus
+              disabled={moderateMutation.isPending}
+              className="w-full rounded-xl border border-surface-border bg-surface-card p-3 text-sm text-content"
+              placeholder="Mô tả vi phạm để lưu trong nhật ký kiểm duyệt..."
+            />
+            <p className="text-xs text-content-secondary">{moderationReason.trim().length}/500 ký tự</p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={closeModeration} disabled={moderateMutation.isPending} className="btn-secondary px-4 py-2 text-sm">Hủy</button>
+            <button
+              type="submit"
+              disabled={moderateMutation.isPending || moderationReason.trim().length < 5 || moderationReason.trim().length > 500}
+              className="btn-primary px-4 py-2 text-sm disabled:opacity-50"
+            >
+              {moderateMutation.isPending ? 'Đang kiểm duyệt...' : 'Xác nhận và ghi nhật ký'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }

@@ -54,10 +54,19 @@ export default function NotificationsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState('all')
+  const [page, setPage] = useState(1)
 
-  const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ['notifications-page-list'],
-    queryFn: async () => (await notificationAPI.getAll({ page: 1, limit: 30 })).data.data,
+  const { data: inboxPage, isLoading, isError, refetch } = useQuery({
+    queryKey: ['notifications-page-list', page],
+    queryFn: async () => (await notificationAPI.getAll({ page, limit: 30 })).data,
+    keepPreviousData: true,
+  })
+  const notifications = inboxPage?.data || []
+  const totalPages = Math.max(1, inboxPage?.pagination?.totalPages || 1)
+  const totalNotifications = inboxPage?.pagination?.total ?? notifications.length
+  const { data: unreadResponse } = useQuery({
+    queryKey: ['unread-notifications-count'],
+    queryFn: async () => (await notificationAPI.getUnreadCount()).data,
   })
 
   const markAll = useMutation({
@@ -86,7 +95,7 @@ export default function NotificationsPage() {
     }
   }
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length
+  const unreadCount = unreadResponse?.data?.count ?? notifications.filter((n) => !n.is_read).length
   const filteredNotifications = notifications.filter((n) => {
     if (filter === 'all') return true
     if (filter === 'comment') return n.event_type === 'comment' || n.event_type === 'reply'
@@ -160,6 +169,11 @@ export default function NotificationsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : isError ? (
+          <div className="card p-8 text-center space-y-3">
+            <p className="text-sm text-rose-600 dark:text-rose-400">Không thể tải thông báo.</p>
+            <button type="button" className="btn-secondary px-4 py-2 text-sm" onClick={() => refetch()}>Thử lại</button>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="card text-center py-20 space-y-3">
@@ -246,6 +260,16 @@ export default function NotificationsPage() {
             })}
           </div>
         )}
+        {totalPages > 1 && (
+          <nav aria-label="Phân trang thông báo" className="flex items-center justify-between gap-3 border-t border-surface-border pt-4 text-xs">
+            <span className="text-content-secondary">Trang {page}/{totalPages} · {totalNotifications} thông báo</span>
+            <div className="flex gap-2">
+              <button type="button" className="btn-secondary px-3 py-2" disabled={page <= 1 || isLoading} onClick={() => setPage((p) => Math.max(1, p - 1))}>Trước</button>
+              <button type="button" className="btn-secondary px-3 py-2" disabled={page >= totalPages || isLoading} onClick={() => setPage((p) => p + 1)}>Sau</button>
+            </div>
+          </nav>
+        )}
+        <p className="text-[11px] text-content-secondary">Bộ lọc loại hoạt động và thống kê bên phải áp dụng cho trang hiện tại.</p>
       </div>
 
       {/* ── Right Column: Gamification & Profile Insight Widget ── */}
@@ -269,10 +293,10 @@ export default function NotificationsPage() {
               <Sparkles className="w-7 h-7" />
             </div>
             <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-              {notifications.length} <span className="text-xs font-sans font-semibold text-[#16a34a] dark:text-[#2ECC71]">thông báo</span>
+              {totalNotifications} <span className="text-xs font-sans font-semibold text-[#16a34a] dark:text-[#2ECC71]">thông báo</span>
             </div>
             <p className="text-[11px] text-slate-500 px-4">
-              Tổng số thông báo và hoạt động được đồng bộ về tài khoản của bạn.
+              Tổng số thông báo hiện có; phân loại bên dưới chỉ tính trên trang đang xem.
             </p>
           </div>
 

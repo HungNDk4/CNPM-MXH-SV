@@ -17,7 +17,6 @@ import {
   Sparkles,
   ExternalLink,
   Trash2,
-  Send,
   Sun,
   Moon,
   Globe,
@@ -282,15 +281,6 @@ export default function SettingsPage() {
 
   // FAQ accordion state
   const [expandedFaq, setExpandedFaq] = useState(null)
-  const [feedbackText, setFeedbackText] = useState('')
-
-  const handleSendFeedback = (e) => {
-    e.preventDefault()
-    if (!feedbackText.trim()) return
-    toast.success('Cảm ơn bạn! Phản hồi đã được gửi đến ban quản trị.')
-    setFeedbackText('')
-  }
-
   const setTab = (tab) => {
     setSearchParams({ tab })
   }
@@ -896,29 +886,13 @@ export default function SettingsPage() {
                 <div className="pb-4 border-b border-slate-100 dark:border-[#3E4042]">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Góp ý & Báo lỗi</h2>
                   <p className="text-xs text-slate-500 dark:text-[#B0B3B8] mt-0.5">
-                    Gửi phản hồi trực tiếp để ban quản trị tiếp tục hoàn thiện trải nghiệm học tập
+                    Tình trạng tiếp nhận góp ý trong ứng dụng
                   </p>
                 </div>
 
-                <form onSubmit={handleSendFeedback} className="mt-4 space-y-4">
-                  <textarea
-                    rows={4}
-                    required
-                    value={feedbackText}
-                    onChange={(e) => setFeedbackText(e.target.value)}
-                    placeholder="Mô tả sự cố hoặc ý tưởng cải tiến của bạn..."
-                    className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#3E4042] bg-white dark:bg-[#303132] text-slate-900 dark:text-[#E4E6EB] focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-                  />
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      className="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-2 shadow-sm"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      Gửi góp ý
-                    </button>
-                  </div>
-                </form>
+                <div role="status" className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/40 dark:text-amber-200">
+                  Kênh góp ý đang được hoàn thiện. Hiện tại trang này chưa gửi hoặc lưu phản hồi. Chức năng gửi sẽ chỉ được mở lại sau khi có API và quy trình tiếp nhận thực tế.
+                </div>
               </div>
             </div>
           )}

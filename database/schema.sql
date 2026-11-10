@@ -251,3 +251,16 @@ CREATE TABLE IF NOT EXISTS post_reports (
   UNIQUE KEY uq_post_reports_reporter_post (reporter_id, post_id),
   INDEX idx_post_reports_status_created (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 13. ADM-02 account moderation audit (additive; no destructive FK)
+CREATE TABLE IF NOT EXISTS account_moderation_audit_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  actor_admin_id INT UNSIGNED NOT NULL,
+  target_user_id INT UNSIGNED NOT NULL,
+  previous_active TINYINT(1) NOT NULL,
+  new_active TINYINT(1) NOT NULL,
+  reason VARCHAR(500) NOT NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  INDEX idx_account_audit_recent (created_at, id),
+  INDEX idx_account_audit_target_recent (target_user_id, created_at, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

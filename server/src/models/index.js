@@ -7,6 +7,7 @@ const PostImage     = require('./PostImage');
 const Bookmark      = require('./Bookmark');
 const Follow        = require('./Follow');
 const ModerationAuditLog = require('./ModerationAuditLog');
+const AccountModerationAuditLog = require('./AccountModerationAuditLog');
 const Notification  = require('./Notification');
 const PostReport    = require('./PostReport');
 const { DataTypes } = require('sequelize');
@@ -121,6 +122,7 @@ module.exports = {
   Bookmark,
   Follow,
   ModerationAuditLog,
+  AccountModerationAuditLog,
   Notification,
   PostReport,
 };

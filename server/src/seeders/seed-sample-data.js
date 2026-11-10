@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const { assertDisposableEnvironment, assertDatabaseIdentity } = require('./fe66-disposable-guard');
 // Fail closed BEFORE loading DB models or creating any data.
 const dbName = assertDisposableEnvironment();
-const { sequelize, User, Post, Comment, Like, Follow, Bookmark, Notification, Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog } = require('../models');
+const { sequelize, User, Post, Comment, Like, Follow, Bookmark, Notification, Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog, PostImage } = require('../models');
 const MARKER = '[FE66_DISPOSABLE_FIXTURE_V1]';
 const DEMO_PASSWORD = process.env.FE66_DEMO_PASSWORD;
 if (!DEMO_PASSWORD || DEMO_PASSWORD.length < 12) throw new Error('FE66_DEMO_PASSWORD must be explicitly set (>=12 characters).');
@@ -392,7 +392,7 @@ Bạn nào đã từng tối ưu bài toán này trong thực tế có thể chi
 ];
 
 
-const auxiliaryModels = [Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog];
+const auxiliaryModels = [Order, DocumentAccess, DocumentFile, RefreshToken, ModerationAuditLog, PostImage];
 async function assertNoOtherData(transaction) {
   for (const model of auxiliaryModels) {
     if (await model.count({ transaction }) !== 0) throw new Error('REFUSED: auxiliary table contains non-fixture records: ' + model.tableName);

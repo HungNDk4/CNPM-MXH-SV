@@ -12,6 +12,14 @@ The older rows below preserve historical branch snapshots and **do not** authori
 | WT-H17-ADM02 | Hunny-17 (proposed) | **NOT CREATED** | Future issue #79 after contract approval | **NO** | PLANNED | Proposed `feat/adm02-account-moderation-api`; no placeholder branch |
 | WT-H17-CLOUD | Both humans + Hunny-17 (review proposed) | **NOT CREATED** | Issues #75/#78/#32; cloud preflight read-only first | **NO** | BLOCKED | No Render/TiDB operation authorized |
 
+## 2026-11-10 — ACTIVE ownership after #86/#88 integration (supersedes old locks below)
+
+- PR #88 MERGED into PR #86; PR #86 MERGED into `integration/team-dev-20261020` @ `928928047f8348fc7ad37c1c9feae34147cd9d1e`. Their former PR writer locks are released for **new work only**. Keep historical entries, do not infer physical directory deletion from GitHub.
+- **WT-H17-ADM02**: owner Hunny-17. Remote-only branch `feat/adm02-account-moderation-api-20261110` @ `b79799f066009d186b436eb083c9b9e99eb50ad3`, Draft PR #89 → integration. **Exclusive editing lock**: `server/src/controllers/account-moderation.controller.js`, `server/src/models/AccountModerationAuditLog.js`, `server/src/routes/admin.routes.js`, `server/src/models/index.js`, `database/schema.sql`, `database/migrations/20261110_adm02_account_audit.sql`, `scripts/ubuntu/adm02-account-moderation.test.cjs`, `.github/workflows/ci.yml`, `docs/ADM02_ACCOUNT_MODERATION_RELEASE_GATE.md`. Tests 9/9 GitHub PASS, human review pending.
+- **WT-H17-PLAN-20261110**: remote-only docs PR #87; synchronized with integration by a **two-parent merge commit on its OWN branch only**, retaining both independently appended SESSION_LOG histories. No main/integration commits caused by docs sync.
+- **WT-H17-UX01**: not created. **WT-H17-CLOUD**: not created. TiDB `qa-acceptance` is a *database branch*, not a Git worktree; the operator's SQL user account is independent of Git source ownership.
+- **Physical worktree paths:** NOT INSPECTED / NOT CREATED by this GitHub-only assistant; no local reset/clean/prune/delete. No duplicate repositories or placeholder feature branches.
+
 As of 2026-10-17. This registry lists **logical streams**. A GitHub remote branch is not a physically created worktree on either member's PC.
 
 | Worktree ID | Owner | Branch | PR / base | Local path verified? | State | Notes |

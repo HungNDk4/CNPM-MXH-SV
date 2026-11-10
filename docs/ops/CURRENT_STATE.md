@@ -1,4 +1,12 @@
 # CURRENT STATE — Read this before taking action
+## 2026-11-10 — LATEST CHECKPOINT (overrides earlier historical checkpoints)
+
+- GitHub `integration/team-dev-20261020` = `928928047f8348fc7ad37c1c9feae34147cd9d1e`. PR #88 MERGED into PR #86 on 2026-11-10; PR #86 MERGED into integration. CI on integration exact SHA: 9/9 push and 9/9 PR checks passed. No cloud acceptance implied.
+- Hunny-17 owns Issue #79. ADM-02 implemented on isolated `feat/adm02-account-moderation-api-20261110` @ `b79799f066009d186b436eb083c9b9e99eb50ad3`, **Draft PR #89**; exact-HEAD **9/9 CI PASS**, including isolated MySQL8 ADM-02 lock/unlock/session rollback tests. HungNDk4 was requested as independent reviewer; **human approval PENDING, NOT merged, NOT deployed**.
+- Render DIRECT READ-ONLY: `mini-study-network-dep01-demo` is still linked to `feat/dep01c-render-tidb-blob-poc-20261022`, auto-deploy enabled on that *PoC branch*. Latest live deploy at commit `71499dfd63d21feb019d6144efcadc7ee9232951`, not integration/PR #89. No Render write.
+- TiDB QA based on **operator screenshots only**: Starter `mini-study-network`, `main` shows 12 tables and `moderation_audit_logs.reason VARCHAR(500) NULL`; database branch `qa-acceptance` created and SQL user `hung_qa` granted SELECT/INSERT/UPDATE/DELETE on `mini_study_network`. Hùng's separate-device login/test still **NOT VERIFIED**. No TiDB SQL executed by assistant.
+- Locks: after #86 merge, Hunny-17 now owns **ONLY PR #89 files** (server admin controllers/models/routes, schema/migration, CI and isolated MySQL test); Hùng Frontend remains separate. No physical worktree verified, no force push, no merge, no live DDL. Next: review #89, then #80, #81, QA/cloud operator gates.
+
 ## 2026-11-10 — QA-06 execution checkpoint (most recent, before earlier notes)
 
 - **Original PR #86:** HungNDk4, open/unmerged at `f8c9625da21a9ba28bc444e2740901f1cd1176bc`, source audit with eight findings on [review comment](https://github.com/HungNDk4/CNPM-MXH-SV/pull/86#issuecomment-6747782694). 9/9 Actions PASS but not new targeted suite/cloud acceptance.

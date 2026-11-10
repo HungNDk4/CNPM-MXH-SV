@@ -1,3 +1,5 @@
+> **2026-11-10 live update:** PR #88 and #86 have been merged in order into integration `928928047f83`. BE-12 ADM-02 Issue #79 has source in [Draft PR #89](https://github.com/HungNDk4/CNPM-MXH-SV/pull/89) @ `b79799f066` with **9/9 GitHub CI PASS**, peer review pending. Render is still on PoC `71499dfd`, not integration. The operator has created TiDB QA branch `qa-acceptance` + CRUD SQL user `hung_qa`; second laptop connection pending. Historical text below claiming #86 open or BE-12 no branch describes the plan at creation time, not current truth. No cloud DDL/deploy.
+
 # Hunny-17 — Continuation plan & worktree/codebase agreement (2026-11-10)
 
 Status: **PROPOSED FOR HUMAN REVIEW** (docs/source audit only). Owner at role level: **Hunny-17, Core Backend / Security / DB / API / integration QA**. Other teammate **HungNDk4** currently owns PR #86. No assignment or human approval is inferred from issue authorship. See [TASK_BOARD.md](TASK_BOARD.md) for live lane statuses.

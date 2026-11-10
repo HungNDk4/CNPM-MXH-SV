@@ -16,6 +16,17 @@ Baseline 2026-10-17 · status states: `TODO | IN_PROGRESS | BLOCKED | REVIEW | D
 | BE-12 | P1 | ADM-02 #79 safe account list/lock/unlock, audit, session invalidation | Hunny-17 Core Backend proposed | TODO | G0/G1 file locks and API/schema contract approval | Issue #79; no dedicated implementation PR verified |
 | DOCS-04 | P1 | Reconcile stale #15–18/old drafts, report traceability and final handoff | Two humans (ownership pending) | TODO | Approved merged baseline and release evidence | No closing action performed |
 
+## 2026-11-10 — LIVE TASK BOARD (older rows below are historical)
+
+| ID | Owner | State | Verified evidence / next gate |
+|---|---|---|---|
+| OPS-08 | Hunny-17, independent reviewer HungNDk4 | REVIEW | PR #87 docs updated to post-#86 integration; local worktree NOT VERIFIED |
+| QA-06 / PR #86/#88 | HungNDk4 author, Hunny-17 review-fix | SOURCE MERGED; CLOUD QA PENDING | #88 merged into #86; #86 merged integration @ `928928047f83`; integration CI 18/18 successful (push + PR checks) |
+| BE-12 / ADM-02 #79 | Hunny-17 | REVIEW | Draft [PR #89](https://github.com/HungNDk4/CNPM-MXH-SV/pull/89) @ `b79799f066`; **9/9 CI PASS**; HungNDk4 human review PENDING; no SQL deployed |
+| BE-11 / My Posts #80 | Hunny-17 backend; HungNDk4 frontend | TODO | Dedicated authenticated owner-only pagination, no duplicate my-stats |
+| QA-07 / Report #81 | Both humans | REVIEW PENDING | Source merged in #86; verify new suite and cloud access paths |
+| OPS-09 / Cloud #75/#78/#32 | Human operators | BLOCKED | Render on PoC @ `71499dfd`, QA branch SQL user prepared by user, QA laptop/API/cloud acceptance NOT RUN |
+
 Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend at role level**; `Human B` = other teammate, **Frontend + Analysis/Design proposed and pending own acceptance of task scope**; `AI` = assistant executing only on explicitly allowed branches. Existing `Owner (proposed)` column is older planning data, **NOT task acceptance** and is not auto-changed by role selection. Exact package mapping in `docs/CORE_BACKEND_TEAM_HANDOFF_20261020.md`. `UNASSIGNED` means not accepted.
 
 | Task ID | Priority | Scope / acceptance summary | Owner (proposed) | Status | Dependency | Evidence / PR |

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { adminAPI } from '@/services/api'
+import AdminLayoutNav from '@/components/admin/AdminLayoutNav'
 import { Shield, Zap, Search, RotateCw, ClipboardList, Inbox, ChevronLeft, ChevronRight, ExternalLink, AlertTriangle } from 'lucide-react'
 
 const STATUS_BADGES = {
@@ -92,32 +93,11 @@ export default function AdminAuditPage() {
   const totalPages = pagination?.totalPages || 1
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      {/* ── Campus Pop Admin Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-rose-500/10 border border-indigo-500/20 p-6 md:p-8 backdrop-blur-sm">
-        <div className="absolute -top-10 -right-10 w-44 h-44 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
-              <Shield className="w-3.5 h-3.5" />
-              Bảng điều khiển Quản trị viên
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-3">
-              Quản trị viên — Nhật ký kiểm duyệt (EXT-03)
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 text-sm max-w-2xl">
-              Ghi nhận toàn bộ thao tác ẩn/xóa bài viết vi phạm, bảo toàn tính minh bạch và toàn vẹn của mạng xã hội sinh viên.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-center bg-surface-card px-4 py-2 rounded-2xl border border-surface-border shadow-2xs">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#16a34a] dark:bg-[#22c55e] animate-pulse" />
-            <span className="text-xs font-semibold text-content">
-              Quyền hạn quản trị
-            </span>
-          </div>
-        </div>
-      </div>
+    <div className="max-w-6xl mx-auto space-y-6 pb-12">
+      <AdminLayoutNav
+        title="Quản trị viên — Nhật ký kiểm duyệt"
+        subtitle="Ghi nhận toàn bộ thao tác ẩn/xóa bài viết vi phạm, bảo toàn tính minh bạch và toàn vẹn của mạng xã hội sinh viên."
+      />
 
       <Link className="btn-secondary inline-flex items-center gap-2 text-sm" to="/admin/content">Quản lý danh sách bài viết</Link>
 

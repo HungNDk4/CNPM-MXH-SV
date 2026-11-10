@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { userAPI, postAPI } from '@/services/api'
+import { userAPI, authAPI, postAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import {
@@ -17,15 +17,14 @@ import {
   Sparkles,
   ExternalLink,
   Trash2,
-  Send,
-  Eye,
   Sun,
   Moon,
   Globe,
   GraduationCap,
   BookOpen,
-  Image as ImageIcon,
   Camera,
+  UploadCloud,
+  Loader2,
 } from 'lucide-react'
 
 const FAQ_ITEMS = [
@@ -47,32 +46,6 @@ const FAQ_ITEMS = [
   },
 ]
 
-const PRESET_BANNERS = [
-  {
-    id: 'garden-code',
-    title: 'Khu vườn Công nghệ',
-    url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80',
-    desc: 'Bản mạch xanh lá & công nghệ tối ưu',
-  },
-  {
-    id: 'cozy-library',
-    title: 'Thư viện Yên tĩnh',
-    url: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1200&auto=format&fit=crop&q=80',
-    desc: 'Không gian học tập & nghiên cứu tập trung',
-  },
-  {
-    id: 'cyber-dark',
-    title: 'Kỷ nguyên Lập trình',
-    url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80',
-    desc: 'Matrix xanh dương & mã nguồn số',
-  },
-  {
-    id: 'minimal-nature',
-    title: 'Mầm Xanh Học Thuật',
-    url: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=1200&auto=format&fit=crop&q=80',
-    desc: 'Tươi sáng, năng động và tạo cảm hứng',
-  },
-]
 
 const PRESET_AVATARS = [
   {
@@ -93,7 +66,7 @@ const PRESET_AVATARS = [
   {
     id: 'human-hacker',
     name: 'Chuyên gia IT',
-    url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jack&clothingGraphic=react',
+    url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jack&',
   },
   {
     id: 'human-scholar',
@@ -106,14 +79,17 @@ export default function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'account'
   const { user, updateUser } = useAuthStore()
-  const { isDark, toggleTheme } = useThemeStore()
+  const { theme, isDark, toggleTheme } = useThemeStore()
+  const activeIsDark = theme ? theme === 'dark' : Boolean(isDark)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
-  // Profile data fetch
+
+  // Profile data fetch using real user profile API
   const { data: profileData, isLoading: isProfileLoading } = useQuery({
     queryKey: ['my-profile', user?.id],
     queryFn: async () => {
+      if (!user?.id) return null
       const res = await userAPI.getProfile(user.id)
       return res.data?.data || res.data
     },
@@ -130,10 +106,60 @@ export default function SettingsPage() {
   const [avatarMode, setAvatarMode] = useState('character') // 'character' | 'custom' | 'initials'
   const [avatarPreview, setAvatarPreview] = useState('')
   const [customAvatarInput, setCustomAvatarInput] = useState('')
+  const [pendingAvatarFile, setPendingAvatarFile] = useState(null)
+  const settingsFileInputRef = useRef(null)
 
-  // State for Banner customization
-  const [bannerPreview, setBannerPreview] = useState('')
-  const [customBannerInput, setCustomBannerInput] = useState('')
+  const handleDeviceUploadSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Ảnh đại diện không được vượt quá 2 MB.')
+      return
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Chỉ chấp nhận ảnh định dạng JPG, PNG hoặc WebP.')
+      return
+    }
+
+    if (pendingAvatarFile && avatarPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(avatarPreview)
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    setPendingAvatarFile(file)
+    setAvatarPreview(previewUrl)
+    setAvatarMode('custom')
+  }
+
+  // Upload Avatar mutation for file from device
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file) => {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      return (await userAPI.uploadAvatar(formData)).data
+    },
+    onSuccess: (res) => {
+      const newAvatarUrl = res.data?.avatar_url || res.data?.user?.avatar_url
+      if (pendingAvatarFile && avatarPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(avatarPreview)
+      }
+      setPendingAvatarFile(null)
+      setAvatarPreview(newAvatarUrl)
+      setCustomAvatarInput(newAvatarUrl)
+      updateUser({ avatar_url: newAvatarUrl })
+      queryClient.invalidateQueries({ queryKey: ['my-profile'] })
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      toast.success('Đã lưu ảnh đại diện thành công!')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể tải lên ảnh đại diện.')
+    },
+  })
+
 
   // Sync profile data to form state
   useEffect(() => {
@@ -145,7 +171,6 @@ export default function SettingsPage() {
       const curAvatar = profileData.avatar_url || user?.avatar_url || ''
       setAvatarPreview(curAvatar)
       setCustomAvatarInput(curAvatar)
-      // Banner customization is preview-only; no server field is available.
     }
   }, [profileData, user])
 
@@ -166,6 +191,10 @@ export default function SettingsPage() {
 
   // Save Avatar mutation
   const handleSaveAvatar = (newUrl) => {
+    if (pendingAvatarFile) {
+      uploadAvatarMutation.mutate(pendingAvatarFile)
+      return
+    }
     const finalUrl = newUrl !== undefined ? newUrl : avatarPreview
     updateProfileMutation.mutate(
       { avatar_url: finalUrl },
@@ -226,12 +255,14 @@ export default function SettingsPage() {
     })
   }
 
+
+
   // Posts management query
-  const { data: myPostsData, isLoading: isPostsLoading } = useQuery({
+  const { data: myPostsData = [], isLoading: isPostsLoading } = useQuery({
     queryKey: ['my-posts-management', user?.id],
     queryFn: async () => {
-      const res = await postAPI.getAll({ page: 1, limit: 50 })
-      return (res.data?.data || []).filter((post) => Number(post.user_id) === Number(user.id))
+      const res = await postAPI.getPosts({ author_id: user?.id, limit: 30 })
+      return res.data?.data || []
     },
     enabled: activeTab === 'posts' && !!user?.id,
   })
@@ -250,21 +281,12 @@ export default function SettingsPage() {
 
   // FAQ accordion state
   const [expandedFaq, setExpandedFaq] = useState(null)
-  const [feedbackText, setFeedbackText] = useState('')
-
-  const handleSendFeedback = (e) => {
-    e.preventDefault()
-    if (!feedbackText.trim()) return
-    toast.success('Cảm ơn bạn! Phản hồi đã được gửi đến ban quản trị.')
-    setFeedbackText('')
-  }
-
   const setTab = (tab) => {
     setSearchParams({ tab })
   }
 
   const navItems = [
-    { id: 'account', label: 'Tài khoản', icon: User, desc: 'Ảnh đại diện, ảnh bìa, thông tin & giao diện' },
+    { id: 'account', label: 'Tài khoản', icon: User, desc: 'Ảnh đại diện, thông tin & giao diện' },
     { id: 'security', label: 'Mật khẩu & bảo mật', icon: ShieldCheck, desc: 'Đổi mật khẩu và an toàn tài khoản' },
     { id: 'posts', label: 'Bài đăng & hoạt động', icon: FileEdit, desc: 'Quản lý, chỉnh sửa hoặc gỡ bài viết' },
     { id: 'help', label: 'Trợ giúp & phản hồi', icon: HelpCircle, desc: 'Giải đáp thắc mắc và góp ý' },
@@ -330,14 +352,27 @@ export default function SettingsPage() {
                 <div className="mt-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
                   {/* Live preview */}
                   <div className="flex flex-col items-center">
-                    <div className="relative group">
+                    <input
+                      ref={settingsFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleDeviceUploadSelect}
+                    />
+                    <div
+                      className="relative group cursor-pointer"
+                      onClick={() => settingsFileInputRef.current?.click()}
+                      title="Nhấn để tải ảnh từ thiết bị"
+                    >
                       <img
                         src={avatarPreview || user?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=Felix'}
                         alt="Preview Avatar"
                         className="w-24 h-24 rounded-full border-4 border-slate-100 dark:border-[#3E4042] shadow-sm object-cover bg-slate-100 dark:bg-[#303132]"
+                        onError={(e) => { e.currentTarget.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=Felix' }}
                       />
-                      <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Camera className="w-6 h-6 text-white" />
+                      <div className="absolute inset-0 rounded-full bg-black/35 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-[11px] font-medium">
+                        <Camera className="w-5 h-5 mb-0.5" />
+                        <span>Tải ảnh</span>
                       </div>
                     </div>
                     <span className="text-[11px] text-slate-400 dark:text-[#B0B3B8] mt-2 font-medium">Xem trước</span>
@@ -408,11 +443,36 @@ export default function SettingsPage() {
                     )}
 
                     {avatarMode === 'custom' && (
-                      <div className="space-y-2">
-                        <label className="text-xs font-semibold text-slate-700 dark:text-[#E4E6EB]">
-                          Đường dẫn ảnh đại diện (URL)
-                        </label>
-                        <div className="flex gap-2">
+                      <div className="space-y-3">
+                        <div className="p-3 rounded-xl border border-dashed border-slate-200 dark:border-[#3E4042] bg-slate-50/50 dark:bg-[#1f2021] flex flex-col sm:flex-row items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                              <UploadCloud className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                {pendingAvatarFile ? pendingAvatarFile.name : 'Tải ảnh từ máy tính / điện thoại'}
+                              </p>
+                              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                {pendingAvatarFile
+                                  ? `${(pendingAvatarFile.size / 1024).toFixed(1)} KB • Sẵn sàng lưu`
+                                  : 'Tối đa 2 MB • Định dạng JPG, PNG hoặc WebP'}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => settingsFileInputRef.current?.click()}
+                            className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-[#3E4042] text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-[#2e2f30] transition-colors shrink-0 cursor-pointer"
+                          >
+                            {pendingAvatarFile ? 'Đổi tệp khác' : 'Chọn tệp'}
+                          </button>
+                        </div>
+
+                        <div className="space-y-1.5 pt-1">
+                          <label htmlFor="avatar_url" className="text-xs font-semibold text-slate-700 dark:text-[#E4E6EB] block">
+                            Hoặc liên kết ảnh trực tuyến (HTTPS)
+                          </label>
                           <input
                             id="avatar_url"
                             type="url"
@@ -420,11 +480,12 @@ export default function SettingsPage() {
                             value={customAvatarInput}
                             onChange={(e) => {
                               setCustomAvatarInput(e.target.value)
+                              if (pendingAvatarFile) setPendingAvatarFile(null)
                               if (e.target.value.startsWith('http')) {
                                 setAvatarPreview(e.target.value)
                               }
                             }}
-                            className="flex-1 text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-[#3E4042] bg-white dark:bg-[#303132] text-slate-900 dark:text-[#E4E6EB] focus:outline-none focus:ring-1 focus:ring-primary-500"
+                            className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-[#3E4042] bg-white dark:bg-[#303132] text-slate-900 dark:text-[#E4E6EB] focus:outline-none focus:ring-1 focus:ring-primary-500"
                           />
                         </div>
                       </div>
@@ -440,89 +501,27 @@ export default function SettingsPage() {
                       <button
                         type="button"
                         onClick={() => handleSaveAvatar(avatarPreview)}
-                        disabled={updateProfileMutation.isPending}
-                        className="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                        disabled={updateProfileMutation.isPending || uploadAvatarMutation.isPending}
+                        className="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
                       >
-                        <Check className="w-3.5 h-3.5" />
-                        {updateProfileMutation.isPending ? 'Đang lưu...' : 'Lưu ảnh đại diện'}
+                        {updateProfileMutation.isPending || uploadAvatarMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            Đang lưu...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            Lưu ảnh đại diện
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* PHẦN 2: ẢNH BÌA */}
-              <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200 dark:border-[#3E4042] p-6 shadow-sm">
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#3E4042]">
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Ảnh bìa</h2>
-                    <p className="text-xs text-slate-500 dark:text-[#B0B3B8] mt-0.5">Tỷ lệ khuyến nghị 3:1 (ví dụ 1200 x 400 px)</p>
-                  </div>
-                  <ImageIcon className="w-5 h-5 text-slate-400 dark:text-[#B0B3B8]" />
-                </div>
-
-                {/* Banner preview */}
-                <div className="mt-4 relative rounded-xl overflow-hidden aspect-[3/1] bg-slate-100 dark:bg-[#303132] border border-slate-200 dark:border-[#3E4042]">
-                  {bannerPreview ? (
-                    <img src={bannerPreview} alt="Banner Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 dark:text-[#B0B3B8] p-4 text-center">
-                      <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
-                      <span className="text-xs">Chưa cài đặt ảnh bìa cá nhân</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Banner presets */}
-                <div className="mt-4">
-                  <span className="text-xs font-semibold text-slate-700 dark:text-[#E4E6EB]">Chọn mẫu có sẵn:</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-2">
-                    {PRESET_BANNERS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => {
-                          setBannerPreview(preset.url)
-                          setCustomBannerInput(preset.url)
-                        }}
-                        className={`group relative rounded-lg overflow-hidden border-2 transition-all text-left ${
-                          bannerPreview === preset.url
-                            ? 'border-primary-600 dark:border-[#2ECC71] ring-2 ring-primary-500/20'
-                            : 'border-transparent hover:border-slate-300 dark:hover:border-[#3E4042]'
-                        }`}
-                      >
-                        <img src={preset.url} alt={preset.title} className="w-full h-14 object-cover" />
-                        <div className="p-1.5 bg-slate-50 dark:bg-[#303132]">
-                          <p className="text-[11px] font-bold text-slate-800 dark:text-[#E4E6EB] truncate">{preset.title}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Custom banner URL */}
-                <div className="mt-4 space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-[#E4E6EB]">Hoặc dán URL ảnh bìa tùy chọn:</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={customBannerInput}
-                    onChange={(e) => {
-                      setCustomBannerInput(e.target.value)
-                      if (e.target.value.startsWith('http')) {
-                        setBannerPreview(e.target.value)
-                      }
-                    }}
-                    className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-[#3E4042] bg-white dark:bg-[#303132] text-slate-900 dark:text-[#E4E6EB] focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-
-                <div className="flex justify-end pt-4">
-                  <p role="note" className="text-xs text-slate-500 dark:text-[#B0B3B8]">Ảnh bìa chỉ xem trước trong phiên này; chưa hỗ trợ lưu lên máy chủ.</p>
-                </div>
-              </div>
-
-              {/* PHẦN 3: THÔNG TIN HỒ SƠ */}
+              {/* PHẦN 2: THÔNG TIN HỒ SƠ */}
               <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200 dark:border-[#3E4042] p-6 shadow-sm">
                 <div className="pb-4 border-b border-slate-100 dark:border-[#3E4042]">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Thông tin hồ sơ</h2>
@@ -612,7 +611,7 @@ export default function SettingsPage() {
                 </form>
               </div>
 
-              {/* PHẦN 4: NGÔN NGỮ VÀ GIAO DIỆN */}
+              {/* PHẦN 3: NGÔN NGỮ VÀ GIAO DIỆN */}
               <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200 dark:border-[#3E4042] p-6 shadow-sm">
                 <div className="pb-4 border-b border-slate-100 dark:border-[#3E4042]">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Ngôn ngữ và giao diện</h2>
@@ -620,40 +619,39 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="mt-5 space-y-5">
-                  {/* Theme Switcher */}
+                  {/* Theme Switcher - Sleek Sliding Toggle */}
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-sm font-bold text-slate-800 dark:text-[#E4E6EB]">Chế độ giao diện</h4>
-                      <p className="text-xs text-slate-500 dark:text-[#B0B3B8]">Chuyển đổi giữa giao diện Sáng và Tối (Facebook Dark Mode)</p>
+                      <p className="text-xs text-slate-500 dark:text-[#B0B3B8]">
+                        {activeIsDark ? 'Đang bật Giao diện Tối Charcoal' : 'Đang bật Giao diện Sáng học thuật'}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-[#303132] p-1 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold text-slate-700 dark:text-[#E4E6EB]">
+                        {activeIsDark ? 'Tối' : 'Sáng'}
+                      </span>
                       <button
                         type="button"
-                        onClick={() => {
-                          if (isDark) toggleTheme()
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          !isDark
-                            ? 'bg-white text-slate-900 shadow-xs'
-                            : 'text-slate-500 dark:text-[#B0B3B8] hover:text-slate-900 dark:hover:text-[#E4E6EB]'
+                        role="switch"
+                        aria-checked={activeIsDark}
+                        onClick={toggleTheme}
+                        className={`relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full p-1 transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#16a34a] shadow-inner select-none ${
+                          activeIsDark ? 'bg-[#16a34a] dark:bg-[#22c55e]' : 'bg-slate-300 dark:bg-[#3E4042]'
                         }`}
+                        aria-label="Chuyển đổi giao diện Sáng / Tối"
                       >
-                        <Sun className="w-3.5 h-3.5 text-amber-500" />
-                        Sáng
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!isDark) toggleTheme()
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          isDark
-                            ? 'bg-[#242526] text-[#2ECC71] shadow-xs'
-                            : 'text-slate-500 dark:text-[#B0B3B8] hover:text-slate-900 dark:hover:text-[#E4E6EB]'
-                        }`}
-                      >
-                        <Moon className="w-3.5 h-3.5 text-[#2ECC71]" />
-                        Tối
+                        <span
+                          className={`pointer-events-none inline-flex h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ease-in-out items-center justify-center ${
+                            activeIsDark ? 'translate-x-6 text-[#16a34a]' : 'translate-x-0 text-amber-500'
+                          }`}
+                        >
+                          {activeIsDark ? (
+                            <Moon className="w-3.5 h-3.5 fill-[#16a34a] text-[#16a34a]" />
+                          ) : (
+                            <Sun className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                          )}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -754,23 +752,33 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* TAB 3: BÀI ĐĂNG & HOẠT ĐỘNG */}
+
+                    {/* TAB 3: BÀI ĐĂNG & HOẠT ĐỘNG */}
           {activeTab === 'posts' && (
             <div className="bg-white dark:bg-[#242526] rounded-2xl border border-slate-200 dark:border-[#3E4042] p-6 shadow-sm">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#3E4042]">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Bài đăng & hoạt động</h2>
                   <p className="text-xs text-slate-500 dark:text-[#B0B3B8] mt-0.5">
-                    Xem bài của bạn trong 50 bài đăng mới nhất, mở chi tiết hoặc xóa bài viết.
+                    Xem danh sách các bài đã đăng, mở xem chi tiết hoặc xóa bài viết.
                   </p>
                 </div>
-                <Link
-                  to="/posts/create"
-                  className="px-3.5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Đăng bài mới
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/my-posts"
+                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#303132] dark:hover:bg-[#3E4042] text-slate-700 dark:text-[#E4E6EB] font-semibold text-xs transition-colors flex items-center gap-1.5"
+                  >
+                    <span>Quản lý chi tiết</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                  <Link
+                    to="/posts/create"
+                    className="px-3.5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Đăng bài mới
+                  </Link>
+                </div>
               </div>
 
               <div className="mt-6">
@@ -779,7 +787,7 @@ export default function SettingsPage() {
                 ) : !myPostsData || myPostsData.length === 0 ? (
                   <div className="py-12 text-center">
                     <FileEdit className="w-10 h-10 text-slate-300 dark:text-[#B0B3B8]/40 mx-auto mb-2" />
-                    <p className="text-slate-600 dark:text-[#B0B3B8] font-medium text-sm">Không có bài đăng của bạn trong 50 bài gần nhất.</p>
+                    <p className="text-slate-600 dark:text-[#B0B3B8] font-medium text-sm">Bạn chưa có bài đăng nào.</p>
                     <Link to="/posts/create" className="text-xs text-primary-600 dark:text-[#2ECC71] hover:underline font-semibold mt-1 inline-block">
                       Tạo bài viết đầu tiên ngay
                     </Link>
@@ -798,19 +806,19 @@ export default function SettingsPage() {
                           <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 dark:text-[#B0B3B8]">
                             <span>{new Date(p.created_at).toLocaleDateString('vi-VN')}</span>
                             <span>•</span>
-                            <span>{p.like_count || 0} thích</span>
+                            <span>{p.like_count || p.likes_count || 0} thích</span>
                             <span>•</span>
-                            <span>{p.comment_count || 0} bình luận</span>
+                            <span>{p.comment_count || p.comments_count || 0} bình luận</span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-1.5 shrink-0">
                           <Link
                             to={`/posts/${p.id}`}
-                            className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-[#B0B3B8] dark:hover:text-[#E4E6EB] hover:bg-slate-100 dark:hover:bg-[#303132] transition-colors"
-                            title="Xem bài"
+                            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#3E4042] transition-colors"
+                            title="Xem chi tiết"
                           >
-                            <Eye className="w-4 h-4" />
+                            <ExternalLink className="w-4 h-4" />
                           </Link>
                           <button
                             type="button"
@@ -878,29 +886,13 @@ export default function SettingsPage() {
                 <div className="pb-4 border-b border-slate-100 dark:border-[#3E4042]">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-[#E4E6EB]">Góp ý & Báo lỗi</h2>
                   <p className="text-xs text-slate-500 dark:text-[#B0B3B8] mt-0.5">
-                    Gửi phản hồi trực tiếp để ban quản trị tiếp tục hoàn thiện trải nghiệm học tập
+                    Tình trạng tiếp nhận góp ý trong ứng dụng
                   </p>
                 </div>
 
-                <form onSubmit={handleSendFeedback} className="mt-4 space-y-4">
-                  <textarea
-                    rows={4}
-                    required
-                    value={feedbackText}
-                    onChange={(e) => setFeedbackText(e.target.value)}
-                    placeholder="Mô tả sự cố hoặc ý tưởng cải tiến của bạn..."
-                    className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#3E4042] bg-white dark:bg-[#303132] text-slate-900 dark:text-[#E4E6EB] focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-                  />
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      className="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs transition-colors flex items-center gap-2 shadow-sm"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      Gửi góp ý
-                    </button>
-                  </div>
-                </form>
+                <div role="status" className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/40 dark:text-amber-200">
+                  Kênh góp ý đang được hoàn thiện. Hiện tại trang này chưa gửi hoặc lưu phản hồi. Chức năng gửi sẽ chỉ được mở lại sau khi có API và quy trình tiếp nhận thực tế.
+                </div>
               </div>
             </div>
           )}

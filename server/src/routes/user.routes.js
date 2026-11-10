@@ -7,6 +7,11 @@ const { authenticate } = require('../middlewares/auth.middleware');
 const { createError } = require('../middlewares/error.middleware');
 const { addFollow, removeFollow, listFollows, followStats } = require('../controllers/follow.controller');
 const { listNotifications, unreadCount, readNotification, readAll } = require('../controllers/notification.controller');
+const {
+  parseAvatarUpload,
+  saveAvatar,
+  deleteAvatarFile,
+} = require('../services/avatar-storage');
 
 // Keep the public profile and profile-update response on the same safe DTO.
 const PUBLIC_FIELDS = ['id', 'full_name', 'avatar_url', 'bio', 'university', 'major', 'created_at'];
@@ -54,13 +59,15 @@ function validatedProfileUpdate(payload) {
       throw createError('Nội dung hồ sơ vượt giới hạn: ' + key, 422);
     }
     if (key === 'avatar_url' && normalized) {
-      try {
-        const url = new URL(normalized);
-        if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) {
-          throw new Error('Invalid HTTPS URL');
+      if (!normalized.startsWith('/uploads/avatars/')) {
+        try {
+          const url = new URL(normalized);
+          if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) {
+            throw new Error('Invalid HTTPS URL');
+          }
+        } catch {
+          throw createError('Ảnh đại diện phải là URL HTTPS hợp lệ hoặc tệp ảnh đã tải lên.', 422);
         }
-      } catch {
-        throw createError('Ảnh đại diện phải là URL HTTPS hợp lệ.', 422);
       }
     }
     updates[key] = key === 'full_name' ? normalized : normalized || null;
@@ -87,6 +94,50 @@ router.delete('/:id/follow', authenticate, removeFollow);
 router.get('/:id/followers', authenticate, (req,res,next) => listFollows(req,res,next,'followers'));
 router.get('/:id/following', authenticate, (req,res,next) => listFollows(req,res,next,'following'));
 router.get('/:id/follow-stats', authenticate, followStats);
+
+// POST /api/users/me/avatar — upload user avatar image
+router.post('/me/avatar', authenticate, parseAvatarUpload, async (req, res, next) => {
+  if (!req.file) {
+    return next(createError('Vui lòng chọn ảnh đại diện.', 422));
+  }
+
+  let savedTarget = null;
+  try {
+    const { avatarUrl, targetPath } = await saveAvatar(req.file);
+    savedTarget = targetPath;
+
+    const currentUser = await User.findByPk(req.user.id);
+    if (!currentUser || !currentUser.is_active) {
+      throw createError('Tài khoản không tồn tại hoặc đã bị khóa.', 401);
+    }
+
+    const oldAvatarUrl = currentUser.avatar_url;
+
+    await User.update({ avatar_url: avatarUrl }, { where: { id: req.user.id } });
+
+    // Clean up previous uploaded avatar file if managed locally
+    if (oldAvatarUrl && oldAvatarUrl !== avatarUrl) {
+      await deleteAvatarFile(oldAvatarUrl);
+    }
+
+    const profile = await publicProfile(req.user.id);
+
+    return res.json({
+      success: true,
+      message: 'Cập nhật ảnh đại diện thành công.',
+      data: {
+        avatar_url: avatarUrl,
+        user: profile,
+      },
+    });
+  } catch (error) {
+    if (savedTarget) {
+      const fs = require('node:fs/promises');
+      try { await fs.unlink(savedTarget); } catch { /* ignore rollback error */ }
+    }
+    return next(error);
+  }
+});
 
 // GET /api/users/:id — active public projection only; never expose account data.
 router.get('/:id', async (req, res, next) => {

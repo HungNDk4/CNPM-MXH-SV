@@ -7,19 +7,25 @@ import AuthLayout from '@/layouts/AuthLayout'
 
 // Pages
 import HomePage from '@/pages/HomePage'
+import SearchPage from '@/pages/search/SearchPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import RegisterPage from '@/pages/auth/RegisterPage'
 import PostDetailPage from '@/pages/posts/PostDetailPage'
 import DocumentDetailPage from '@/pages/documents/DocumentDetailPage'
 import CreatePostPage from '@/pages/posts/CreatePostPage'
+import MyPostsPage from '@/pages/posts/MyPostsPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
 import BookmarksPage from '@/pages/bookmarks/BookmarksPage'
 import NotificationsPage from '@/pages/notifications/NotificationsPage'
 import SettingsPage from '@/pages/settings/SettingsPage'
+import AdminOverviewPage from '@/pages/admin/AdminOverviewPage'
+import AdminPostsPage from '@/pages/admin/AdminPostsPage'
+import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage'
 import AdminAuditPage from '@/pages/admin/AdminAuditPage'
 import AdminContentPage from '@/pages/admin/AdminContentPage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import MascotGalleryPage from '@/pages/MascotGalleryPage'
 
 // Route bảo vệ (cần đăng nhập)
 const ProtectedRoute = ({ children }) => {
@@ -48,6 +54,8 @@ export default function App() {
       {/* Main app routes */}
       <Route element={<MainLayout />}>
         <Route index element={<HomePage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/mascot-gallery" element={<MascotGalleryPage />} />
         <Route path="/posts/:id" element={<PostDetailPage />} />
         <Route path="/documents/:id" element={<DocumentDetailPage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
@@ -56,6 +64,12 @@ export default function App() {
         {/* Protected */}
         <Route path="/posts/create" element={
           <ProtectedRoute><CreatePostPage /></ProtectedRoute>
+        } />
+        <Route path="/my-posts" element={
+          <ProtectedRoute><MyPostsPage /></ProtectedRoute>
+        } />
+        <Route path="/posts/manage" element={
+          <Navigate to="/my-posts" replace />
         } />
         <Route path="/bookmarks" element={
           <ProtectedRoute><BookmarksPage /></ProtectedRoute>
@@ -70,7 +84,16 @@ export default function App() {
           <Navigate to="/settings?tab=help" replace />
         } />
         <Route path="/admin" element={
-          <Navigate to="/admin/audit-logs" replace />
+          <AdminRoute><AdminOverviewPage /></AdminRoute>
+        } />
+        <Route path="/admin/overview" element={
+          <AdminRoute><AdminOverviewPage /></AdminRoute>
+        } />
+        <Route path="/admin/posts" element={
+          <AdminRoute><AdminPostsPage /></AdminRoute>
+        } />
+        <Route path="/admin/analytics" element={
+          <AdminRoute><AdminAnalyticsPage /></AdminRoute>
         } />
         <Route path="/admin/content" element={
           <AdminRoute><AdminContentPage /></AdminRoute>

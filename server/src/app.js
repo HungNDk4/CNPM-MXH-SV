@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -10,6 +11,7 @@ const postRoutes    = require('./routes/post.routes');
 const documentRoutes = require('./routes/document.routes');
 const commentRoutes = require('./routes/comment.routes');
 const likeRoutes    = require('./routes/like.routes');
+const adminRoutes   = require('./routes/admin.routes');
 
 const { errorHandler } = require('./middlewares/error.middleware');
 
@@ -36,7 +38,7 @@ const isolatedChromiumCI =
   process.env.FE74_CI_RATE_LIMIT === 'EXPLICIT_DISPOSABLE_E2E_ONLY';
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  max: isolatedChromiumCI ? 1000 : 100,
+  max: isolatedChromiumCI ? 1000 : (process.env.NODE_ENV === 'development' ? 1000 : 100),
   message: { success: false, message: 'Quá nhiều request, vui lòng thử lại sau.' },
 });
 app.use('/api/', limiter);
@@ -52,6 +54,17 @@ if (process.env.NODE_ENV !== 'test') {
 
 // ─── Static Files (uploads) ──────────────────────────────────────
 // No public static mount for protected PDFs (SEC-01).
+// Public post illustrations only (SEC-01 safe: images only, no PDFs).
+app.use('/uploads/post-images', express.static(path.join(__dirname, '../uploads/post-images'), {
+  dotfiles: 'ignore',
+  index: false,
+  maxAge: '1d',
+}));
+app.use('/uploads/avatars', express.static(path.join(__dirname, '../uploads/avatars'), {
+  dotfiles: 'ignore',
+  index: false,
+  maxAge: '7d',
+}));
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -65,6 +78,7 @@ app.use('/api/posts',    postRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/likes',    likeRoutes);
+app.use('/api/admin',    adminRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────
 app.use('*', (req, res) => {

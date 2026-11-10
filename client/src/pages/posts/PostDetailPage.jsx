@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { commentAPI, likeAPI, postAPI, bookmarkAPI, followAPI } from '@/services/api'
+import { commentAPI, likeAPI, postAPI, bookmarkAPI, followAPI, adminAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import {
   ArrowLeft,
@@ -26,8 +26,10 @@ import {
   ShieldCheck,
   ArrowRight,
   User,
+  Flag,
 } from 'lucide-react'
 import Badge, { TYPE_BADGE_CONFIG } from '@/components/common/Badge'
+import ReportPostModal from '@/components/post/ReportPostModal'
 
 const MAX_COMMENT = 2000
 const TYPE_CONFIG = {
@@ -58,10 +60,16 @@ const stamp = (value) => {
   })
 }
 
-function BookmarkButton({ postId }) {
+function BookmarkButton({ postId, initialBookmarked = false }) {
   const qc = useQueryClient()
   const authenticated = useAuthStore((state) => state.isAuthenticated)
-  const [bookmarked, setBookmarked] = useState(false)
+  const [bookmarked, setBookmarked] = useState(Boolean(initialBookmarked))
+
+  useEffect(() => {
+    if (typeof initialBookmarked === 'boolean') {
+      setBookmarked(initialBookmarked)
+    }
+  }, [initialBookmarked])
 
   const toggle = useMutation({
     mutationFn: () => (bookmarked ? bookmarkAPI.remove(postId) : bookmarkAPI.save(postId)),
@@ -69,6 +77,8 @@ function BookmarkButton({ postId }) {
       const isSaved = res.data.data.bookmarked
       setBookmarked(isSaved)
       qc.invalidateQueries({ queryKey: ['bookmarks'] })
+      qc.invalidateQueries({ queryKey: ['posts'] })
+      qc.invalidateQueries({ queryKey: ['post-detail', String(postId)] })
       toast.success(isSaved ? 'Đã lưu bài viết!' : 'Đã bỏ lưu bài viết.')
     },
     onError: (err) => {
@@ -83,31 +93,38 @@ function BookmarkButton({ postId }) {
       type="button"
       onClick={() => toggle.mutate()}
       disabled={toggle.isPending}
-      className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm flex items-center gap-2 rounded-xl transition-all ${
+      className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer group active:scale-95 ${
         bookmarked
-          ? 'text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40'
-          : ''
+          ? 'text-amber-800 dark:text-amber-200 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/60 dark:hover:bg-amber-900/80 border border-amber-300 dark:border-amber-700 shadow-xs font-bold'
+          : 'text-slate-700 dark:text-slate-200 hover:text-amber-800 dark:hover:text-amber-300 hover:bg-amber-100/80 dark:hover:bg-amber-950/60'
       }`}
       aria-label={bookmarked ? 'Bỏ lưu bài viết' : 'Lưu bài viết'}
     >
       {bookmarked ? (
-        <BookmarkCheck className="w-4 h-4 text-amber-600 dark:text-amber-400 fill-amber-500" aria-hidden="true" />
+        <BookmarkCheck className="w-4 h-4 text-amber-600 dark:text-amber-400 fill-amber-500 transition-transform duration-200 group-hover:scale-115" aria-hidden="true" />
       ) : (
-        <Bookmark className="w-4 h-4 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+        <Bookmark className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-amber-500 transition-transform duration-200 group-hover:scale-115" aria-hidden="true" />
       )}
       <span>{toggle.isPending ? 'Đang lưu...' : bookmarked ? 'Đã lưu' : 'Lưu bài'}</span>
     </button>
   )
 }
 
-function LikeButton({ targetType, targetId }) {
+function LikeButton({ targetType, targetId, initialLiked = false, initialCount }) {
   const qc = useQueryClient()
-  const [liked, setLiked] = useState(null)
+  const [liked, setLiked] = useState(typeof initialLiked === 'boolean' ? initialLiked : null)
   const key = ['fe01-likes', targetType, targetId]
+
+  useEffect(() => {
+    if (typeof initialLiked === 'boolean') {
+      setLiked(initialLiked)
+    }
+  }, [initialLiked])
 
   const { data: count, isLoading, isError } = useQuery({
     queryKey: key,
     queryFn: async () => (await likeAPI.count(targetType, targetId)).data.data.count,
+
     enabled: Boolean(targetId),
     retry: false,
   })
@@ -115,8 +132,14 @@ function LikeButton({ targetType, targetId }) {
   const toggle = useMutation({
     mutationFn: () => likeAPI.toggle(targetType, targetId),
     onSuccess: (response) => {
-      setLiked(Boolean(response.data.liked))
+      const isNowLiked = Boolean(response.data.liked)
+      setLiked(isNowLiked)
       qc.invalidateQueries({ queryKey: key })
+      if (targetType === 'post') {
+        qc.invalidateQueries({ queryKey: ['posts'] })
+        qc.invalidateQueries({ queryKey: ['post-detail', String(targetId)] })
+        qc.invalidateQueries({ queryKey: ['post-like-count', targetId] })
+      }
     },
     onError: (error) => toast.error(error.response?.data?.message || 'Không thể cập nhật lượt thích.'),
   })
@@ -128,10 +151,10 @@ function LikeButton({ targetType, targetId }) {
     <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm">
       <button
         type="button"
-        className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 rounded-xl transition-all ${
+        className={`btn-secondary min-h-10 px-4 py-2 text-xs sm:text-sm inline-flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer group active:scale-95 ${
           liked
-            ? 'text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40'
-            : 'text-slate-700 dark:text-slate-200'
+            ? 'text-rose-700 dark:text-rose-200 bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/60 dark:hover:bg-rose-900/80 border border-rose-300 dark:border-rose-700 shadow-xs font-bold'
+            : 'text-slate-700 dark:text-slate-200 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-100/80 dark:hover:bg-rose-950/60'
         }`}
         aria-label={'Thích hoặc bỏ thích ' + item}
         aria-pressed={liked === null ? 'mixed' : liked}
@@ -140,7 +163,9 @@ function LikeButton({ targetType, targetId }) {
         disabled={toggle.isPending}
       >
         <Heart
-          className={`w-4 h-4 transition-transform ${liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400'}`}
+          className={`w-4 h-4 transition-transform duration-200 group-hover:scale-115 active:scale-125 ${
+            liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400 group-hover:text-rose-500'
+          }`}
           aria-hidden="true"
         />
         <span className="font-semibold">{toggle.isPending ? 'Đang lưu...' : label}</span>
@@ -394,7 +419,7 @@ function Comments({ postId }) {
       <div className="flex items-center justify-between pb-3 border-b border-surface-border">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-          <span>Bình luận ({comments.length})</span>
+          <span>Bình luận{comments.length > 0 ? ` (${comments.length})` : ''}</span>
         </h2>
       </div>
 
@@ -464,15 +489,29 @@ export default function PostDetailPage() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({ title: '', content: '', subject: '', tags: '' })
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+
+  const isAdmin = user?.role === 'admin'
 
   const { data: post, isLoading, isError, error } = useQuery({
-    queryKey: ['post-detail', id],
-    queryFn: async () => (await postAPI.getById(id)).data.data,
+    queryKey: ['post-detail', id, isAdmin],
+    queryFn: async () => {
+      try {
+        return (await postAPI.getById(id)).data.data
+      } catch (err) {
+        if (isAdmin && err.response?.status === 404) {
+          const res = await adminAPI.getPostDetail(id)
+          return res.data.data
+        }
+        throw err
+      }
+    },
     enabled: Boolean(validId && authenticated),
     retry: false,
   })
 
-  const canModify = authenticated && post && (Number(user?.id) === Number(post.user_id) || user?.role === 'admin')
+  const isSuppressed = Boolean(post && post.status && post.status !== 'active')
+  const canModify = authenticated && post && !isSuppressed && (Number(user?.id) === Number(post.user_id) || user?.role === 'admin')
 
   const startEdit = () => {
     setEditForm({
@@ -570,10 +609,12 @@ export default function PostDetailPage() {
     </section>
   )
 
-  if (!post || post.status !== 'active' || !TYPE_CONFIG[post.post_type]) return (
+  const isPostVisible = post && (post.status === 'active' || isAdmin) && Boolean(TYPE_CONFIG[post.post_type])
+
+  if (!isPostVisible) return (
     <section className="card text-center py-14 space-y-4 max-w-2xl mx-auto">
       <h1 className="font-bold text-xl text-slate-900 dark:text-white">Bài viết không khả dụng tại trang này.</h1>
-      {post?.post_type === 'document' && post.status === 'active' ? (
+      {post?.post_type === 'document' && (post.status === 'active' || isAdmin) ? (
         <Link to={'/documents/' + post.id} className="btn-primary inline-block">Xem tài liệu</Link>
       ) : (
         <Link to="/" className="btn-secondary inline-block">Về bảng tin</Link>
@@ -595,6 +636,27 @@ export default function PostDetailPage() {
           <span>Quay lại bảng tin</span>
         </Link>
       </nav>
+
+      {/* Admin Moderation Notice Banner */}
+      {isAdmin && post.status !== 'active' && (
+        <div className="p-4 rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div>
+              <p className="font-bold">Chế độ xem Quản trị viên</p>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Bài viết này đang ở trạng thái <strong>{post.status === 'hidden' ? 'Đã ẩn (hidden)' : 'Đã xóa (deleted)'}</strong> và không hiển thị với người dùng thông thường.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/admin/posts"
+            className="shrink-0 px-3 py-1.5 bg-amber-200 dark:bg-amber-800 hover:bg-amber-300 dark:hover:bg-amber-700 text-amber-900 dark:text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5"
+          >
+            Quản trị bài viết &rarr;
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* ── CỘT TRÁI: BÀI VIẾT & BÌNH LUẬN (8 Cols) ── */}
@@ -706,7 +768,7 @@ export default function PostDetailPage() {
                 </div>
 
                 {/* FE-05: Owner/Admin actions */}
-                {canModify && (
+                {canModify ? (
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -728,6 +790,16 @@ export default function PostDetailPage() {
                       <span>{deletePostMutation.isPending ? 'Đang xóa...' : 'Xóa bài viết'}</span>
                     </button>
                   </div>
+                ) : user && (
+                  <button
+                    type="button"
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 text-slate-500 hover:text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    aria-label="Báo cáo bài viết"
+                  >
+                    <Flag className="w-3.5 h-3.5" />
+                    <span>Báo cáo</span>
+                  </button>
                 )}
               </div>
 
@@ -738,13 +810,13 @@ export default function PostDetailPage() {
 
               {/* Author info header */}
               <div className="flex items-center gap-3.5 py-4 border-y border-surface-border">
-                <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0">
-                  <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600">
+                <div className="w-12 h-12 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
+                  <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-sm font-bold text-primary-600 aspect-square">
                     {post.author?.avatar_url ? (
                       <img
                         src={post.author.avatar_url}
                         alt={post.author.full_name || 'Tác giả'}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-full aspect-square"
                         onError={(e) => { e.currentTarget.style.display = 'none' }}
                       />
                     ) : (
@@ -761,7 +833,9 @@ export default function PostDetailPage() {
                     <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Sinh viên</span>
                   )}
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {post.author?.university || post.author?.major || 'Tác giả bài viết'}
+                    {post.author?.university && post.author?.major
+                      ? `${post.author.university} · ${post.author.major}`
+                      : post.author?.university || post.author?.major || 'Tác giả bài viết'}
                   </p>
                 </div>
               </div>
@@ -792,10 +866,17 @@ export default function PostDetailPage() {
 
               {/* Post Footer Interaction */}
               <div className="border-t border-surface-border pt-4 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <LikeButton targetType="post" targetId={post.id} />
-                  <BookmarkButton postId={post.id} />
-                </div>
+                {isSuppressed ? (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/60">
+                    <Lock className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Bài viết đang {post.status === 'hidden' ? 'bị ẩn' : 'đã xóa'} • {post.like_count ?? 0} lượt thích (chỉ đọc)</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <LikeButton targetType="post" targetId={post.id} initialLiked={post.is_liked} initialCount={post.like_count} />
+                    <BookmarkButton postId={post.id} initialBookmarked={post.is_bookmarked} />
+                  </div>
+                )}
                 <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-medium">
                   <Eye className="w-4 h-4" />
                   <span>{post.view_count ?? 0} lượt xem</span>
@@ -805,7 +886,21 @@ export default function PostDetailPage() {
           )}
 
           {/* Comments Section */}
-          <Comments postId={post.id} />
+          {isSuppressed ? (
+            <div className="card p-6 border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 rounded-2xl flex items-start gap-3.5 text-amber-900 dark:text-amber-200 text-sm">
+              <Lock className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div className="space-y-1">
+                <div className="font-semibold text-amber-950 dark:text-amber-100">
+                  Khu vực tương tác và bình luận tạm khóa
+                </div>
+                <div className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                  Bài viết này đang ở trạng thái <span className="font-mono font-bold text-amber-950 dark:text-amber-100">[{post.status}]</span>. Bạn đang xem với tư cách Quản trị viên phục vụ công tác kiểm duyệt. Theo quy định bảo mật hệ thống, tính năng thích, lưu và bình luận không khả dụng trên nội dung chưa được kích hoạt.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Comments postId={post.id} />
+          )}
         </div>
 
         {/* ── CỘT PHẢI: TÁC GIẢ & MÔN HỌC (GROVELYN BENTO SIDEBAR: 4 Cols) ── */}
@@ -814,17 +909,16 @@ export default function PostDetailPage() {
           <div className="card p-5 space-y-4 bg-surface-card border border-surface-border rounded-[20px] shadow-xs">
             <div className="text-[11px] font-bold uppercase tracking-wider text-content-muted">Tác giả bài viết</div>
             <div className="flex items-center gap-3.5">
-              <div className="w-13 h-13 rounded-full avatar-gradient-ring p-[2px] shrink-0">
-                <div className="w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71]">
-                  {post.author?.avatar_url ? (
+              <div className="w-14 h-14 rounded-full avatar-gradient-ring p-[2px] shrink-0 aspect-square">
+                <div className="relative w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden font-bold text-base text-[#16a34a] dark:text-[#2ECC71] aspect-square">
+                  <span>{post.author?.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                  {post.author?.avatar_url && (
                     <img
                       src={post.author.avatar_url}
-                      alt={post.author.full_name || 'Tác giả'}
-                      className="w-full h-full object-cover"
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover rounded-full aspect-square"
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
-                  ) : (
-                    post.author?.full_name?.[0]?.toUpperCase() || 'U'
                   )}
                 </div>
               </div>
@@ -893,6 +987,14 @@ export default function PostDetailPage() {
           </div>
         </aside>
       </div>
+
+      {/* Report Modal */}
+      <ReportPostModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        postId={post.id}
+        postTitle={post.title}
+      />
     </main>
   )
 }

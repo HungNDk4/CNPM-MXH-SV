@@ -282,22 +282,24 @@ export default function AdminOverviewPage() {
                     {dailyTrends.map((t, idx) => {
                       const heightPercent = Math.max((t.count / maxTrendCount) * 100, 8)
                       return (
-                        <div key={idx} className="flex-1 flex flex-col items-center gap-1 group relative">
+                        <div key={idx} className="flex-1 h-full flex flex-col items-center justify-end group relative">
                           {/* Tooltip on hover */}
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 px-2 py-0.5 rounded-md bg-[#06110a] text-white text-[10px] font-bold whitespace-nowrap pointer-events-none z-20">
                             {t.count} bài viết ({t.date})
                           </div>
                           {/* Count on top of bar */}
-                          <span className="text-[10px] font-bold text-[#56614f] dark:text-[#B0B3B8] tabular-nums">
+                          <span className="text-[10px] font-bold text-[#56614f] dark:text-[#B0B3B8] tabular-nums mb-1">
                             {t.count}
                           </span>
-                          {/* Bar */}
-                          <div
-                            style={{ height: `${heightPercent}%` }}
-                            className="w-full max-w-[28px] rounded-t-lg bg-gradient-to-t from-emerald-600 to-emerald-400 dark:from-[#16a34a] dark:to-[#2ECC71] group-hover:brightness-110 transition-all cursor-pointer"
-                          />
+                          {/* Bar wrapper */}
+                          <div className="w-full flex-1 flex items-end justify-center min-h-[60px]">
+                            <div
+                              style={{ height: `${heightPercent}%` }}
+                              className="w-full max-w-[28px] rounded-t-lg bg-gradient-to-t from-emerald-600 to-emerald-400 dark:from-[#16a34a] dark:to-[#2ECC71] group-hover:brightness-110 transition-all cursor-pointer shadow-xs"
+                            />
+                          </div>
                           {/* Date label */}
-                          <span className="text-[9px] text-[#56614f] dark:text-[#B0B3B8] truncate max-w-[42px] mt-1">
+                          <span className="text-[9px] text-[#56614f] dark:text-[#B0B3B8] truncate max-w-[42px] mt-1.5">
                             {t.date.split('-').slice(1).join('/')}
                           </span>
                         </div>

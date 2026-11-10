@@ -37,23 +37,31 @@ const register = async (req, res, next) => {
     const salt = await bcrypt.genSalt(12);
     const password_hash = await bcrypt.hash(password, salt);
 
-    const user = await User.create({ full_name, email, password_hash, university, major });
-
-    const { accessToken, refreshToken } = generateTokens(user);
-
-    // Lưu refresh token vào DB
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-    await RefreshToken.create({ user_id: user.id, token: refreshToken, expires_at: expiresAt });
+    // Registration must commit the account and its initial refresh session
+    // together. No admin can observe/lock an account between row creation
+    // and initial session persistence. A token write failure rolls back both.
+    let result;
+    await sequelize.transaction(async transaction => {
+      const user = await User.create({
+        full_name, email, password_hash, university, major,
+      }, { transaction });
+      const { accessToken, refreshToken } = generateTokens(user);
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+      await RefreshToken.create({
+        user_id: user.id, token: refreshToken, expires_at: expiresAt,
+      }, { transaction });
+      result = {
+        user: { id: user.id, full_name: user.full_name, email: user.email, role: user.role },
+        accessToken,
+        refreshToken,
+      };
+    });
 
     res.status(201).json({
       success: true,
       message: 'Đăng ký thành công!',
-      data: {
-        user: { id: user.id, full_name: user.full_name, email: user.email, role: user.role },
-        accessToken,
-        refreshToken,
-      },
+      data: result,
     });
   } catch (error) {
     next(error);

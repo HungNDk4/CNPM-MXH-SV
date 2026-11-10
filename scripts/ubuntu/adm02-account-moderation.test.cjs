@@ -73,6 +73,26 @@ test('ADM-02 real HTTP + isolated MySQL8: roles, status, JWT, audit, concurrency
     const access = loginStudent.body.data.accessToken;
     const refresh = loginStudent.body.data.refreshToken;
 
+    // Fail initial refresh-token write: a half-registered account must not
+    // survive. The additive regression is confined to disposable MySQL8 CI.
+    const initialTokenCreate = RefreshToken.create;
+    const failEmail = 'adm02-failed-register-' + unique + '@example.test';
+    try {
+      RefreshToken.create = async () => {
+        throw new Error('ADM02_FORCED_INITIAL_REFRESH_FAILURE');
+      };
+      const failedRegister = await api('POST', '/api/auth/register', null, {
+        full_name: 'ADM02 rollback user',
+        email: failEmail,
+        password: 'adm02-register-rollback-only',
+      });
+      assert.equal(failedRegister.status, 500);
+    } finally {
+      RefreshToken.create = initialTokenCreate;
+    }
+    assert.equal(await User.count({ where: { email: failEmail } }), 0,
+      'Failed initial refresh persistence must roll back account creation');
+
     // Existing auth/router guards; no private user fields in list.
     assert.equal((await api('GET', '/api/admin/users')).status, 401);
     assert.equal((await api('GET', '/api/admin/users', access)).status, 403);

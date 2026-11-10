@@ -10,6 +10,7 @@ const {
   updatePost,
   deletePost,
   getMyPostStats,
+  getMyPosts,
 } = require('../controllers/post.controller');
 const {
   getAdminOverview,
@@ -57,6 +58,8 @@ router.get('/moderation/audit-logs', authenticate, authorize('admin'), listModer
 router.get('/moderation/posts', authenticate, authorize('admin'), listAdminPosts);
 router.get('/moderation/posts/:id', authenticate, authorize('admin'), getAdminPostById);
 
+// Static owner-scoped routes MUST precede /:id and do not accept author_id.
+router.get('/my', authenticate, getMyPosts);
 // Student personal post stats (authenticated)
 router.get('/my-stats', authenticate, getMyPostStats);
 

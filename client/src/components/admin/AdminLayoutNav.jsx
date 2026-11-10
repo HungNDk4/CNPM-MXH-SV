@@ -5,6 +5,7 @@ import {
   FileText,
   BarChart3,
   ClipboardList,
+  Users,
 } from 'lucide-react'
 
 const TABS = [
@@ -21,6 +22,13 @@ const TABS = [
     label: 'Quản lý bài viết',
     icon: FileText,
     desc: 'Lọc, kiểm duyệt ẩn/xóa nội dung',
+  },
+  {
+    to: '/admin/users',
+    exact: false,
+    label: 'Tài khoản người dùng',
+    icon: Users,
+    desc: 'Quản lý khóa/mở khóa và lịch sử tài khoản',
   },
   {
     to: '/admin/analytics',

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -26,6 +26,7 @@ export default function MyPostsPage() {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [activeTab, setActiveTab] = useState('all') // 'all' | 'document' | 'discussion' | 'question'
+  const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'active' | 'hidden' | 'deleted'
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
   const [sortBy, setSortBy] = useState('newest') // 'newest' | 'engagement'
@@ -47,23 +48,21 @@ export default function MyPostsPage() {
 
   const stats = statsData || { total_posts: 0, total_likes: 0, total_comments: 0, total_views: 0 }
 
-  // 2. Fetch Student Authored Posts (A.2)
-  const queryParams = useMemo(() => {
-    const params = {
-      author_id: user?.id,
-      page,
-      limit: 10,
-    }
-    if (activeTab !== 'all') params.type = activeTab
-    if (appliedSearch) params.search = appliedSearch
-    return params
-  }, [user?.id, page, activeTab, appliedSearch])
+  // BE-11: owner-only server pagination and global ordering.
+  // Never send author_id; backend derives ownership from JWT.
+  const queryParams = {
+    page,
+    limit: 10,
+    sort: sortBy,
+    ...(activeTab !== 'all' ? { type: activeTab } : {}),
+    ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+    ...(appliedSearch ? { search: appliedSearch } : {}),
+  }
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['my-authored-posts', queryParams],
+    queryKey: ['my-authored-posts', user?.id, page, activeTab, statusFilter, appliedSearch, sortBy],
     queryFn: async () => {
-      if (!user?.id) return { data: [], pagination: { total: 0, totalPages: 1 } }
-      const res = await postAPI.getAll(queryParams)
+      const res = await postAPI.getMyPosts(queryParams)
       return res.data || { data: [], pagination: { total: 0, totalPages: 1 } }
     },
     enabled: Boolean(user?.id),
@@ -72,19 +71,6 @@ export default function MyPostsPage() {
 
   const rawPosts = data?.data || []
   const pagination = data?.pagination || { total: 0, totalPages: 1 }
-
-  // Sorting
-  const sortedPosts = useMemo(() => {
-    const list = [...rawPosts]
-    if (sortBy === 'engagement') {
-      return list.sort((a, b) => {
-        const engA = (Number(a.like_count) || 0) + (Number(a.comment_count) || 0)
-        const engB = (Number(b.like_count) || 0) + (Number(b.comment_count) || 0)
-        return engB - engA
-      })
-    }
-    return list
-  }, [rawPosts, sortBy])
 
   // Delete Mutation
   const deleteMutation = useMutation({
@@ -129,7 +115,7 @@ export default function MyPostsPage() {
               Bài đăng của tôi
             </h1>
             <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] max-w-2xl leading-relaxed mt-1">
-              Quản lý toàn bộ câu hỏi, bài thảo luận và tài liệu học tập bạn đã đóng góp cho cộng đồng sinh viên.
+              Quản lý bài đã đăng, kể cả bài bị ẩn hoặc đã xóa. Các trạng thái không công khai không thể tương tác.
             </p>
           </div>
           <Link
@@ -253,6 +239,22 @@ export default function MyPostsPage() {
           ))}
         </div>
 
+        {/* Owner-only status filter, including moderation outcomes */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <label htmlFor="my-posts-status" className="font-semibold text-[#56614f] dark:text-[#B0B3B8]">Trạng thái bài:</label>
+          <select
+            id="my-posts-status"
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
+            className="input max-w-xs text-xs"
+          >
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Đang công khai</option>
+            <option value="hidden">Đã bị Admin ẩn</option>
+            <option value="deleted">Đã xóa</option>
+          </select>
+        </div>
+
         {/* Row 2: Search Input & Sort Dropdown */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between pt-2 border-t border-[#E2E7DE] dark:border-[#3E4042]">
           {/* Search Input */}
@@ -282,7 +284,7 @@ export default function MyPostsPage() {
             <span className="text-xs text-[#56614f] dark:text-[#B0B3B8]">Sắp xếp:</span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => { setSortBy(e.target.value); setPage(1) }}
               className="text-xs py-1.5 px-2.5 rounded-xl border border-[#E2E7DE] dark:border-[#3E4042] bg-[#F2F4EF] dark:bg-[#18191A] text-[#06110a] dark:text-white focus:outline-none cursor-pointer"
             >
               <option value="newest">Mới nhất</option>
@@ -327,7 +329,7 @@ export default function MyPostsPage() {
             Thử lại
           </button>
         </div>
-      ) : sortedPosts.length === 0 ? (
+      ) : rawPosts.length === 0 ? (
         <div className="card p-12 text-center bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] rounded-2xl shadow-2xs space-y-3">
           <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#303132] text-slate-400 dark:text-[#B0B3B8] flex items-center justify-center mx-auto">
             <FileQuestion className="w-6 h-6" />
@@ -360,8 +362,22 @@ export default function MyPostsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {sortedPosts.map((post) => (
-            <PostCard key={post.id} post={post} onDelete={handleDeletePost} />
+          {rawPosts.map((post) => (
+            post.status !== 'active' ? (
+              <article key={post.id} className="card p-5 space-y-2" aria-label={`Bài không công khai: ${post.title}`}>
+                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${post.status === 'hidden'
+                  ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                  : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'}`}>
+                  {post.status === 'hidden' ? 'Đã bị Admin ẩn' : 'Đã xóa'}
+                </span>
+                <h3 className="font-bold text-content">{post.title}</h3>
+                <p className="text-sm text-content-secondary">
+                  Bài này không hiển thị công khai và không thể truy cập, chỉnh sửa hoặc tương tác.
+                </p>
+              </article>
+            ) : (
+              <PostCard key={post.id} post={post} onDelete={handleDeletePost} />
+            )
           ))}
 
           {/* Pagination */}

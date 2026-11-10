@@ -1,0 +1,116 @@
+name: QA — Actual Chromium UI screenshots, ADM-02 plus My Posts (disposable CI)
+
+on:
+  push:
+    branches:
+      - feat/fe-adm02-be11-integration-20261110
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    name: Chromium browser screenshots — real FE+BE in isolated MySQL8
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: qa_ui_disposable_ci_only
+          MYSQL_DATABASE: mini_study_network
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pqa_ui_disposable_ci_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      GITHUB_ACTIONS: 'true'
+      NODE_ENV: test
+      REPORT_UI_DISPOSABLE: 'true'
+      E2E_DISPOSABLE_DB: 'true'
+      DB_AUTO_SYNC: 'false'
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_NAME: mini_study_network
+      DB_USER: root
+      DB_PASSWORD: qa_ui_disposable_ci_only
+      JWT_ACCESS_SECRET: qa_ui_access_disposable_only_20261110
+      JWT_REFRESH_SECRET: qa_ui_refresh_disposable_only_20261110
+      CLIENT_URL: http://127.0.0.1:5173
+      PORT: '5000'
+      FE74_CI_RATE_LIMIT: EXPLICIT_DISPOSABLE_E2E_ONLY
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ephemeral local-only assemble PR #89 and #90 on PR #91 for UI proof
+        run: |
+          set -euxo pipefail
+          git config user.name "QA ephemeral runner"
+          git config user.email "qa-ephemeral@example.invalid"
+          git fetch origin eee376c9d63141c22a2ca64184c06c5e56c552c8
+          git fetch origin de360da15dd630920bde542c92b372b97bcfa3eb
+          git merge --no-ff --no-edit eee376c9d63141c22a2ca64184c06c5e56c552c8
+          git merge --no-ff --no-edit de360da15dd630920bde542c92b372b97bcfa3eb
+          git log --format="%h %s" -5
+          test -f server/src/models/AccountModerationAuditLog.js
+          test -f client/src/pages/admin/AdminUsersPage.jsx
+          grep -q 'getMyPosts' client/src/pages/posts/MyPostsPage.jsx
+          echo "No push: temporary runner-only merge for evidence."
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            client/package-lock.json
+            server/package-lock.json
+      - name: Import ALL schema from ephemeral merged source on disposable MySQL8
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/schema.sql
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/migrations/20261021_document_files.sql
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" -D "$DB_NAME" -e "SHOW TABLES LIKE 'account_moderation_audit_logs';"
+      - name: Install lockfile dependencies and isolated Chromium
+        run: |
+          npm --prefix server ci
+          npm --prefix client ci
+          npm --prefix client install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          cd client && npx playwright install --with-deps chromium
+      - name: Launch genuine Express and Vite HTTP services (no mock APIs)
+        run: |
+          node server/src/index.js > "$RUNNER_TEMP/qa-ui-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/qa-ui-server.pid"
+          npm --prefix client run dev -- --host 127.0.0.1 --strictPort > "$RUNNER_TEMP/qa-ui-vite.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/qa-ui-vite.pid"
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5000/api/health >/dev/null &&
+               curl -fsS http://127.0.0.1:5173/ >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          echo "App unavailable"; tail -n 100 "$RUNNER_TEMP/qa-ui-server.log" "$RUNNER_TEMP/qa-ui-vite.log"; exit 1
+      - name: Run actual Chromium UI interactions and save screenshots
+        run: node --test client/e2e/qa-adm02-my-posts-screens.test.cjs
+      - name: Always upload original screenshots and result manifest
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: report-qa-ui-pr89-pr90-pr91-screenshots
+          path: ${{ runner.temp }}/adm02-be11-ui/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Dump runtime logs if browser failed
+        if: failure()
+        run: |
+          test ! -f "$RUNNER_TEMP/qa-ui-server.log" || tail -n 120 "$RUNNER_TEMP/qa-ui-server.log"
+          test ! -f "$RUNNER_TEMP/qa-ui-vite.log" || tail -n 120 "$RUNNER_TEMP/qa-ui-vite.log"
+      - name: Stop isolated services
+        if: always()
+        run: |
+          for name in server vite; do
+            if test -f "$RUNNER_TEMP/qa-ui-$name.pid"; then
+              kill "$(cat "$RUNNER_TEMP/qa-ui-$name.pid")" 2>/dev/null || true
+            fi
+          done

@@ -23,6 +23,7 @@ import AdminPostsPage from '@/pages/admin/AdminPostsPage'
 import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage'
 import AdminAuditPage from '@/pages/admin/AdminAuditPage'
 import AdminContentPage from '@/pages/admin/AdminContentPage'
+import AdminUsersPage from '@/pages/admin/AdminUsersPage'
 import PaymentResult from '@/pages/payment/PaymentResultPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import MascotGalleryPage from '@/pages/MascotGalleryPage'
@@ -91,6 +92,9 @@ export default function App() {
         } />
         <Route path="/admin/posts" element={
           <AdminRoute><AdminPostsPage /></AdminRoute>
+        } />
+        <Route path="/admin/users" element={
+          <AdminRoute><AdminUsersPage /></AdminRoute>
         } />
         <Route path="/admin/analytics" element={
           <AdminRoute><AdminAnalyticsPage /></AdminRoute>

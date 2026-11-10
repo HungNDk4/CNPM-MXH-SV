@@ -1,0 +1,71 @@
+name: BE-11 owner-only My Posts — isolated MySQL 8 regression
+
+on:
+  pull_request:
+    paths:
+      - 'server/src/controllers/post.controller.js'
+      - 'server/src/routes/post.routes.js'
+      - 'scripts/ubuntu/be11-my-posts.test.cjs'
+      - '.github/workflows/be11-my-posts.yml'
+  push:
+    branches:
+      - 'feat/be11-my-posts-api-20261110'
+    paths:
+      - 'server/src/controllers/post.controller.js'
+      - 'server/src/routes/post.routes.js'
+      - 'scripts/ubuntu/be11-my-posts.test.cjs'
+      - '.github/workflows/be11-my-posts.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  be11-isolated-mysql:
+    name: BE-11 My Posts 51+ / owner isolation / safe DTO (disposable MySQL 8)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: be11_ci_only_do_not_reuse
+          MYSQL_DATABASE: mini_study_network
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pbe11_ci_only_do_not_reuse"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: test
+      DB_AUTO_SYNC: 'false'
+      BE11_DISPOSABLE_MYSQL: 'true'
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_USER: root
+      DB_PASSWORD: be11_ci_only_do_not_reuse
+      DB_NAME: mini_study_network
+      JWT_ACCESS_SECRET: be11_disposable_access_jwt_test_only_20261110
+      JWT_REFRESH_SECRET: be11_disposable_refresh_jwt_test_only_20261110
+      CLIENT_URL: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Import baseline schema into disposable local MySQL 8
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/schema.sql
+          mysql --protocol=tcp -h127.0.0.1 -P3306 -uroot -p"$DB_PASSWORD" < database/migrations/20261021_document_files.sql
+      - name: Install backend lockfile dependencies
+        run: npm --prefix server ci
+      - name: Syntax-check BE-11 tests and changed controller
+        run: |
+          node --check server/src/controllers/post.controller.js
+          node --check server/src/routes/post.routes.js
+          node --check scripts/ubuntu/be11-my-posts.test.cjs
+      - name: Run BE-11 real MySQL 8 regression (CI-only)
+        run: node --test scripts/ubuntu/be11-my-posts.test.cjs

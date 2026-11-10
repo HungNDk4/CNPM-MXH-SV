@@ -154,6 +154,70 @@ const getPosts = async (req, res, next) => {
 };
 
 /**
+ * BE-11 / UX-01: GET /api/posts/my
+ *
+ * Owner-scoped, authenticated list independent of the public free-only feed.
+ * Includes own hidden/deleted posts so moderation status is visible to the author.
+ * NEVER accepts author_id from the client and NEVER includes private PDF paths.
+ */
+const getMyPosts = async (req, res, next) => {
+  try {
+    const permitted = ['page', 'limit', 'type', 'status', 'search', 'sort'];
+    if (Object.keys(req.query).some(key => !permitted.includes(key))) {
+      throw createError('Tham số danh sách bài viết cá nhân không hợp lệ.', 422);
+    }
+    const page = positiveIntQuery(req.query.page, 'page', 1, 10000);
+    const limit = positiveIntQuery(req.query.limit, 'limit', 10, 50);
+    const { type = 'all', status = 'all', sort = 'newest' } = req.query;
+    if (typeof type !== 'string' || !['all', 'question', 'discussion', 'document'].includes(type)) {
+      throw createError('Loại bài viết không hợp lệ.', 422);
+    }
+    if (typeof status !== 'string' || !['all', 'active', 'hidden', 'deleted'].includes(status)) {
+      throw createError('Trạng thái bài viết không hợp lệ.', 422);
+    }
+    if (typeof sort !== 'string' || !['newest', 'engagement'].includes(sort)) {
+      throw createError('Cách sắp xếp không hợp lệ.', 422);
+    }
+    const search = textQuery(req.query.search, 'search', 100);
+    const userId = Number(req.user.id); // Trusted authenticated DB user; never a query parameter.
+    const where = { user_id: userId };
+    if (type !== 'all') where.post_type = type;
+    if (status !== 'all') where.status = status;
+    if (search !== undefined) {
+      const pattern = '%' + escapeLike(search) + '%';
+      where[Op.or] = [
+        { title: { [Op.like]: pattern } },
+        { content: { [Op.like]: pattern } },
+      ];
+    }
+
+    const order = sort === 'engagement'
+      ? [[sequelize.literal('(like_count + comment_count)'), 'DESC'],
+          ['created_at', 'DESC'], ['id', 'DESC']]
+      : [['created_at', 'DESC'], ['id', 'DESC']];
+    const { count, rows } = await Post.findAndCountAll({
+      where,
+      attributes: { include: postEngagementAttributes(userId) },
+      include: [
+        { model: User, as: 'author', attributes: ['id', 'full_name', 'avatar_url', 'university', 'major'] },
+        { model: PostImage, as: 'images', attributes: ['id', 'image_url', 'sort_order'], required: false },
+      ],
+      distinct: true,
+      order,
+      limit,
+      offset: (page - 1) * limit,
+    });
+    res.json({
+      success: true,
+      data: rows.map(toSafePost),
+      pagination: { total: count, page, limit, totalPages: Math.max(1, Math.ceil(count / limit)) },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * GET /api/posts/:id
  */
 const getPostById = async (req, res, next) => {
@@ -442,6 +506,7 @@ const getMyPostStats = async (req, res, next) => {
 
 module.exports = {
   getPosts,
+  getMyPosts,
   getPostById,
   getTrendingTopics,
   getMyPostStats,

@@ -2,30 +2,19 @@
 Baseline 2026-10-17 · status states: `TODO | IN_PROGRESS | BLOCKED | REVIEW | DONE | DEFERRED`.
 **This is the only canonical status table.** A phase gate does not become PASS just because associated documents exist.
 
-## 2026-11-10 — Hunny-17 continuation lanes (current scoped plan; earlier rows below are historical unless re-verified)
+## 2026-11-10 — Hunny-17 active work lanes (latest GitHub source review)
 
-**Source:** [HUNNY17_NEXT_WORK_PLAN_20261110.md](HUNNY17_NEXT_WORK_PLAN_20261110.md). Hunny-17 accepted Core Backend *role*; these planned task IDs do not imply code implementation, new branches or teammate acceptance. PR #86 still belongs to HungNDk4, is open at `f8c9625da21`; `main` is not the development baseline. Statuses are as of GitHub source inspection on 2026-11-10; re-fetch before action.
+**Source:** [HUNNY17_NEXT_WORK_PLAN_20261110.md](HUNNY17_NEXT_WORK_PLAN_20261110.md). Hunny-17 accepted Core Backend *role*; these planned task IDs do not imply code implementation, new branches or teammate acceptance. PR #86 and #88 have both MERGED into `integration/team-dev-20261020` @ `928928047f83`; main remains the older baseline. Statuses are source-verified 2026-11-10. PR #89 code is a separate DRAFT and has 9/9 CI PASS, not human-approved or deployed.
 
 | Task ID | Priority | Scope / acceptance summary | Owner (proposed) | Status | Dependency | Evidence / PR |
 |---|---|---|---|---|---|---|
-| OPS-08 | P0 | Harmonize continuation plan, logical branch/worktree and file boundaries (docs only) | Hunny-17 + AI docs; reviewer pending | REVIEW | Integration base SHA verified | Docs branch `docs/hunny17-resume-worktree-20261110`; local worktree NOT VERIFIED |
-| QA-06 | P0 | Review #86 source/security/API/DB, 8 findings, focused safety remediation in stacked PR #88 | Hunny-17 (audit and PR #88 code author), HungNDk4 review pending | REVIEW | PR #86 author signoff; #88 CI and review | [PR #86 review](https://github.com/HungNDk4/CNPM-MXH-SV/pull/86#issuecomment-6747782694); [Draft PR #88](https://github.com/HungNDk4/CNPM-MXH-SV/pull/88) @ `1f565543`; cloud/DB acceptance NOT RUN |
-| OPS-09 | P0 | Cloud schema preflight, backup, release acceptance for #75/#78/#32 (no automatic deploy) | Both humans + Hunny-17 Core Backend proposed | BLOCKED | Render/TiDB access, human approval, release candidate | PR #85 already integration-merged; cloud migration/smoke NOT VERIFIED |
-| BE-11 | P1 | UX-01 owner-only paginated My Posts contract and tests, no duplicate My Stats | Hunny-17 Core Backend proposed | BLOCKED | Review #86, approved API/UI ownership | Issue #80; #86 owns related Post/UI changes |
-| QA-07 | P1 | COM-01 #81 post-report transaction and authorization acceptance, not duplicate implementation | Hunny-17 Core Backend review proposed | BLOCKED | Disposition of #86 and scoped DB/browser tests | #86 contains Report model/routes/UI/tests; NOT merged |
-| BE-12 | P1 | ADM-02 #79 safe account list/lock/unlock, audit, session invalidation | Hunny-17 Core Backend proposed | TODO | G0/G1 file locks and API/schema contract approval | Issue #79; no dedicated implementation PR verified |
+| OPS-08 | P0 | Plan/worktree + post-merge source status, no local branch duplication | Hunny-17, HungNDk4 reviewer requested | REVIEW | Docs PR #87 independent review and current exact-HEAD CI | Docs PR #87 now synced to integration with append-only log histories; remote branch only |
+| QA-06 | P0 | Review #86 source/security and focused UX fixes #88 | HungNDk4 author, Hunny-17 auditor | REVIEW | Merged source, independent acceptance records pending | PR #88 MERGED to PR #86; PR #86 MERGED to integration @ 928928047f83; 9/9 baseline CI PASS, cloud QA separate |
+| OPS-09 | P0 | Cloud Render/TiDB preflight, migration and release acceptance | Human cloud operators + Hunny-17 audit | BLOCKED | Read-only live evidence, backup and operator approval | Render on PoC branch @ 71499dfd (not integration); TiDB QA branch configured by operator; no deploy or DDL |
+| BE-11 | P1 | UX-01 owner-only paginated My Posts contract and tests; reuse my-stats | Hunny-17 Backend, HungNDk4 Frontend | TODO | ADM-02 PR #89 review; scoped API handoff | Issue #80; no implementation branch created yet |
+| QA-07 | P1 | COM-01 report-post audit, transaction and authorization acceptance | Hunny-17 reviewing Hùng's merged code | REVIEW | Targeted disposable MySQL tests and human sign-off | Issue #81; source merged via PR #86; cloud schema/report migration not verified |
+| BE-12 | P1 | ADM-02 admin account lock/unlock + session invalidation, append-only audit | Hunny-17 Core Backend | REVIEW | PR #89 independent human review; QA cloud schema separately gated | Draft PR #89 @ b79799f066: exact-HEAD 9/9 CI PASS including new disposable MySQL8 ADM-02 regression; no TiDB migration/deploy |
 | DOCS-04 | P1 | Reconcile stale #15–18/old drafts, report traceability and final handoff | Two humans (ownership pending) | TODO | Approved merged baseline and release evidence | No closing action performed |
-
-## 2026-11-10 — LIVE TASK BOARD (older rows below are historical)
-
-| ID | Owner | State | Verified evidence / next gate |
-|---|---|---|---|
-| OPS-08 | Hunny-17, independent reviewer HungNDk4 | REVIEW | PR #87 docs updated to post-#86 integration; local worktree NOT VERIFIED |
-| QA-06 / PR #86/#88 | HungNDk4 author, Hunny-17 review-fix | SOURCE MERGED; CLOUD QA PENDING | #88 merged into #86; #86 merged integration @ `928928047f83`; integration CI 18/18 successful (push + PR checks) |
-| BE-12 / ADM-02 #79 | Hunny-17 | REVIEW | Draft [PR #89](https://github.com/HungNDk4/CNPM-MXH-SV/pull/89) @ `b79799f066`; **9/9 CI PASS**; HungNDk4 human review PENDING; no SQL deployed |
-| BE-11 / My Posts #80 | Hunny-17 backend; HungNDk4 frontend | TODO | Dedicated authenticated owner-only pagination, no duplicate my-stats |
-| QA-07 / Report #81 | Both humans | REVIEW PENDING | Source merged in #86; verify new suite and cloud access paths |
-| OPS-09 / Cloud #75/#78/#32 | Human operators | BLOCKED | Render on PoC @ `71499dfd`, QA branch SQL user prepared by user, QA laptop/API/cloud acceptance NOT RUN |
 
 Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend at role level**; `Human B` = other teammate, **Frontend + Analysis/Design proposed and pending own acceptance of task scope**; `AI` = assistant executing only on explicitly allowed branches. Existing `Owner (proposed)` column is older planning data, **NOT task acceptance** and is not auto-changed by role selection. Exact package mapping in `docs/CORE_BACKEND_TEAM_HANDOFF_20261020.md`. `UNASSIGNED` means not accepted.
 

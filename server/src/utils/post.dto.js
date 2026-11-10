@@ -7,6 +7,38 @@ const toSafePost = (record) => {
   const post = typeof record.toJSON === 'function' ? record.toJSON() : record;
   const author = post.author || null;
 
+  // Images: extract URLs of attached post images
+  let images = [];
+  if (Array.isArray(post.images)) {
+    images = post.images.map(img => (typeof img === 'string' ? img : img.image_url));
+  }
+
+  const likeCount = Number(
+    post.like_count ??
+    (typeof record.getDataValue === 'function' ? record.getDataValue('like_count') : undefined) ??
+    post.likes_count ??
+    0
+  );
+
+  const commentCount = Number(
+    post.comment_count ??
+    (typeof record.getDataValue === 'function' ? record.getDataValue('comment_count') : undefined) ??
+    post.comments_count ??
+    0
+  );
+
+  const isLiked = Boolean(
+    post.is_liked ??
+    (typeof record.getDataValue === 'function' ? Number(record.getDataValue('is_liked')) : undefined) ??
+    false
+  );
+
+  const isBookmarked = Boolean(
+    post.is_bookmarked ??
+    (typeof record.getDataValue === 'function' ? Number(record.getDataValue('is_bookmarked')) : undefined) ??
+    false
+  );
+
   return {
     id: post.id,
     user_id: post.user_id,
@@ -27,7 +59,13 @@ const toSafePost = (record) => {
       full_name: author.full_name,
       avatar_url: author.avatar_url ?? null,
       university: author.university ?? null,
+      major: author.major ?? null,
     } : null,
+    images,
+    like_count: likeCount,
+    comment_count: commentCount,
+    is_liked: isLiked,
+    is_bookmarked: isBookmarked,
   };
 };
 

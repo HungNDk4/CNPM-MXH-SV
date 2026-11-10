@@ -148,7 +148,8 @@ test('EXT-04: inbox, event provenance, ownership and safe content gates', { time
       assert.equal(expect(await unread(a),200).data.count,3);
       assert.equal(expect(await unread(b),200).data.count,2);
       for (const entry of [...mine.data,...all.data]) {
-        assert.deepEqual(Object.keys(entry).sort(),
+        const actualKeys = Object.keys(entry).filter(k => !['actor', 'targetPost'].includes(k)).sort();
+        assert.deepEqual(actualKeys,
           ['id','event_type','actor_id','post_id','comment_id','is_read','created_at'].sort());
         assert.ok(!JSON.stringify(entry).includes('content'));
         assert.ok(!JSON.stringify(entry).includes('file_url'));

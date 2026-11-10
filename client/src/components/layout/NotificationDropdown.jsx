@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { notificationAPI } from '@/services/api'
+import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
 import {
   Bell,
@@ -46,17 +47,27 @@ export default function NotificationDropdown() {
   const dropdownRef = useRef(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const token = useAuthStore((state) => state.accessToken)
 
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ['unread-notifications-count'],
     queryFn: async () => (await notificationAPI.getUnreadCount()).data.data.count,
-    refetchInterval: 30000,
+    enabled: Boolean(isAuthenticated && token),
+    refetchInterval: (query) => {
+      if (!isAuthenticated || query.state.error?.response?.status === 401) {
+        return false
+      }
+      return 30000
+    },
+    retry: false,
   })
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications-list'],
     queryFn: async () => (await notificationAPI.getAll({ page: 1, limit: 10 })).data.data,
-    enabled: open,
+    enabled: Boolean(open && isAuthenticated && token),
+    retry: false,
   })
 
   const markAll = useMutation({
@@ -79,6 +90,8 @@ export default function NotificationDropdown() {
     setOpen(false)
     if (item.post_id) {
       navigate(`/posts/${item.post_id}`)
+    } else if (item.event_type === 'follow' && item.actor_id) {
+      navigate(`/profile/${item.actor_id}`)
     }
   }
 
@@ -98,12 +111,13 @@ export default function NotificationDropdown() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Thông báo"
-        className="relative min-w-10 min-h-10 px-2.5 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition-all"
+        className="relative w-9 h-9 flex items-center justify-center text-[#52675A] dark:text-[#A8B9AF] hover:text-[#123D35] dark:hover:text-white hover:bg-white dark:hover:bg-[#17231F] rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] cursor-pointer"
       >
-        <Bell className="w-5 h-5" aria-hidden="true" />
+        <Bell className={`w-4.5 h-4.5 transition-transform duration-200 ${unreadCount > 0 ? 'text-[#16A34A] dark:text-[#4ADE80]' : ''}`} aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 bg-rose-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-sm animate-pulse-slow">
-            {unreadCount > 9 ? '9+' : unreadCount}
+          <span className="absolute top-1 right-1 bg-rose-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-xs">
+            <span className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-60 pointer-events-none" />
+            <span className="relative z-10">{unreadCount > 9 ? '9+' : unreadCount}</span>
           </span>
         )}
       </button>
@@ -161,12 +175,28 @@ export default function NotificationDropdown() {
                         : 'hover:bg-surface-muted/70'
                     }`}
                   >
-                    <span className={`shrink-0 p-2 rounded-xl mt-0.5 ${config.iconColor}`}>
-                      <EventIcon className="w-4 h-4" />
-                    </span>
+                    <div className="relative shrink-0 mt-0.5">
+                      {item.actor?.avatar_url ? (
+                        <img
+                          src={item.actor.avatar_url}
+                          alt={item.actor?.full_name || 'Avatar'}
+                          className="w-8 h-8 rounded-full object-cover border border-surface-border"
+                        />
+                      ) : (
+                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${config.iconColor}`}>
+                          {item.actor?.full_name?.[0]?.toUpperCase() || <EventIcon className="w-4 h-4" />}
+                        </span>
+                      )}
+                      <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-surface-card border border-surface-border flex items-center justify-center">
+                        <EventIcon className="w-2.5 h-2.5" />
+                      </span>
+                    </div>
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className={`leading-snug break-words ${!item.is_read ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
-                        {config.label}
+                        <span className="font-bold text-slate-900 dark:text-white mr-1">
+                          {item.actor?.full_name || 'Một bạn học'}
+                        </span>
+                        <span>{config.label}</span>
                       </p>
                       <span className="text-[11px] text-slate-400 dark:text-slate-500 block">
                         {new Date(item.created_at).toLocaleString('vi-VN')}

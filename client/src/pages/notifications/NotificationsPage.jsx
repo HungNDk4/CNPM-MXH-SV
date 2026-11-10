@@ -1,3 +1,4 @@
+import EmptyState from '@/components/common/EmptyState'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -53,10 +54,19 @@ export default function NotificationsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState('all')
+  const [page, setPage] = useState(1)
 
-  const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ['notifications-page-list'],
-    queryFn: async () => (await notificationAPI.getAll({ page: 1, limit: 30 })).data.data,
+  const { data: inboxPage, isLoading, isError, refetch } = useQuery({
+    queryKey: ['notifications-page-list', page],
+    queryFn: async () => (await notificationAPI.getAll({ page, limit: 30 })).data,
+    keepPreviousData: true,
+  })
+  const notifications = inboxPage?.data || []
+  const totalPages = Math.max(1, inboxPage?.pagination?.totalPages || 1)
+  const totalNotifications = inboxPage?.pagination?.total ?? notifications.length
+  const { data: unreadResponse } = useQuery({
+    queryKey: ['unread-notifications-count'],
+    queryFn: async () => (await notificationAPI.getUnreadCount()).data,
   })
 
   const markAll = useMutation({
@@ -85,7 +95,7 @@ export default function NotificationsPage() {
     }
   }
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length
+  const unreadCount = unreadResponse?.data?.count ?? notifications.filter((n) => !n.is_read).length
   const filteredNotifications = notifications.filter((n) => {
     if (filter === 'all') return true
     if (filter === 'comment') return n.event_type === 'comment' || n.event_type === 'reply'
@@ -160,6 +170,11 @@ export default function NotificationsPage() {
               </div>
             ))}
           </div>
+        ) : isError ? (
+          <div className="card p-8 text-center space-y-3">
+            <p className="text-sm text-rose-600 dark:text-rose-400">Không thể tải thông báo.</p>
+            <button type="button" className="btn-secondary px-4 py-2 text-sm" onClick={() => refetch()}>Thử lại</button>
+          </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="card text-center py-20 space-y-3">
             <div className="w-16 h-16 mx-auto rounded-2xl bg-surface-muted flex items-center justify-center text-slate-400">
@@ -190,8 +205,21 @@ export default function NotificationsPage() {
                       : 'bg-surface-card border-surface-border hover:bg-slate-50/80 dark:hover:bg-[#303132]'
                   }`}
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs mt-0.5 ${config.color}`}>
-                    <EventIcon className="w-5 h-5" />
+                  <div className="relative shrink-0 mt-0.5">
+                    {item.actor?.avatar_url ? (
+                      <img
+                        src={item.actor.avatar_url}
+                        alt={item.actor?.full_name || 'Avatar'}
+                        className="w-10 h-10 rounded-full object-cover border border-[#E2E7DE] dark:border-[#3E4042]"
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs border shadow-2xs ${config.color}`}>
+                        {item.actor?.full_name?.[0]?.toUpperCase() || <EventIcon className="w-5 h-5" />}
+                      </div>
+                    )}
+                    <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border border-white dark:border-[#242526] shadow-xs ${config.color}`}>
+                      <EventIcon className="w-2.5 h-2.5" />
+                    </span>
                   </div>
 
                   <div className="flex-1 min-w-0 space-y-1">
@@ -201,6 +229,11 @@ export default function NotificationsPage() {
                           {item.actor?.full_name || 'Một bạn học'}
                         </span>
                         <span>{config.label}</span>
+                        {item.targetPost?.title && (
+                          <span className="text-[#16a34a] dark:text-[#2ECC71] font-semibold ml-1 line-clamp-1 inline">
+                            "{item.targetPost.title}"
+                          </span>
+                        )}
                       </p>
                       {!item.is_read && (
                         <span className="w-2.5 h-2.5 rounded-full bg-[#16a34a] dark:bg-[#22c55e] shrink-0 shadow-sm" />
@@ -227,6 +260,16 @@ export default function NotificationsPage() {
             })}
           </div>
         )}
+        {totalPages > 1 && (
+          <nav aria-label="Phân trang thông báo" className="flex items-center justify-between gap-3 border-t border-surface-border pt-4 text-xs">
+            <span className="text-content-secondary">Trang {page}/{totalPages} · {totalNotifications} thông báo</span>
+            <div className="flex gap-2">
+              <button type="button" className="btn-secondary px-3 py-2" disabled={page <= 1 || isLoading} onClick={() => setPage((p) => Math.max(1, p - 1))}>Trước</button>
+              <button type="button" className="btn-secondary px-3 py-2" disabled={page >= totalPages || isLoading} onClick={() => setPage((p) => p + 1)}>Sau</button>
+            </div>
+          </nav>
+        )}
+        <p className="text-[11px] text-content-secondary">Bộ lọc loại hoạt động và thống kê bên phải áp dụng cho trang hiện tại.</p>
       </div>
 
       {/* ── Right Column: Gamification & Profile Insight Widget ── */}
@@ -250,10 +293,10 @@ export default function NotificationsPage() {
               <Sparkles className="w-7 h-7" />
             </div>
             <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-              {notifications.length} <span className="text-xs font-sans font-semibold text-[#16a34a] dark:text-[#2ECC71]">thông báo</span>
+              {totalNotifications} <span className="text-xs font-sans font-semibold text-[#16a34a] dark:text-[#2ECC71]">thông báo</span>
             </div>
             <p className="text-[11px] text-slate-500 px-4">
-              Tổng số thông báo và hoạt động được đồng bộ về tài khoản của bạn.
+              Tổng số thông báo hiện có; phân loại bên dưới chỉ tính trên trang đang xem.
             </p>
           </div>
 

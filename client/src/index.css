@@ -103,8 +103,18 @@
   /* Inputs */
   .input {
     @apply w-full bg-surface-card border border-surface-border text-content rounded-xl
-           px-4 py-2.5 placeholder-[#56614F] dark:placeholder-[#B0B3B8] text-sm focus:outline-none focus:ring-1
-           focus:ring-[#16a34a] dark:focus:ring-[#2ECC71] focus:border-[#16a34a] dark:focus:border-[#2ECC71] transition-all duration-200 font-medium;
+           px-4 py-2.5 placeholder-[#56614F] dark:placeholder-[#B0B3B8] text-sm focus:outline-none focus:ring-2
+           focus:ring-[#16a34a]/30 dark:focus:ring-[#2ECC71]/30 focus:border-[#16a34a] dark:focus:border-[#2ECC71] transition-all duration-200 font-medium;
+  }
+
+  /* Browser autofill theme harmony */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 
   /* Badges */
@@ -130,7 +140,8 @@
   }
   .glass {
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-    @apply bg-surface-card/90 backdrop-blur-md border border-surface-border;
+    background-color: var(--bg-card);
+    @apply backdrop-blur-md border border-surface-border;
   }
   .avatar-gradient-ring {
     @apply p-0.5 rounded-full bg-[#E1E5DD] dark:bg-[#262626];

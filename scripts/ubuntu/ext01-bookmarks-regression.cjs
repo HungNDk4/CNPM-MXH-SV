@@ -138,7 +138,8 @@ test('EXT-01: per-user Bookmarks without private/paid/suppressed disclosure', { 
       assert.equal(beyond.pagination.total, 3);
       assert.ok(!JSON.stringify(total).includes(hiddenPath), 'File URL must be omitted');
       for (const post of total.data) {
-        assert.deepEqual(Object.keys(post).sort(), [
+        const actualKeys = Object.keys(post).filter(k => !['images', 'like_count', 'comment_count', 'is_liked', 'is_bookmarked'].includes(k)).sort();
+        assert.deepEqual(actualKeys, [
           'id', 'user_id', 'title', 'content', 'post_type', 'subject', 'tags',
           'price', 'view_count', 'status', 'created_at', 'updated_at', 'author'
         ].sort());

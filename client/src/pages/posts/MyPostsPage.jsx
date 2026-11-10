@@ -1,0 +1,397 @@
+import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import { postAPI } from '@/services/api'
+import { useAuthStore } from '@/stores/authStore'
+import PostCard from '@/components/PostCard'
+import { PostCardSkeleton } from '@/components/common/Skeleton'
+import {
+  PlusCircle,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Heart,
+  MessageSquare,
+  Eye,
+  Search,
+  X,
+  ArrowUpDown,
+  FileQuestion,
+} from 'lucide-react'
+
+export default function MyPostsPage() {
+  const { user } = useAuthStore()
+  const queryClient = useQueryClient()
+  const [page, setPage] = useState(1)
+  const [activeTab, setActiveTab] = useState('all') // 'all' | 'document' | 'discussion' | 'question'
+  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [sortBy, setSortBy] = useState('newest') // 'newest' | 'engagement'
+
+  // 1. Fetch Real Personal Statistics (A.1)
+  const {
+    data: statsData,
+    isLoading: isStatsLoading,
+    isError: isStatsError,
+  } = useQuery({
+    queryKey: ['my-post-stats', user?.id],
+    queryFn: async () => {
+      const res = await postAPI.getMyStats()
+      return res.data?.data || { total_posts: 0, total_likes: 0, total_comments: 0, total_views: 0 }
+    },
+    enabled: Boolean(user?.id),
+    staleTime: 30000,
+  })
+
+  const stats = statsData || { total_posts: 0, total_likes: 0, total_comments: 0, total_views: 0 }
+
+  // 2. Fetch Student Authored Posts (A.2)
+  const queryParams = useMemo(() => {
+    const params = {
+      author_id: user?.id,
+      page,
+      limit: 10,
+    }
+    if (activeTab !== 'all') params.type = activeTab
+    if (appliedSearch) params.search = appliedSearch
+    return params
+  }, [user?.id, page, activeTab, appliedSearch])
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['my-authored-posts', queryParams],
+    queryFn: async () => {
+      if (!user?.id) return { data: [], pagination: { total: 0, totalPages: 1 } }
+      const res = await postAPI.getAll(queryParams)
+      return res.data || { data: [], pagination: { total: 0, totalPages: 1 } }
+    },
+    enabled: Boolean(user?.id),
+    keepPreviousData: true,
+  })
+
+  const rawPosts = data?.data || []
+  const pagination = data?.pagination || { total: 0, totalPages: 1 }
+
+  // Sorting
+  const sortedPosts = useMemo(() => {
+    const list = [...rawPosts]
+    if (sortBy === 'engagement') {
+      return list.sort((a, b) => {
+        const engA = (Number(a.like_count) || 0) + (Number(a.comment_count) || 0)
+        const engB = (Number(b.like_count) || 0) + (Number(b.comment_count) || 0)
+        return engB - engA
+      })
+    }
+    return list
+  }, [rawPosts, sortBy])
+
+  // Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id) => postAPI.delete(id),
+    onSuccess: () => {
+      toast.success('Đã xóa bài viết thành công!')
+      queryClient.invalidateQueries({ queryKey: ['my-authored-posts'] })
+      queryClient.invalidateQueries({ queryKey: ['my-post-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['trending-topics'] })
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể xóa bài viết. Vui lòng thử lại!')
+    },
+  })
+
+  const handleDeletePost = (id, title) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa bài viết "${title}" không? Hành động này không thể hoàn tác.`)) {
+      deleteMutation.mutate(id)
+    }
+  }
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    setAppliedSearch(searchTerm.trim())
+    setPage(1)
+  }
+
+  const handleClearSearch = () => {
+    setSearchTerm('')
+    setAppliedSearch('')
+    setPage(1)
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+      {/* ── Page Header ── */}
+      <div className="pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#06110a] dark:text-[#E7E7E7]">
+              Bài đăng của tôi
+            </h1>
+            <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] max-w-2xl leading-relaxed mt-1">
+              Quản lý toàn bộ câu hỏi, bài thảo luận và tài liệu học tập bạn đã đóng góp cho cộng đồng sinh viên.
+            </p>
+          </div>
+          <Link
+            to="/posts/create"
+            className="btn-primary self-start sm:self-auto py-2.5 px-4 text-xs font-bold inline-flex items-center gap-2 rounded-xl shadow-xs shrink-0"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Đăng bài mới</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── A.1 Overview Statistics (KPI Cards) ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        {/* KPI 1: Total Posts */}
+        <div className="bg-white dark:bg-[#242526] rounded-2xl border border-[#E2E7DE] dark:border-[#3E4042] p-4 shadow-2xs relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] sm:text-xs font-semibold text-[#56614f] dark:text-[#B0B3B8]">
+              Tổng bài đăng
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <FileText className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#06110a] dark:text-white tabular-nums">
+              {isStatsLoading ? '…' : stats.total_posts}
+            </span>
+          </div>
+          <p className="text-[10px] text-[#56614f] dark:text-[#B0B3B8] mt-1">
+            Đang hiển thị công khai
+          </p>
+        </div>
+
+        {/* KPI 2: Total Likes */}
+        <div className="bg-white dark:bg-[#242526] rounded-2xl border border-[#E2E7DE] dark:border-[#3E4042] p-4 shadow-2xs relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] sm:text-xs font-semibold text-[#56614f] dark:text-[#B0B3B8]">
+              Lượt thích nhận
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+              <Heart className="w-4 h-4 fill-rose-500/20" />
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#06110a] dark:text-white tabular-nums">
+              {isStatsLoading ? '…' : stats.total_likes}
+            </span>
+          </div>
+          <p className="text-[10px] text-[#56614f] dark:text-[#B0B3B8] mt-1">
+            Từ các sinh viên khác
+          </p>
+        </div>
+
+        {/* KPI 3: Total Comments */}
+        <div className="bg-white dark:bg-[#242526] rounded-2xl border border-[#E2E7DE] dark:border-[#3E4042] p-4 shadow-2xs relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] sm:text-xs font-semibold text-[#56614f] dark:text-[#B0B3B8]">
+              Bình luận nhận
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+              <MessageSquare className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#06110a] dark:text-white tabular-nums">
+              {isStatsLoading ? '…' : stats.total_comments}
+            </span>
+          </div>
+          <p className="text-[10px] text-[#56614f] dark:text-[#B0B3B8] mt-1">
+            Tương tác trong luồng
+          </p>
+        </div>
+
+        {/* KPI 4: Total Views */}
+        <div className="bg-white dark:bg-[#242526] rounded-2xl border border-[#E2E7DE] dark:border-[#3E4042] p-4 shadow-2xs relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] sm:text-xs font-semibold text-[#56614f] dark:text-[#B0B3B8]">
+              Lượt xem bài viết
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <Eye className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#06110a] dark:text-white tabular-nums">
+              {isStatsLoading ? '…' : stats.total_views}
+            </span>
+          </div>
+          <p className="text-[10px] text-[#56614f] dark:text-[#B0B3B8] mt-1">
+            Tổng lượt tiếp cận thật
+          </p>
+        </div>
+      </div>
+
+      {/* ── Filters Bar: Category Tabs & Search & Sort ── */}
+      <div className="bg-white dark:bg-[#242526] rounded-2xl border border-[#E2E7DE] dark:border-[#3E4042] p-4 shadow-2xs space-y-4">
+        {/* Row 1: Category Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs font-semibold">
+          {[
+            { id: 'all', label: 'Tất cả bài viết' },
+            { id: 'document', label: 'Tài liệu PDF' },
+            { id: 'discussion', label: 'Thảo luận' },
+            { id: 'question', label: 'Hỏi đáp' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab.id)
+                setPage(1)
+              }}
+              className={`px-3 py-1.5 rounded-xl transition-all shrink-0 cursor-pointer ${
+                activeTab === tab.id
+                  ? 'bg-[#16a34a] text-white dark:bg-[#2ECC71] dark:text-[#18191A] font-bold shadow-2xs'
+                  : 'bg-[#F2F4EF] dark:bg-[#303132] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Row 2: Search Input & Sort Dropdown */}
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between pt-2 border-t border-[#E2E7DE] dark:border-[#3E4042]">
+          {/* Search Input */}
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm theo tiêu đề hoặc nội dung..."
+              className="w-full text-xs sm:text-sm pl-9 pr-8 py-2 rounded-xl border border-[#E2E7DE] dark:border-[#3E4042] bg-[#F2F4EF] dark:bg-[#18191A] text-[#06110a] dark:text-white placeholder-[#56614f] dark:placeholder-[#B0B3B8] focus:bg-white dark:focus:bg-[#303132] focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <Search className="w-4 h-4 text-[#56614f] dark:text-[#B0B3B8] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </form>
+
+          {/* Sort Selector */}
+          <div className="flex items-center gap-2 shrink-0">
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#56614f] dark:text-[#B0B3B8]" />
+            <span className="text-xs text-[#56614f] dark:text-[#B0B3B8]">Sắp xếp:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="text-xs py-1.5 px-2.5 rounded-xl border border-[#E2E7DE] dark:border-[#3E4042] bg-[#F2F4EF] dark:bg-[#18191A] text-[#06110a] dark:text-white focus:outline-none cursor-pointer"
+            >
+              <option value="newest">Mới nhất</option>
+              <option value="engagement">Tương tác cao nhất</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Active Search Filter Indicator ── */}
+      {appliedSearch && (
+        <div className="flex items-center justify-between px-4 py-2 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-medium border border-emerald-500/20">
+          <span>
+            Đang lọc theo từ khóa: <strong className="font-bold">"{appliedSearch}"</strong>
+          </span>
+          <button
+            type="button"
+            onClick={handleClearSearch}
+            className="text-emerald-600 dark:text-emerald-400 hover:underline font-bold"
+          >
+            Xóa bộ lọc
+          </button>
+        </div>
+      )}
+
+      {/* ── Post Listing & UX States ── */}
+      {isLoading ? (
+        <div className="space-y-4" role="status">
+          {[1, 2, 3].map((i) => (
+            <PostCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="card text-center py-16 space-y-4" role="alert">
+          <p className="text-slate-700 dark:text-slate-300 font-medium">Không thể tải danh sách bài đăng.</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="btn-secondary text-sm inline-flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Thử lại
+          </button>
+        </div>
+      ) : sortedPosts.length === 0 ? (
+        <div className="card p-12 text-center bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] rounded-2xl shadow-2xs space-y-3">
+          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#303132] text-slate-400 dark:text-[#B0B3B8] flex items-center justify-center mx-auto">
+            <FileQuestion className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-bold text-[#06110a] dark:text-white">
+            {appliedSearch ? 'Không tìm thấy bài viết phù hợp' : 'Bạn chưa có bài đăng nào trong mục này'}
+          </h3>
+          <p className="text-xs text-[#56614f] dark:text-[#B0B3B8] max-w-sm mx-auto">
+            {appliedSearch
+              ? 'Hãy thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc tìm kiếm.'
+              : 'Chia sẻ ngay những tài liệu, đồ án hay câu hỏi của bạn để cùng giao lưu với cộng đồng sinh viên.'}
+          </p>
+          {appliedSearch ? (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="btn-secondary text-xs px-4 py-2 mt-2 rounded-xl"
+            >
+              Xóa bộ lọc
+            </button>
+          ) : (
+            <Link
+              to="/posts/create"
+              className="btn-primary text-xs px-4 py-2 inline-flex items-center gap-1.5 rounded-xl shadow-xs mt-2"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Đăng bài ngay</span>
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {sortedPosts.map((post) => (
+            <PostCard key={post.id} post={post} onDelete={handleDeletePost} />
+          ))}
+
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 pt-6">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-2 inline-flex items-center gap-1.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Trang trước
+              </button>
+              <span className="text-xs sm:text-sm font-medium text-[#56614f] dark:text-[#B0B3B8] px-3 sm:px-4 py-1.5 rounded-xl bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] shadow-2xs">
+                Trang <strong className="text-[#06110a] dark:text-white">{page}</strong> / {pagination.totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={page >= pagination.totalPages}
+                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-2 inline-flex items-center gap-1.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Trang sau
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

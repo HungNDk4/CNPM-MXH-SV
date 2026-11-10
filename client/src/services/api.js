@@ -14,6 +14,7 @@ export const postAPI = {
   getById:  (id)     => api.get(`/posts/${id}`),
   getTrendingTopics: () => api.get('/posts/trending-topics'),
   getMyStats: () => api.get('/posts/my-stats'),
+  getMyPosts: (params) => api.get('/posts/my', { params }),
   create:   (data)   => {
     if (typeof FormData !== 'undefined' && data instanceof FormData) {
       return api.post('/posts', data, { headers: { 'Content-Type': undefined } })
@@ -100,6 +101,10 @@ export const adminAPI = {
   moderatePost: (postId, status, reason) => api.patch(`/posts/${postId}/moderation`, reason === undefined ? { status } : { status, reason }),
   getPosts: (params) => api.get('/posts/moderation/posts', { params }),
   getPostDetail: (id) => api.get(`/posts/moderation/posts/${id}`),
+  getAccounts: (params) => api.get('/admin/users', { params }),
+  setAccountStatus: (id, is_active, reason) =>
+    api.patch(`/admin/users/${id}/status`, { is_active, reason }),
+  getAccountAuditLogs: (params) => api.get('/admin/users/audit-logs', { params }),
   getReports: (params) => api.get('/admin/reports', { params }),
   handleReport: (id, data) => api.patch(`/admin/reports/${id}`, data),
 }

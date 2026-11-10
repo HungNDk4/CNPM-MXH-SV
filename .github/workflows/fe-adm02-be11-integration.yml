@@ -1,0 +1,36 @@
+name: FE — ADM-02 + BE-11 contract and production build (source-only)
+
+on:
+  pull_request:
+    paths:
+      - 'client/src/App.jsx'
+      - 'client/src/services/api.js'
+      - 'client/src/pages/admin/AdminUsersPage.jsx'
+      - 'client/src/components/admin/AdminLayoutNav.jsx'
+      - 'client/src/pages/posts/MyPostsPage.jsx'
+      - 'scripts/fe-adm02-be11-contract.test.cjs'
+      - '.github/workflows/fe-adm02-be11-integration.yml'
+  push:
+    branches:
+      - 'feat/fe-adm02-be11-integration-20261110'
+
+permissions:
+  contents: read
+
+jobs:
+  fe-contract-build:
+    name: FE ADM-02/BE-11 source contracts and Vite build (not QA cloud)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Install locked Frontend dependencies
+        run: npm --prefix client ci
+      - name: Validate FE API route and ownership contracts
+        run: node --test scripts/fe-adm02-be11-contract.test.cjs
+      - name: Build production Frontend bundle
+        run: npm --prefix client run build

@@ -150,6 +150,11 @@ jobs:
       - name: QA-01 two-account ownership and refresh regression (disposable MySQL)
         working-directory: server
         run: node --test ../scripts/ubuntu/auth-ownership.test.cjs
+      - name: ADM-02 account lock, session revocation and audit regression (disposable MySQL)
+        working-directory: server
+        env:
+          ADM02_DISPOSABLE_MYSQL: 'true'
+        run: node --test ../scripts/ubuntu/adm02-account-moderation.test.cjs
       - name: DOC-03 PDF upload regression (disposable DB)
         working-directory: server
         run: node --test ../scripts/ubuntu/pdf-upload.test.cjs

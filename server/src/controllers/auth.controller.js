@@ -74,20 +74,43 @@ const login = async (req, res, next) => {
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) throw createError('Email hoặc mật khẩu không đúng.', 401);
 
-    const { accessToken, refreshToken } = generateTokens(user);
+    // A moderation lock can commit while bcrypt.compare() is running.
+    // Re-lock/re-check the account immediately before inserting a new session.
+    // This shares the user-row lock with admin lock and refresh rotation.
+    let result;
+    await sequelize.transaction(async transaction => {
+      const current = await User.findByPk(user.id, {
+        transaction, lock: transaction.LOCK.UPDATE,
+      });
+      if (!current || !current.is_active) {
+        throw createError('Tài khoản đã bị khóa.', 403);
+      }
+      // A password change during bcrypt validation must not mint a session
+      // from a hash that is no longer the account's current credential.
+      if (current.password_hash !== user.password_hash) {
+        throw createError('Email hoặc mật khẩu không đúng.', 401);
+      }
 
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-    await RefreshToken.create({ user_id: user.id, token: refreshToken, expires_at: expiresAt });
+      const { accessToken, refreshToken } = generateTokens(current);
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+      await RefreshToken.create({
+        user_id: current.id, token: refreshToken, expires_at: expiresAt,
+      }, { transaction });
+      result = {
+        user: {
+          id: current.id, full_name: current.full_name, email: current.email,
+          role: current.role, avatar_url: current.avatar_url,
+        },
+        accessToken,
+        refreshToken,
+      };
+    });
 
     res.json({
       success: true,
       message: 'Đăng nhập thành công!',
-      data: {
-        user: { id: user.id, full_name: user.full_name, email: user.email, role: user.role, avatar_url: user.avatar_url },
-        accessToken,
-        refreshToken,
-      },
+      data: result,
     });
   } catch (error) {
     next(error);

@@ -43,6 +43,7 @@ test('ADM-02 real HTTP + isolated MySQL8: roles, status, JWT, audit, concurrency
     const adminB = await user('admin', 'adminb');
     const student = await user('student', 'student');
     const student2 = await user('student', 'student2');
+    const loginRaceStudent = await user('student', 'loginrace');
     await new Promise((resolve, reject) => {
       server.once('error', reject);
       server.listen(0, '127.0.0.1', resolve);
@@ -171,6 +172,43 @@ test('ADM-02 real HTTP + isolated MySQL8: roles, status, JWT, audit, concurrency
     assert.deepEqual(concurrent.map(r => r.status).sort(), [200, 200]);
     assert.equal(concurrent.filter(r => r.body.data.changed).length, 1);
     assert.equal(await AccountModerationAuditLog.count({ where: { target_user_id: student2.id } }), 1);
+
+    // Deterministic login/lock race: login passed is_active check, but
+    // bcrypt.compare has not finished. Lock must commit BEFORE token insertion.
+    const oldCompare = bcrypt.compare;
+    let comparisonEntered;
+    let releaseComparison;
+    const entered = new Promise(resolve => { comparisonEntered = resolve; });
+    const comparisonGate = new Promise(resolve => { releaseComparison = resolve; });
+    bcrypt.compare = async (...args) => {
+      const matched = await oldCompare(...args);
+      comparisonEntered();
+      await comparisonGate;
+      return matched;
+    };
+    let pendingRaceLogin;
+    try {
+      pendingRaceLogin = api('POST', '/api/auth/login', null, {
+        email: loginRaceStudent.email, password: 'adm02-test-only-secret-' + unique,
+      });
+      await entered;
+      const lockedDuringLogin = await api('PATCH',
+        '/api/admin/users/' + loginRaceStudent.id + '/status', tokenA, {
+          is_active: false, reason: 'Khóa tài khoản ngay khi đang đăng nhập',
+        });
+      assert.equal(lockedDuringLogin.status, 200, JSON.stringify(lockedDuringLogin.body));
+    } finally {
+      releaseComparison();
+      bcrypt.compare = oldCompare;
+    }
+    const racedLogin = await pendingRaceLogin;
+    assert.equal(racedLogin.status, 403, JSON.stringify(racedLogin.body));
+    assert.equal(await RefreshToken.count({
+      where: { user_id: loginRaceStudent.id, revoked: false },
+    }), 0, 'No refresh session may survive a committed account lock');
+    assert.equal((await api('GET', '/api/auth/me',
+      jwt.sign({ id: loginRaceStudent.id, role: 'student' },
+        process.env.JWT_ACCESS_SECRET, { expiresIn: '15m' }))).status, 401);
 
     // Another admin can lock and restore an admin without removing the last admin.
     const lockAdmin = await api('PATCH', '/api/admin/users/' + adminB.id + '/status', tokenA, {

@@ -1,6 +1,21 @@
 # TASK BOARD — canonical status and ownership
 Baseline 2026-10-17 · status states: `TODO | IN_PROGRESS | BLOCKED | REVIEW | DONE | DEFERRED`.
 **This is the only canonical status table.** A phase gate does not become PASS just because associated documents exist.
+
+## 2026-11-10 — Hunny-17 active work lanes (latest GitHub source review)
+
+**Source:** [HUNNY17_NEXT_WORK_PLAN_20261110.md](HUNNY17_NEXT_WORK_PLAN_20261110.md). Hunny-17 accepted Core Backend *role*; these planned task IDs do not imply code implementation, new branches or teammate acceptance. PR #86 and #88 have both MERGED into `integration/team-dev-20261020` @ `928928047f83`; main remains the older baseline. Statuses are source-verified 2026-11-10. PR #89 code is a separate DRAFT and has 9/9 CI PASS, not human-approved or deployed.
+
+| Task ID | Priority | Scope / acceptance summary | Owner (proposed) | Status | Dependency | Evidence / PR |
+|---|---|---|---|---|---|---|
+| OPS-08 | P0 | Plan/worktree + post-merge source status, no local branch duplication | Hunny-17, HungNDk4 reviewer requested | REVIEW | Docs PR #87 independent review and current exact-HEAD CI | Docs PR #87 now synced to integration with append-only log histories; remote branch only |
+| QA-06 | P0 | Review #86 source/security and focused UX fixes #88 | HungNDk4 author, Hunny-17 auditor | REVIEW | Merged source, independent acceptance records pending | PR #88 MERGED to PR #86; PR #86 MERGED to integration @ 928928047f83; 9/9 baseline CI PASS, cloud QA separate |
+| OPS-09 | P0 | Cloud Render/TiDB preflight, migration and release acceptance | Human cloud operators + Hunny-17 audit | BLOCKED | Read-only live evidence, backup and operator approval | Render on PoC branch @ 71499dfd (not integration); TiDB QA branch configured by operator; no deploy or DDL |
+| BE-11 | P1 | UX-01 owner-only paginated My Posts contract and tests; reuse my-stats | Hunny-17 Backend, HungNDk4 Frontend | TODO | ADM-02 PR #89 review; scoped API handoff | Issue #80; no implementation branch created yet |
+| QA-07 | P1 | COM-01 report-post audit, transaction and authorization acceptance | Hunny-17 reviewing Hùng's merged code | REVIEW | Targeted disposable MySQL tests and human sign-off | Issue #81; source merged via PR #86; cloud schema/report migration not verified |
+| BE-12 | P1 | ADM-02 admin account lock/unlock + session invalidation, append-only audit | Hunny-17 Core Backend | REVIEW | PR #89 independent human review; QA cloud schema separately gated | Draft PR #89 @ b79799f066: exact-HEAD 9/9 CI PASS including new disposable MySQL8 ADM-02 regression; no TiDB migration/deploy |
+| DOCS-04 | P1 | Reconcile stale #15–18/old drafts, report traceability and final handoff | Two humans (ownership pending) | TODO | Approved merged baseline and release evidence | No closing action performed |
+
 Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend at role level**; `Human B` = other teammate, **Frontend + Analysis/Design proposed and pending own acceptance of task scope**; `AI` = assistant executing only on explicitly allowed branches. Existing `Owner (proposed)` column is older planning data, **NOT task acceptance** and is not auto-changed by role selection. Exact package mapping in `docs/CORE_BACKEND_TEAM_HANDOFF_20261020.md`. `UNASSIGNED` means not accepted.
 
 | Task ID | Priority | Scope / acceptance summary | Owner (proposed) | Status | Dependency | Evidence / PR |

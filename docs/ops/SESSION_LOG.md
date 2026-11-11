@@ -524,3 +524,33 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Unit tests: **PASS** (19/19 tests).
    - BE-08 isolated moderation regression: **PASS** (7/7 groups).
    - SEC-01 private PDF security regression: **PASS** (18/18 checks).
+
+## SESSION-20261110-H17-OPS08 — Continuation plan and remote-only worktree agreement
+
+**Actor:** AI via authorized GitHub connector at user's request. **Task:** OPS-08. **State:** docs drafted/pushed for human review, not human-approved implementation.
+**Verified baseline:** `main` `0993a42154fe` (untouched); `integration/team-dev-20261020` `955bee98c91f`; PR #86 by HungNDk4 OPEN `f8c9625da21` (do not edit).
+**Docs-only branch:** `docs/hunny17-resume-worktree-20261110`, based on exact integration SHA above; single coherent commit, Draft PR to integration (see branch/PR HEAD for exact commit).
+**Files:** HUNNY17_NEXT_WORK_PLAN_20261110.md, TASK_BOARD.md, CURRENT_STATE.md, WORKTREE_REGISTRY.md, WORKTREE_PLAYBOOK.md, SESSION_LOG.md. No `client/`, `server/`, `database/`, `.github/` source/config or `.gitignore` changes.
+**Remote source audit:** PR #86 contains report model/routes/UI/migration plus admin/personal-post features; ADM-02 still proposed; #75/#78/#32 cloud release not accepted. Plan avoids duplicate report implementation and shared file writes.
+**Worktree:** **LOCAL WORKTREE NOT CREATED/NOT INSPECTED**; only logical remote branch recorded. No local reset/clean/prune, no other branch modified.
+**Tests:** no runtime, DB, Chromium or cloud tests performed for this docs change. Static control integrity and GitHub CI status should be verified on exact new PR SHA after publishing; until confirmed, `NOT RUN`. Human review `PENDING`.
+**Next:** review docs/ownership, then QA-06 inspect #86 source/security/schema/targeted tests; cloud preflight separately read-only after access authorization.
+
+## SESSION-20261110-QA06-PR86-REMEDIATION-LOCKS — Review code and ownership handoff
+
+**Actor:** Hunny-17 via GitHub connector / AI-assisted source review. User instructed PR #86 comment remediation, source ownership gate and read-only cloud preparation.
+**Baseline:** `integration/team-dev-20261020` @ `955bee98c91ffa5b3f068891ba31912b3102d86a`; PR #86 by HungNDk4 @ `f8c9625da21a9ba28bc444e2740901f1cd1176bc`.
+**Evidence:** 8 preliminary findings on PR #86 discussion comment #6747782694. Draft stacked [PR #88](https://github.com/HungNDk4/CNPM-MXH-SV/pull/88) @ `1f565543b830a17c6e3b5e27cddd3f48a4e56b54` fixes Admin reason, fake feedback, notifications pagination; adds read-only cloud release gate note. Original PR #86 untouched.
+**Files locked:** detailed owner matrix in WORKTREE_REGISTRY; #86 HungNDk4 owner, #88 Hunny-17 patch editor on branch only, #87 docs ownership; no overlapping BE-11 or BE-12 implementation branch opened. Shared SESSION_LOG append histories need merge preservation.
+**Testing:** PR #87 prior exact-HEAD GitHub 9/9 PASS. PR #88 newly initiated CI **PENDING AT INSPECTION**, no local runtime/DB/browser tests separately executed. Direct new-suite report/avatar/MySQL tests **NOT RUN**; no cloud smoke, no live TiDB/Render.
+**Safety:** no changes to main, integration, original #86, cloud config, real data; no physical worktree created, no force push/cleanup.
+**Next:** obtain #88 CI and human author review; integrate into PR #86 by its owner, then consider backend Issue #79/#80 code after locks resolved. Cloud preflight remains read-only and BLOCKED on operator access.
+
+## SESSION-20261110-ADM02-SOURCE-CI-CLOUD — Work proceeds while teammate connects QA
+
+**GitHub human merge evidence:** PR #88 MERGED into #86 branch at 2026-11-10T02:18:18Z; PR #86 MERGED into `integration/team-dev-20261020` at 2026-11-10T02:59:35Z, merge commit `928928047f8348fc7ad37c1c9feae34147cd9d1e`. These merges were not executed by the assistant in this session.
+**ADM-02:** assigned Hunny-17, created one cohesive source commit `b79799f066009d186b436eb083c9b9e99eb50ad3` and **Draft PR #89**, isolated feature branch from new integration. Admin-only user list/status/audit, row locks, refresh revocation, append-only audit migration and explicit disposable-only MySQL8 regression test. **Exact SHA GitHub CI 9/9 SUCCESS**, targeted Ubuntu MySQL8 test job included. **Human approval PENDING**, no PR #89 merge, no TiDB DDL.
+**Direct read-only Render:** `mini-study-network-dep01-demo` still configured for PoC branch `feat/dep01c-render-tidb-blob-poc-20261022`, latest live SHA `71499dfd63d21feb019d6144efcadc7ee9232951`, autoDeploy yes *on PoC branch*. No release or settings mutation.
+**TiDB user-evidenced:** QA branch `qa-acceptance` and `hung_qa` CRUD grants set by operator; Hùng's laptop/Backend test not confirmed; not independently accessed by connector. No credentials stored in repo.
+**Session locks:** PR #89 files exclusively owned by Hunny-17 until handoff. Local worktrees unverified. PR #87 docs branch synced with new integration preserving append-only histories.
+**Next:** independent peer review PR #89 → then #80 owner-only My Posts API → #81 report acceptance; separate approved schema backup and operator-only QA/cloud gates.

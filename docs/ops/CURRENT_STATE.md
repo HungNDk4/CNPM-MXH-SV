@@ -1,4 +1,31 @@
 # CURRENT STATE — Read this before taking action
+## 2026-11-10 — LATEST CHECKPOINT (overrides earlier historical checkpoints)
+
+- GitHub `integration/team-dev-20261020` = `928928047f8348fc7ad37c1c9feae34147cd9d1e`. PR #88 MERGED into PR #86 on 2026-11-10; PR #86 MERGED into integration. CI on integration exact SHA: 9/9 push and 9/9 PR checks passed. No cloud acceptance implied.
+- Hunny-17 owns Issue #79. ADM-02 implemented on isolated `feat/adm02-account-moderation-api-20261110` @ `b79799f066009d186b436eb083c9b9e99eb50ad3`, **Draft PR #89**; exact-HEAD **9/9 CI PASS**, including isolated MySQL8 ADM-02 lock/unlock/session rollback tests. HungNDk4 was requested as independent reviewer; **human approval PENDING, NOT merged, NOT deployed**.
+- Render DIRECT READ-ONLY: `mini-study-network-dep01-demo` is still linked to `feat/dep01c-render-tidb-blob-poc-20261022`, auto-deploy enabled on that *PoC branch*. Latest live deploy at commit `71499dfd63d21feb019d6144efcadc7ee9232951`, not integration/PR #89. No Render write.
+- TiDB QA based on **operator screenshots only**: Starter `mini-study-network`, `main` shows 12 tables and `moderation_audit_logs.reason VARCHAR(500) NULL`; database branch `qa-acceptance` created and SQL user `hung_qa` granted SELECT/INSERT/UPDATE/DELETE on `mini_study_network`. Hùng's separate-device login/test still **NOT VERIFIED**. No TiDB SQL executed by assistant.
+- Locks: after #86 merge, Hunny-17 now owns **ONLY PR #89 files** (server admin controllers/models/routes, schema/migration, CI and isolated MySQL test); Hùng Frontend remains separate. No physical worktree verified, no force push, no merge, no live DDL. Next: review #89, then #80, #81, QA/cloud operator gates.
+
+## 2026-11-10 — QA-06 execution checkpoint (most recent, before earlier notes)
+
+- **Original PR #86:** HungNDk4, open/unmerged at `f8c9625da21a9ba28bc444e2740901f1cd1176bc`, source audit with eight findings on [review comment](https://github.com/HungNDk4/CNPM-MXH-SV/pull/86#issuecomment-6747782694). 9/9 Actions PASS but not new targeted suite/cloud acceptance.
+- **Focused fix Draft PR #88:** https://github.com/HungNDk4/CNPM-MXH-SV/pull/88, stacked *on PR #86 branch*, separate branch `fix/pr86-review-ui-gates-20261110` at `1f565543b830a17c6e3b5e27cddd3f48a4e56b54`. Three Frontend fix files + read-only cloud preflight note. Do **not** push to PR #86 directly or merge without HungNDk4 approval.
+- **PR #87:** docs/worktree control remains Draft. Exact previous HEAD 42b24aa GitHub Actions 9/9 SUCCESS. Further docs updates need new exact-HEAD CI before approval.
+- **File ownership:** see [WORKTREE_REGISTRY.md](WORKTREE_REGISTRY.md) 2026-11-10 file lock matrix. Current PR #86 shared files are locked; BE-11 issue #80 and ADM-02 issue #79 are **not yet authorized to start coding** on overlapping paths.
+- **Cloud:** [PR #88 read-only gate](PR86_REMEDIATION_CLOUD_PREFLIGHT_20261110.md) is proposed in the stacked PR (not integrated into this docs base). Render/TiDB live access, schema, backup and deployed SHA **NOT VERIFIED**; no SQL/deploy.
+- **Local worktrees:** no person-specific physical worktree seen; remote only.
+- **NEXT_SESSION_ACTIONS:** check #88 exact-HEAD CI and get HungNDk4 review/merge into #86; then review #86 full scope, migrate docs history without clobbering, and only after locked file release begin BE-11/ADM-02 implementation on fresh single-task branch.
+
+## 2026-11-10 — ACTIVE CHECKPOINT (overrides stale historical snapshots below)
+
+- **Plan:** [HUNNY17_NEXT_WORK_PLAN_20261110.md](HUNNY17_NEXT_WORK_PLAN_20261110.md); continuation task statuses in [TASK_BOARD.md](TASK_BOARD.md) under 2026-11-10. This is a docs-only proposed handoff, not feature approval.
+- **GitHub source-of-truth as inspected:** `main` = `0993a42154fe` (old); `integration/team-dev-20261020` = `955bee98c91f` (merged #77/#82/#84/#85). HungNDk4 PR #86 remains OPEN, unmerged, at `f8c9625da21`; do not touch its branch or merge automatically.
+- **Immediate next work:** OPS-08 docs review → QA-06 PR #86 source/CI/DB/security review. OPS-09 cloud preflight independently BLOCKED on Render/TiDB, backup and human deployment approval. BE-11/QA-07 depend on #86 disposition; BE-12 needs own frozen backend contract.
+- **Local environment:** **NO local worktree inspected or created here**; GitHub-only docs branch is remote, path unknown. Never delete or reset teammate worktrees. Follow [WORKTREE_PLAYBOOK.md](WORKTREE_PLAYBOOK.md) and [WORKTREE_REGISTRY.md](WORKTREE_REGISTRY.md).
+- **No source/runtime effect:** no `client/`, `server/`, `database/`, CI workflow, `.gitignore`, Render, TiDB or `main` modifications in this docs package. Test and cloud execution = **NOT RUN** for this plan. Exact PR CI result must be checked after publication.
+- **NEXT_SESSION_ACTIONS:** fetch latest branches/PRs/CI, verify selected task ownership, review #86 without editing its branch; only then propose task-specific branch/worktree and tests. Older 2026-10-17/21 status blocks are audit history, not current verdict.
+
 ## 2026-10-21 E2E-01 — latest GitHub verification (read first)
 
 - Integration baseline `integration/team-dev-20261020` confirmed at `7bbe302623191d5f28e967424ae529df307a13e7`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. On integration, PDF security/API/React PRs #20/#21/#23/#24/#25/#26/#27/#29 have been merged; historical older rows/paragraphs below are not current source assertions.

@@ -524,3 +524,25 @@ Analyzed CI error logs from failed GitHub Actions workflow run across all 4 fail
    - Unit tests: **PASS** (19/19 tests).
    - BE-08 isolated moderation regression: **PASS** (7/7 groups).
    - SEC-01 private PDF security regression: **PASS** (18/18 checks).
+
+## SESSION-20261111-PR89-90-91-VERIFICATION — Local Migration & Full Regression Verification
+**Actor:** AI under user pairing. **Branch:** `integration/team-dev-20261020` (commit `434cf82`).
+**Scope & Deliverables:**
+1. **Verified Merged PRs #89, #90, #91 on Integration Baseline:**
+   - PR #89 (`feat/adm02-account-moderation-api-20261110` @ `309e9a9`): Admin account lock/unlock, refresh session revocation, login-vs-lock atomic transaction and audit logging.
+   - PR #90 (`feat/be11-my-posts-api-20261110` @ `0f459d2`): Authenticated owner-only `GET /api/posts/my` with server-side pagination, global sorting, and client-claimed `author_id` rejection.
+   - PR #91 (`feat/fe-adm02-be11-integration-20261110` @ `434cf82`): Frontend integration with `AdminUsersPage.jsx` and `MyPostsPage.jsx` connected to real APIs.
+2. **Executed Additive Database Migration:**
+   - Applied `database/migrations/20261110_adm02_account_audit.sql` to local MySQL 8 database `mini_study_network`. Created `account_moderation_audit_logs` table with indices.
+3. **Verification Evidence (all PASS on local test environment):**
+   - FE API Contract Guard (`node scripts/fe-adm02-be11-contract.test.cjs`): **PASS** (1/1).
+   - ADM-02 HTTP + MySQL8 suite (`node scripts/ubuntu/adm02-account-moderation.test.cjs`): **PASS** (1/1 suite, all 401/403/422/409, concurrency, atomic lock, rollback and session revocation verified).
+   - BE-11 My Posts suite (`node scripts/ubuntu/be11-my-posts.test.cjs`): **PASS** (1/1 suite, 51+ pagination, A/B isolation, status filters, engagement sort verified).
+   - BE-08 Content Moderation (`node scripts/ubuntu/be08-admin-moderation-regression.cjs`): **PASS** (7/7 groups).
+   - EXT-03 Audit Log (`node scripts/ubuntu/ext03-admin-audit-regression.cjs`): **PASS** (9/9 groups).
+   - QA-01 / BE-05 / BE-07 (`node scripts/ubuntu/auth-ownership.test.cjs`): **PASS** (15/15 checks, 9/9 profile security, 7/7 refresh rotation).
+   - SEC-01 Private PDF Security (`node scripts/ubuntu/pdf-security.test.cjs`): **PASS** (18/18 checks).
+   - Frontend production build (`cd client && npm run build`): **PASS** (2109 modules, 0 errors).
+   - Backend syntax check (`node --check`): **PASS** (0 errors).
+   - Project control static checks (`node scripts/check-project-control.mjs`): **PASS** (54 task rows).
+4. **Guardrail:** `main` branch remains at initial commit (`0993a42`), completely untouched. No merges performed.

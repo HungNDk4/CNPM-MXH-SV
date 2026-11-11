@@ -32,23 +32,26 @@ Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend
 | DS-04 | P1 | UI sitemap, user flows and wireframes | AI + Human A review | TODO | G1 | source UI; [issue #17](https://github.com/HungNDk4/CNPM-MXH-SV/issues/17) |
 | DS-05 | P1 | Sequence/activity diagrams for critical flows | AI + Human A review | TODO | DS-01/02/03 | Not started |
 | DS-06 | P0 | Threat model, design gate | AI + two humans review | TODO | DS-02/03/05 | P0 vulnerabilities |
-| SEC-01 | P0 | No leak of paid-document file URL | UNASSIGNED | BLOCKED | DS-03 + access decision | Bug identified; no code fix; [issue #13](https://github.com/HungNDk4/CNPM-MXH-SV/issues/13) |
-| SEC-02 | P2 | Full VNPay idempotent callbacks, payment QA for extension | UNASSIGNED | DEFERRED | Explicit reopening of payment scope | Payment source unsafe; routes MUST first be gated by SEC-03 |
-| SEC-03 | P0 | Hard-disable/gate paid APIs, paid document paths and callbacks with negative tests before MVP demo | UNASSIGNED | TODO | AN-00 + security review | Scope Option B, code not yet gated; [issue #12](https://github.com/HungNDk4/CNPM-MXH-SV/issues/12) |
-| BE-01 | P1 | Public guest GET feed, optional auth | UNASSIGNED | TODO | DS-03 | route currently blocks guest |
-| BE-02 | P1 | Schema consistency + migration plan | UNASSIGNED | TODO | DS-02 | ORM drift |
-| QA-01 | P0 | Auth/privacy tests + verify paid endpoints DENIED in MVP | UNASSIGNED | TODO | DS-03/SEC-01/SEC-03 | CI only syntax/build now; [issue #14](https://github.com/HungNDk4/CNPM-MXH-SV/issues/14) |
-| FE-01 | P1 | Post detail + threaded comments | UNASSIGNED | TODO | DS-03/04 + BE-01 | FE page stub; [issue #15](https://github.com/HungNDk4/CNPM-MXH-SV/issues/15) |
-| FE-02 | P1 | Like/unlike FE with correct API states | UNASSIGNED | TODO | DS-03/04 | BE route exists |
-| FE-03 | P1 | Search/filter/pagination UI | UNASSIGNED | TODO | BE-01/DS-04 | UI placeholders |
-| FE-04 | P1 | Profile/edit/password screens | UNASSIGNED | TODO | DS-03/04 | FE page stub; [issue #16](https://github.com/HungNDk4/CNPM-MXH-SV/issues/16) |
-| FE-05 | P1 | Edit/delete post UI with ownership | UNASSIGNED | TODO | DS-03/04 | BE routes exist |
-| BE-03 | P1 | Admin hide/delete after PDF publication | UNASSIGNED | TODO | AN-03/DS-03/ADR-013 | Admin post-moderation confirmed; report/appeal UX remains PROPOSED |
-| DOC-01 | P1 | Human A selects direct PDF upload for free documents | Human A | DONE | AN-00 | User confirmed B 2026-10-17; ADR-010; detailed spec awaiting review |
-| DOC-02 | P1 | Finish PDF storage/retention/moderation API design without paid infrastructure | Human A + AI | TODO | DOC-01 + ADR-011/012/013 and ADR-014 cost constraint; local vs online demo requirement OPEN | STORAGE_COST_REVIEW recommendations; local storage NOT approved, no endpoint |
-| DOC-03 | P1 | Implement authenticated single-PDF upload, validation and storage | UNASSIGNED | BLOCKED | DOC-02 design approval + SEC-04 | Existing source URL-only |
-| DOC-04 | P1 | Implement authenticated PDF download, guest metadata/login CTA, cleanup and UI | UNASSIGNED | BLOCKED | DOC-03 + DOC-02 design approval | ADR-011 approved; no code/test yet |
-| SEC-04 | P0 | Replace vulnerable Multer 1.x with reviewed patched release before upload implementation | UNASSIGNED | TODO | DOC-01 + compatibility check | Repo package.json declares 1.4.5-lts.1; GHSA-wc9g-mqfw-jrwm affects <2.3.0 |
+| SEC-01 | P0 | No leak of paid-document file URL | AI + Human A review | DONE | DS-03 + access decision | PR #20, #21, #24; pdf-security.test.cjs 18/18 PASS |
+| SEC-02 | P2 | Full VNPay idempotent callbacks, payment QA for extension | UNASSIGNED | DEFERRED | Explicit reopening of payment scope | Payment source unsafe; routes gated by SEC-03 |
+| SEC-03 | P0 | Hard-disable/gate paid APIs, paid document paths and callbacks with negative tests before MVP demo | AI + Human A review | DONE | AN-00 + security review | PR #20 (8a4a3b6); paid endpoints return 404/disabled; negative tests PASS |
+| BE-01 | P1 | Public guest GET feed, optional auth | AI + Human A review | DONE | DS-03 | Feed public/optional-auth contract; guest/auth validated |
+| BE-02 | P1 | Schema consistency + migration plan | AI + Human A review | DONE | DS-02 | Schema and migrations synchronized with Sequelize models |
+| QA-01 | P0 | Auth/privacy tests + verify paid endpoints DENIED in MVP | AI + Human A review | DONE | DS-03/SEC-01/SEC-03 | auth-ownership.test.cjs 15/15 PASS; BE-05 9/9 PASS; BE-07 7/7 PASS |
+| FE-01 | P1 | Post detail + threaded comments | Human B + AI | DONE | DS-03/04 + BE-01 | PostDetailPage.jsx connected; E2E validated |
+| FE-02 | P1 | Like/unlike FE with correct API states | Human B + AI | DONE | DS-03/04 | PostCard and PostDetailPage reactions connected |
+| FE-03 | P1 | Search/filter/pagination UI | Human B + AI | DONE | BE-01/DS-04 | SearchPage.jsx and quick-search floating panel connected |
+| FE-04 | P1 | Profile/edit/password screens | Human B + AI | DONE | DS-03/04 | ProfilePage.jsx connected; BE-05 password change PASS |
+| FE-05 | P1 | Edit/delete post UI with ownership | Human B + AI | DONE | DS-03/04 | Edit/delete post modals and ownership guards active |
+| BE-03 | P1 | Admin hide/delete after PDF publication | Human A + AI | DONE | AN-03/DS-03/ADR-013 | PR #86; be08-admin-moderation-regression.cjs 7/7 PASS |
+| DOC-01 | P1 | Human A selects direct PDF upload for free documents | Human A | DONE | AN-00 | User confirmed B 2026-10-17; ADR-010; detailed spec in DOCUMENT_UPLOAD_SPEC.md |
+| DOC-02 | P1 | Finish PDF storage/retention/moderation API design without paid infrastructure | Human A + AI | DONE | DOC-01 + ADR-011/012/013 | DOC02_PRIVATE_STORAGE_DESIGN.md approved |
+| DOC-03 | P1 | Implement authenticated single-PDF upload, validation and storage | Human A + AI | DONE | DOC-02 design approval + SEC-04 | PR #24 (8c18548); pdf-upload regression PASS |
+| DOC-04 | P1 | Implement authenticated PDF download, guest metadata/login CTA, cleanup and UI | Human A + AI | DONE | DOC-03 + DOC-02 design approval | PR #25 (84d3013); pdf-download regression PASS |
+| SEC-04 | P0 | Replace vulnerable Multer 1.x with reviewed patched release before upload implementation | AI + Human A review | DONE | DOC-01 + compatibility check | PR #23 (2dc4a7a); Multer 2.4.0 upgraded and CI locked |
+| ADM-02 | P1 | Admin account moderation API, atomic lock, refresh revocation & audit | Human A + AI | DONE | AN-03/DS-03 | PR #89 merged (309e9a9); migration 20261110_adm02_account_audit.sql; adm02-account-moderation.test.cjs PASS |
+| BE-11 | P1 | Authenticated owner-only My Posts API, pagination & sorting | Human A + AI | DONE | DS-03 | PR #90 merged (0f459d2); be11-my-posts.test.cjs PASS |
+| FE-06 | P1 | Frontend integration for ADM-02 user moderation and BE-11 My Posts | Human B + AI | DONE | ADM-02/BE-11 | PR #91 merged (434cf82); fe-adm02-be11-contract.test.cjs PASS; AdminUsersPage & MyPostsPage |
 | PAY-01 | P2 | Order/history/payment state UI | UNASSIGNED | DEFERRED | New explicit scope decision | VNPay Sandbox extension only |
 | PAY-02 | P2 | Sandbox full flow/negative/idempotency tests | UNASSIGNED | DEFERRED | SEC-02 + scope reopened | NOT TESTED; out of MVP |
 | QA-02 | P1 | Disposable MySQL integration suite | UNASSIGNED | REVIEW | G4 / Ubuntu CI | Ubuntu 24.04 + real MySQL 8 auth, refresh-token uniqueness/rotation, post CRUD smoke PASS run 39288366164; full integration suite still NOT RUN |

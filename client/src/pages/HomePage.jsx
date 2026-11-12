@@ -418,7 +418,10 @@ export default function HomePage() {
               <span className="sr-only sm:not-sr-only text-xs">Sắp xếp:</span>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => {
+                  setSortBy(e.target.value)
+                  scrollToFeedTop()
+                }}
                 className="cursor-pointer appearance-none bg-transparent pr-1 font-bold text-xs sm:text-sm text-[#06110a] dark:text-white outline-none"
               >
                 <option value="newest" className="bg-white dark:bg-[#303132] text-[#06110a] dark:text-white">Mới nhất</option>
@@ -567,7 +570,10 @@ export default function HomePage() {
             title="Chưa có bài viết từ người bạn theo dõi"
             description="Theo dõi các bạn học và tác giả tích cực chia sẻ tài liệu hữu ích để cập nhật bài viết mới nhất tại đây."
             actionLabel='Xem bảng tin "Dành cho bạn"'
-            onAction={() => setStreamTab('for-you')}
+            onAction={() => {
+              setStreamTab('for-you')
+              scrollToFeedTop()
+            }}
           />
         ) : displayPosts.length === 0 ? (
           <EmptyState
@@ -600,6 +606,7 @@ export default function HomePage() {
                     next.delete('subject')
                     setSearchParams(next)
                     setPage(1)
+                    scrollToFeedTop()
                   }
                 : undefined
             }

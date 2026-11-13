@@ -64,7 +64,7 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
   const [commentText, setCommentText] = useState('')
   const [replyingTo, setReplyingTo] = useState(null) // { id: number, authorName: string }
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
-  const [showComments, setShowComments] = useState(true)
+  const [showComments, setShowComments] = useState(false)
 
   // Sync state if props change (from optimized feed query)
   useEffect(() => {
@@ -241,10 +241,8 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
 
   const handleCommentButtonClick = (e) => {
     e.preventDefault()
-    setShowComments(true)
-    setTimeout(() => {
-      commentInputRef.current?.focus()
-    }, 50)
+    e.stopPropagation()
+    navigate(postUrl)
   }
 
   // Display top root comments (up to 2 in feed, rest linked to detail page)

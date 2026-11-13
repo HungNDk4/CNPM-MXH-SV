@@ -1,203 +1,167 @@
-# KỊCH BẢN DEMO & BẢO VỆ ĐỒ ÁN — MINI STUDY NETWORK
-
-> **Hệ thống:** Mạng xã hội học tập & Chia sẻ tài liệu học tập sinh viên (Mini Study Network)  
-> **Công nghệ:** React 18, Vite, Tailwind CSS, Express.js, Sequelize ORM, MySQL 8, Playwright  
-> **Thời lượng demo khuyến nghị:** 10 – 15 phút
-
----
-
-## I. CHUẨN BỊ TRƯỚC BUỔI DEMO (SETUP & PREPARATION)
-
-### 1. Khởi động hệ thống
-Mở 2 cửa sổ terminal tại thư mục gốc của dự án:
-* **Terminal 1 (Backend):**
-  ```bash
-  cd server && npm start
-  # Đảm bảo hiển thị: 🚀 Server running on http://localhost:5000 | ✅ MySQL connected successfully.
-  ```
-* **Terminal 2 (Frontend):**
-  ```bash
-  cd client && npm run dev
-  # Đảm bảo hiển thị: ➜ Local: http://localhost:5173/
-  ```
-
-### 2. Danh sách tài khoản thử nghiệm (Test Personas)
-Chuẩn bị sẵn 3 tài khoản đại diện cho 3 vai trò:
-
-| Vai trò | Email đăng nhập | Mật khẩu | Mục đích demo |
-| :--- | :--- | :--- | :--- |
-| **Quản trị viên (Admin)** | `admin@studynet.vn` | `Admin@123` | Quản lý hệ thống, kiểm duyệt nội dung, khóa/mở khóa tài khoản, xem audit log |
-| **Sinh viên 1 (Student A)** | `hungnd13112004@gmail.com` | `123456` | Đăng câu hỏi, đăng tài liệu PDF, quản lý bài viết của tôi, sửa thông tin |
-| **Sinh viên 2 (Student B)** | `demo1@gmail.com` | `Password123!` | Tương tác chéo: Like, bình luận bài viết, tải tài liệu PDF |
-| **Khách vãng lai (Guest)** | *(Không đăng nhập)* | *(Không)* | Khám phá trang chủ, tìm kiếm, thử tải file bị chặn đăng nhập |
-
-### 3. Thiết lập cửa sổ trình duyệt (Browser Setup)
-* **Cửa sổ 1 (Trình duyệt thường):** Dùng để đăng nhập **Sinh viên A** và chuyển đổi sang **Quản trị viên**.
-* **Cửa sổ 2 (Trình duyệt ẩn danh - Incognito):** Ban đầu để làm **Khách (Guest)**, sau đó đăng nhập **Sinh viên B** để biểu diễn tương tác chéo thời gian thực giữa 2 người dùng.
+# KỊCH BẢN DEMO BẢO VỆ ĐỒ ÁN — MINI STUDY NETWORK
+**Dự án:** Mạng xã hội học tập và chia sẻ tài liệu sinh viên (Mini Study Network)  
+**Nhóm sinh viên thực hiện:** 2 thành viên (Human A — Core Backend & Security, Human B — Frontend & UI/UX)  
+**Thời lượng đề xuất:** 10 – 15 phút trình diễn + 5 phút Q&A phản biện
 
 ---
 
-## II. KỊCH BẢN PHÂN CẢNH DEMO (SCENE-BY-SCENE WALKTHROUGH)
+## I. Đánh giá Mức độ Sẵn sàng Demo (Readiness Check)
 
-```mermaid
-flowchart TD
-    M1["Phân cảnh 1: Khách vãng lai\n(Khám phá & Chặn tải PDF 401)"] --> M2["Phân cảnh 2: Sinh viên học tập\n(Đăng bài, Upload PDF, Tương tác chéo & My Posts)"]
-    M2 --> M3["Phân cảnh 3: Quản trị viên\n(Dashboard, Kiểm duyệt ẩn bài, Khóa tài khoản & Audit Log)"]
-    M3 --> M4["Phân cảnh 4: Điểm nhấn công nghệ\n(Dark/Light Mode, Quick Search, Private Storage)"]
-```
+| Phân hệ / Tính năng | Tiêu chí SRS / MVP | Trạng thái hiện tại | Đánh giá Demo |
+|---|---|:---:|---|
+| **1. Khách vãng lai (Guest)** | Xem feed công khai, tìm kiếm tài liệu, xem metadata PDF, chuyển theme | **HOÀN THÀNH** | Sẵn sàng demo |
+| **2. Xác thực & Tài khoản (Auth)** | Đăng ký, đăng nhập JWT + Refresh Token, đổi mật khẩu thu hồi phiên | **HOÀN THÀNH** | Sẵn sàng demo |
+| **3. Đăng bài & Chia sẻ PDF (Posts & Docs)** | Đăng câu hỏi/thảo luận, đính kèm ảnh, upload PDF (≤10MB) lưu trữ bảo mật | **HOÀN THÀNH** | Sẵn sàng demo |
+| **4. Tải PDF bảo mật (Secure PDF Stream)** | Khách chặn tải (401), sinh viên đăng nhập tải stream an toàn, không lộ file key | **HOÀN THÀNH** | Điểm nhấn kỹ thuật |
+| **5. Tương tác học tập (Interactions)** | Like/Unlike (chống duplicate), Bình luận phân cấp (Threaded), Báo cáo vi phạm | **HOÀN THÀNH** | Sẵn sàng demo |
+| **6. Mạng xã hội mở rộng (Social)** | Lưu bài viết (Bookmark), Theo dõi (Follow/Unfollow), Thông báo thời gian thực | **HOÀN THÀNH** | Sẵn sàng demo |
+| **7. Quản lý cá nhân (My Posts & Profile)** | KPI cá nhân, lọc trạng thái bài (công khai/ẩn/xóa), Campus ID card sinh viên | **HOÀN THÀNH** | Sẵn sàng demo |
+| **8. Quản trị nội dung (Admin Content)** | Ẩn/xóa mềm bài vi phạm kèm lý do bắt buộc, xử lý hàng đợi báo cáo | **HOÀN THÀNH** | Sẵn sàng demo |
+| **9. Quản trị người dùng (Admin Users)** | Khóa/mở khóa tài khoản có lý do, thu hồi phiên lập tức, chống tự khóa admin | **HOÀN THÀNH** | Điểm nhấn bảo mật |
+| **10. Nhật ký & Phân tích (Analytics & Audit)** | Biểu đồ xu hướng, xếp hạng tương tác, nhật ký kiểm duyệt append-only | **HOÀN THÀNH** | Sẵn sàng demo |
 
----
-
-### PHÂN CẢNH 1: TRẢI NGHIỆM KHÁCH VÃNG LAI & RÀO CẮN BẢO MẬT (GUEST EXPERIENCE)
-* **Thời lượng:** ~2 phút  
-* **Môi trường:** Cửa sổ Ẩn danh (chưa đăng nhập)  
-* **Mục tiêu:** Chứng minh hệ thống cho phép sinh viên tiếp cận tri thức mở nhưng bảo vệ chặt chẽ tài nguyên tải về (Chính sách ADR-011).
-
-1. **Khám phá Bảng tin:**
-   * Mở `http://localhost:5173/`.
-   * Giới thiệu giao diện phong cách Bento Academic, hiển thị các bài viết câu hỏi, thảo luận và tài liệu học tập.
-   * Thử chuyển qua các tab bộ lọc: *Hỏi đáp, Thảo luận, Tài liệu*.
-2. **Tìm kiếm học thuật:**
-   * Gõ phím tắt `/` hoặc bấm vào thanh tìm kiếm, gõ từ khóa `React` hoặc `Web` để tìm kiếm tài liệu.
-3. **Chứng minh rào chắn tải PDF (Security Gate):**
-   * Bấm vào xem chi tiết một tài liệu (ví dụ: *"Bộ tài liệu tổng hợp Fullstack Web"*).
-   * Khách xem được đầy đủ: Tiêu đề, mô tả tóm tắt, tên môn học, tác giả và dung lượng file PDF.
-   * **Thao tác quan trọng:** Bấm nút **"Tải tài liệu PDF"**.
-   * **Kết quả quan sát:** Hệ thống hiển thị thông báo yêu cầu đăng nhập (HTTP 401 được bắt và thông báo toast / chuyển hướng sang `/login`). Không bao giờ rò rỉ URL file trực tiếp ra bên ngoài.
+> **KẾT LUẬN:** Hệ thống **đã đủ 100% chức năng cần thiết** cho buổi bảo vệ đồ án, giao diện Bento Academic đồng bộ, hỗ trợ Dark/Light mode và có dữ liệu mẫu thực tế.
 
 ---
 
-### PHÂN CẢNH 2: SINH VIÊN HỌC TẬP & CHIA SẺ TÀI LIỆU (SOCIAL LEARNING)
-* **Thời lượng:** ~5 phút  
-* **Môi trường:** Cửa sổ 1 (Sinh viên A) + Cửa sổ 2 (Sinh viên B)  
-* **Mục tiêu:** Demo trọn vẹn vòng đời một bài viết từ đăng tải, upload PDF, tương tác chéo, đến quản lý cá nhân.
+## II. Chuẩn bị Tài khoản & Môi trường Trình diễn
 
-1. **Sinh viên A đăng tải bài viết & Upload PDF:**
-   * Tại Cửa sổ 1, đăng nhập với `hungnd13112004@gmail.com` / `123456`.
-   * Bấm nút **"Tạo bài viết"** (`/posts/create`).
-   * Chọn loại bài: **Chia sẻ tài liệu**.
-   * Nhập tiêu đề: *"Đề cương ôn tập & Bài tập thực hành Mạng máy tính 2026"*.
-   * Nhập nội dung mô tả, chọn môn học *"Mạng máy tính"*.
-   * **Upload file PDF:** Chọn một file PDF thực tế (≤10 MB).
-   * Bấm **"Đăng bài"**: Hệ thống validate magic bytes `%PDF-`, mã hóa lưu file vào vùng lưu trữ riêng tư (Private Storage) và tạo bài viết với trạng thái `active` ngay lập tức.
-2. **Sinh viên B tương tác chéo (Cửa sổ Ẩn danh):**
-   * Đăng nhập tài khoản Sinh viên B (`demo1@gmail.com` / `Password123!`).
-   * Vào trang chủ sẽ thấy ngay bài viết vừa đăng của Sinh viên A.
-   * **Tải tài liệu PDF:** Bấm vào chi tiết bài viết và bấm **"Tải tài liệu PDF"** -> File PDF được tải về máy thành công với tên chuẩn an toàn.
-   * **Tương tác:**
-     * Bấm **Like** bài viết (chỉ số like tăng tức thời).
-     * Bấm **Lưu bài viết (Bookmark)**.
-     * Nhập bình luận: *"Cảm ơn bạn đã chia sẻ tài liệu rất hữu ích!"* và gửi (bình luận xuất hiện ngay lập tức).
-3. **Sinh viên A quản lý bài viết của tôi (`/my-posts`):**
-   * Quay lại Cửa sổ 1 của Sinh viên A, truy cập vào menu avatar -> chọn **"Bài viết của tôi"** (`/my-posts`).
-   * Giới thiệu các tính năng mới tích hợp:
-     * Bộ chỉ số thống kê bài viết, tổng lượt thích, bình luận.
-     * Dropdown lọc theo trạng thái: *Đang hiển thị, Bị ẩn, Đã xóa*.
-     * Sắp xếp theo: *Mới nhất, Nhiều tương tác nhất*.
-   * Thử bấm chỉnh sửa bài viết hoặc thử chức năng xóa mềm.
+### 1. Thông tin Đăng nhập Demo
+
+| Vai trò | Email đăng nhập | Mật khẩu | Mục đích trình diễn |
+|---|---|---|---|
+| **Khách (Guest)** | *(Chưa đăng nhập)* | *(Không)* | Demo xem trước metadata, chặn tải tài liệu |
+| **Sinh viên A (Tác giả)** | `hungnd13112004@gmail.com` | `123456` | Demo đăng bài, upload PDF, tương tác, xem My Posts |
+| **Sinh viên B (Người dùng khác)** | `demo1@gmail.com` | `123456` | Demo tải PDF, follow, like, bình luận, báo cáo vi phạm |
+| **Quản trị viên (Admin)** | `admin@studynet.vn` | `Admin@123` | Demo Overview, kiểm duyệt bài viết, khóa tài khoản, xem Audit Log |
+
+### 2. Thiết lập Môi trường Trình diễn
+* **Mở 2 cửa sổ trình duyệt song song:**
+  * Cửa sổ 1: Trình duyệt bình thường (Dành cho **Sinh viên A** hoặc **Admin**).
+  * Cửa sổ 2: Trình duyệt ẩn danh (Incognito) (Dành cho **Khách** hoặc **Sinh viên B**).
+* **Kiểm tra dịch vụ:**
+  * Backend: `http://localhost:5000` (`npm start` trong thư mục `server`).
+  * Frontend: `http://localhost:5173` (`npm run dev` trong thư mục `client`).
 
 ---
 
-### PHÂN CẢNH 3: QUẢN TRỊ VIÊN HỆ THỐNG & KIỂM DUYỆT (ADMIN MODERATION)
-* **Thời lượng:** ~5 phút  
-* **Môi trường:** Cửa sổ 1 (Chuyển sang tài khoản Admin)  
-* **Mục tiêu:** Điểm nhấn thuyết phục nhất của đồ án — chứng minh hệ thống có công cụ quản trị kiểm duyệt chặt chẽ, truy vết minh bạch (Audited) và phản ứng bảo mật thời gian thực.
+## III. Phân vai Trình diễn (2 Thành viên)
 
-1. **Đăng nhập Quản trị viên & Tổng quan hệ thống:**
-   * Đăng xuất Sinh viên A, đăng nhập Admin: `admin@studynet.vn` / `Admin@123`.
-   * Giao diện Admin xuất hiện với thanh điều hướng 5 phân hệ:
-     * **Tổng quan (`/admin`):** Biểu đồ xu hướng hoạt động, tổng bài viết, tổng người dùng.
-     * **Phân tích (`/admin/analytics`):** Xếp hạng bài viết nổi bật và mức độ tương tác.
-2. **Kiểm duyệt bài viết vi phạm (ADM-01):**
-   * Vào **"Quản lý bài viết"** (`/admin/posts`).
-   * Tìm bài viết của Sinh viên A vừa đăng.
-   * Bấm nút **"Ẩn bài viết"**.
-   * Hệ thống yêu cầu nhập lý do kiểm duyệt: Nhập *"Nội dung tài liệu cần xác minh bản quyền học phần"*.
-   * Bấm **"Xác nhận ẩn"**.
-   * **Kiểm chứng tức thời bên Sinh viên B:**
-     * Chuyển sang Cửa sổ 2 (Sinh viên B), refresh trang chủ: Bài viết **hoàn toàn biến mất** khỏi bảng tin công khai.
-     * Thử truy cập thẳng link cũ của bài viết: Trả về **404 Không tìm thấy**.
-   * **Kiểm chứng bên tác giả (Sinh viên A):**
-     * Đăng nhập lại Sinh viên A vào `/my-posts`: Bài viết chuyển sang tab **"Bị ẩn"** với thẻ trạng thái thông báo tĩnh, vô hiệu hóa các nút like/comment.
-3. **Kiểm duyệt tài khoản người dùng (ADM-02):**
-   * Quay lại giao diện Admin, chọn tab **"Tài khoản người dùng"** (`/admin/users`).
-   * Danh sách hiển thị toàn bộ tài khoản với badge *Đang hoạt động / Đã khóa*.
-   * **Điểm nhấn bảo mật:** Chỉ vào tài khoản `admin@studynet.vn` — Nút "Khóa" bị mờ và vô hiệu hóa (`disabled`) để **chống Admin tự khóa chính mình**.
-   * Tìm tài khoản sinh viên vi phạm (ví dụ `demo4@gmail.com` hoặc tài khoản Sinh viên A).
-   * Bấm nút **"Khóa"**: Modal bật lên yêu cầu nhập lý do (5–500 ký tự).
-   * Nhập: *"Vi phạm chính sách chia sẻ tài liệu nhiều lần"*.
-   * Bấm **"Xác nhận khóa"**.
-   * **Kiểm chứng thu hồi phiên tức thời (Session Revocation):**
-     * Người dùng bị khóa lập tức bị hủy bỏ toàn bộ refresh token trong database.
-     * Mọi request tiếp theo (kể cả khi JWT access token chưa hết hạn) đều bị chặn **401/403**.
-     * Khi người dùng cố đăng nhập lại: Hệ thống báo lỗi rõ ràng *"Tài khoản đã bị khóa"*.
-   * **Mở khóa tài khoản:** Admin có thể bấm nút **"Mở khóa"** kèm lý do giải trình để phục hồi tài khoản cho sinh viên.
-4. **Nhật ký kiểm duyệt minh bạch (Audit Logs):**
-   * Vào tab **"Nhật ký kiểm duyệt"** (`/admin/audit-logs`) và phần audit trong trang `/admin/users`.
-   * Chứng minh hệ thống ghi nhận đầy đủ:
-     * Thời gian thao tác (chính xác đến mili-giây).
-     * Admin thực hiện (Actor Admin ID).
-     * Đối tượng bị xử lý (Target ID).
-     * Trạng thái cũ → Trạng thái mới.
-     * Lý do xử lý bắt buộc.
-     * Dữ liệu là **Append-only** (không ai có thể chỉnh sửa hay xóa lịch sử audit).
+* **Thành viên 1 (Human A — Phụ trách Backend, Bảo mật & Luồng Admin):**
+  * Thuyết trình kiến trúc backend, cơ chế bảo vệ PDF, phân quyền JWT/Refresh Token và trực tiếp demo các tính năng Quản trị hệ thống (Admin).
+* **Thành viên 2 (Human B — Phụ trách Frontend, Trải nghiệm người dùng & Luồng Sinh viên):**
+  * Thuyết trình phong cách thiết kế UI/UX Bento Academic, khả năng responsive, tối ưu hóa giao diện và trực tiếp demo các luồng thao tác của Khách & Sinh viên.
 
 ---
 
-### PHÂN CẢNH 4: ĐIỂM NHẤN CÔNG NGHỆ & TRẢI NGHIỆM (TECH HIGHLIGHTS)
-* **Thời lượng:** ~2 phút  
-* **Mục tiêu:** Gây ấn tượng về độ hoàn thiện UI/UX và tiêu chuẩn mã nguồn.
+## IV. Kịch bản Chi tiết Từng Bước (12 Phút)
 
-1. **Giao diện 2 chế độ Sáng / Tối (Light / Dark Theme):**
-   * Bấm nút icon Mặt trời / Mặt trăng trên thanh điều hướng.
-   * Toàn bộ hệ thống chuyển đổi màu sắc mượt mà, độ tương phản chuẩn WCAG, không chói mắt.
-2. **Bộ nhận diện Mascot Cú học thuật (Academic Owl):**
-   * Giới thiệu các trạng thái cảm xúc của Mascot: Khi không có dữ liệu tìm kiếm (Empty State), khi chào mừng, khi tải trang.
-3. **Responsive Design:**
-   * Bật Inspect chế độ Mobile/Tablet (iPhone 14 / iPad) trên DevTools để chứng minh giao diện co giãn linh hoạt, menu chuyển sang dạng trượt mượt mà.
+### Giai đoạn 1: Trải nghiệm Khách vãng lai & Tìm kiếm học tập (2 phút)
+*Người trình bày: Thành viên 2 (Frontend)*
 
----
-
-## III. CẨM NANG TRẢ LỜI CÂU HỎI PHẢN BIỆN (DEFENSE Q&A GUIDE)
-
-Dưới đây là các câu hỏi trọng tâm mà giảng viên / hội đồng chấm đồ án hay hỏi và câu trả lời chuẩn xác:
-
-### 1. "File PDF lưu ở đâu? Có bị rò rỉ nếu ai đó đoán được URL không?"
-* **Trả lời:**
-  * File PDF không lưu ở thư mục public tĩnh (`/uploads`) mà được quản lý qua dịch vụ **Private Document Storage** riêng biệt.
-  * Mỗi file khi tải lên được đổi tên thành mã UUID ngẫu nhiên và lưu ở thư mục bảo mật với quyền đọc hạn chế.
-  * Khi người dùng tải file, bắt buộc phải đi qua endpoint API `/api/documents/:id/download` có middleware xác thực JWT và kiểm tra trạng thái bài viết (`active`).
-  * Backend đọc file dạng stream và truyền về response chứ **không bao giờ trả về URL tĩnh**, do đó kẻ tấn công không thể dùng URL để tải lén.
-
-### 2. "Nếu tài khoản bị Admin khóa nhưng Access Token của họ vẫn còn hạn (15 phút) thì họ có tiếp tục phá hoại được không?"
-* **Trả lời:**
-  * Hệ thống đã giải quyết triệt để vấn đề này. Middleware xác thực `auth.middleware.js` không chỉ giải mã chữ ký JWT mà còn truy vấn trường `is_active` của người dùng trên từng request.
-  * Đồng thời, trong transaction khóa tài khoản, toàn bộ Refresh Token của tài khoản đó bị xóa (Revoke) ngay lập tức.
-  * Vì vậy, ngay sau khi Admin bấm Khóa, người dùng đó gửi bất kỳ request nào cũng sẽ bị từ chối **401 Unauthorized** và không thể xin cấp token mới.
-
-### 3. "Nếu có 2 Admin cùng thao tác khóa/mở khóa một tài khoản cùng lúc thì hệ thống xử lý thế nào?"
-* **Trả lời:**
-  * Endpoint `PATCH /api/admin/users/:id/status` được bọc hoàn toàn trong **Database Transaction** với cơ chế khóa dòng (Row-level Lock).
-  * Trạng thái được kiểm tra điều kiện (CAS - Compare And Swap). Nếu trạng thái không thay đổi, hệ thống là idempotent và không tạo audit log dư thừa.
-  * Thao tác ghi audit log được liên kết trong cùng transaction; nếu ghi log lỗi, toàn bộ thao tác cập nhật trạng thái sẽ tự động **Rollback** để bảo đảm toàn vẹn dữ liệu.
-
-### 4. "Dự án có những bài kiểm thử tự động (Automated Tests) nào?"
-* **Trả lời:**
-  * Hệ thống có hệ thống test tự động nhiều tầng:
-    1. **Unit & Contract Tests:** Kiểm tra tính toàn vẹn DTO, không lộ mật khẩu, không lộ private storage key.
-    2. **Integration Regression Tests:** Hơn 10 kịch bản test trên MySQL 8 thật (chạy trong GitHub Actions CI và local): Test xác thực 2 tài khoản, test vòng đời refresh token, test kiểm duyệt bài viết BE-08, test kiểm duyệt tài khoản ADM-02, test phân trang BE-11.
-    3. **E2E UI Tests:** Sử dụng Playwright điều khiển trình duyệt Chromium chụp màn hình và kiểm tra 0 console error, 0 broken images trên cả 2 theme Light và Dark.
-
-### 5. "Phần thanh toán VNPay trong đồ án hiện tại thế nào?"
-* **Trả lời:**
-  * Theo quyết định phạm vi MVP (Option B trong `docs/MVP_SCOPE.md`), nhóm tập trung ưu tiên hoàn thiện xuất sắc trải nghiệm mạng xã hội học tập và chia sẻ tài liệu **hoàn toàn miễn phí** cho sinh viên.
-  * Các route thanh toán cũ đã được khóa an toàn ở tầng backend (trả về 404/disabled có test negative) để tránh rò rỉ bảo mật. Nhóm đã thiết kế sẵn mô hình dữ liệu để sẵn sàng mở rộng tính năng tài liệu có phí và VNPay Sandbox trong giai đoạn tiếp theo.
+1. **Khám phá Bảng tin (Feed):**
+   * Mở cửa sổ ẩn danh truy cập `http://localhost:5173/`.
+   * Trình bày giao diện Campus Pop Bento: bố cục 3 cột (Danh mục môn học bên trái, Bảng tin trung tâm, Xu hướng & Thống kê bên phải).
+   * Thao tác chuyển đổi nhanh **Chế độ Sáng (Light Mode) ↔ Chế độ Tối (Dark Mode)** trên thanh Navbar để minh họa độ đồng bộ giao diện.
+2. **Tìm kiếm thông minh (Quick Search & Search Page):**
+   * Bấm phím tắt `/` hoặc click ô tìm kiếm để mở **Quick Search Floating Panel**.
+   * Gõ từ khóa `React` hoặc chọn môn `Công nghệ phần mềm`: kết quả gợi ý tức thời.
+   * Chuyển sang trang Tìm kiếm nâng cao `/search`: lọc theo loại bài (Câu hỏi, Thảo luận, Tài liệu).
+3. **Cơ chế Bảo vệ Tài liệu với Khách:**
+   * Click vào một bài viết tài liệu PDF.
+   * Chỉ rõ: Khách được xem tiêu đề, mô tả, môn học, tác giả và **metadata file** (kích thước, định dạng `.pdf`).
+   * Bấm nút **"Tải tài liệu PDF"**: Hệ thống hiển thị thông báo popup yêu cầu đăng nhập, chặn truy cập file bytes trái phép (Backend trả HTTP 401).
 
 ---
 
-## IV. BẢNG PHÂN CÔNG THUYẾT TRÌNH CỦA 2 THÀNH VIÊN (PROPOSED 2-PERSON DIVISION)
+### Giai đoạn 2: Trải nghiệm Sinh viên — Đăng tài liệu & Mạng xã hội (4 phút)
+*Người trình bày: Thành viên 2 (Frontend) phối hợp Thành viên 1 (Backend)*
 
-| Thành viên | Vai trò phụ trách | Nội dung thuyết minh trong buổi bảo vệ |
-| :--- | :--- | :--- |
-| **Thành viên A (Backend & Bảo mật)** | Trình bày Kiến trúc & Cơ sở dữ liệu | • Giới thiệu mô hình kiến trúc Client-Server, ERD cơ sở dữ liệu.<br>• Phân tích cơ chế bảo mật JWT, atomic refresh token, private PDF storage.<br>• Thuyết minh phân cảnh Quản trị viên (Khóa tài khoản, ẩn bài, Audit logs). |
-| **Thành viên B (Frontend & Nghiệp vụ)** | Trình bày Giao diện & Luồng người dùng | • Giới thiệu ý tưởng sản phẩm, phân tích yêu cầu (Use Cases).<br>• Trực tiếp điều khiển thao tác Demo màn 1 (Khách) và màn 2 (Sinh viên tương tác chéo).<br>• Trình bày thiết kế Bento UI, Dark/Light mode và trải nghiệm người dùng. |
+1. **Đăng nhập Sinh viên A:**
+   * Đăng nhập với tài khoản `hungnd13112004@gmail.com` / `123456`.
+   * Giao diện cập nhật thông tin sinh viên, hiển thị số thông báo và menu điều hướng cá nhân.
+2. **Đăng tải Tài liệu PDF có đính kèm file:**
+   * Bấm nút **"Đăng bài"** (`/posts/create`).
+   * Chọn loại bài: **Tài liệu học tập**.
+   * Nhập tiêu đề: `"Đề cương ôn tập & Bài tập lớn CNPM 2026"`.
+   * Chọn môn học, nhập mô tả nội dung.
+   * Tải lên 1 file PDF thực tế (dung lượng < 10MB).
+   * Bấm **"Đăng tài liệu"**: Bài viết xuất hiện tức thì trên đầu Feed kèm huy hiệu Document.
+3. **Tương tác đa chiều giữa Sinh viên A & B (Minh họa tính năng mạng xã hội):**
+   * Chuyển sang Cửa sổ 2 đăng nhập **Sinh viên B** (`demo1@gmail.com` / `123456`).
+   * Sinh viên B xem bài tài liệu vừa đăng của Sinh viên A:
+     * Bấm **Tải tài liệu PDF**: File PDF được tải về máy thành công với đúng kích thước và nội dung nguyên bản.
+     * Bấm **Thả tim (Like)**: Số lượt thích tăng lên thời gian thực. Bấm lại để Hủy like.
+     * Viết **Bình luận**: `"Tài liệu rất chi tiết, cảm ơn bạn!"`.
+     * Bấm **"Lưu bài viết" (Bookmark)**: Lưu vào danh sách cá nhân.
+     * Click vào tác giả Sinh viên A, bấm **"Theo dõi" (Follow)**.
+4. **Trung tâm thông báo (Notifications):**
+   * Quay lại Cửa sổ 1 của Sinh viên A: Badge chuông thông báo hiển thị thông báo mới từ Sinh viên B (Like, Bình luận, Follow).
+5. **Trang Bài viết của tôi (`/my-posts`):**
+   * Sinh viên A truy cập `/my-posts`:
+     * Chỉ rõ bảng KPI cá nhân: Tổng bài viết, tổng lượt thích, bình luận, lượt xem.
+     * Thử nghiệm bộ lọc: Đang hiển thị (`active`), Bị ẩn (`hidden`), Đã xóa (`deleted`).
+     * Thử nghiệm sắp xếp: Mới nhất (`newest`) ↔ Tương tác nhiều nhất (`engagement`).
+
+---
+
+### Giai đoạn 3: Phân hệ Quản trị viên (Admin Moderation & Security) (4 phút)
+*Người trình bày: Thành viên 1 (Backend & Security)*
+
+1. **Đăng nhập Quản trị viên:**
+   * Đăng nhập tài khoản `admin@studynet.vn` / `Admin@123`.
+   * Truy cập phân hệ Quản trị tại `/admin`.
+2. **Tổng quan hệ thống (`/admin`):**
+   * Trình bày Dashboard thống kê tổng số tài khoản, bài viết, tài liệu, báo cáo vi phạm.
+   * Biểu đồ xu hướng hoạt động trong 7 ngày gần nhất.
+3. **Kiểm duyệt Bài viết vi phạm (`/admin/posts` & `/admin/content`):**
+   * Sinh viên B báo cáo một bài viết có nội dung vi phạm (Report post).
+   * Admin vào `/admin/content` thấy bài viết nằm trong hàng đợi báo cáo.
+   * Admin bấm **"Ẩn nội dung"**: Modal yêu cầu nhập lý do kiểm duyệt (5–500 ký tự). Nhập: `"Nội dung chứa liên kết không phù hợp quy định học thuật"`.
+   * **Kiểm chứng bảo mật:**
+     * Sinh viên B và Khách lập tức không thể xem bài viết đó trên feed hoặc detail (trả 404).
+     * Sinh viên A (tác giả) vào `/my-posts` mục "Bị ẩn" vẫn thấy bài viết của mình kèm thẻ thông báo trạng thái tĩnh nhưng bị khóa tương tác.
+4. **Kiểm duyệt & Khóa tài khoản Người dùng (`/admin/users`):**
+   * Admin tìm kiếm tài khoản Sinh viên vi phạm (ví dụ `demo4@gmail.com`).
+   * Trình bày tính năng an toàn: Nút "Khóa" của tài khoản Admin hiện tại bị **vô hiệu hóa** (ngăn chặn tự khóa chính mình).
+   * Bấm **"Khóa tài khoản"** đối với `demo4@gmail.com`. Nhập lý do: `"Vi phạm tiêu chuẩn cộng đồng nhiều lần"`.
+   * **Kiểm chứng tức thời:**
+     * Mở tab đăng nhập thử tài khoản vừa bị khóa: Hệ thống từ chối đăng nhập với thông báo *"Tài khoản đã bị khóa"*.
+     * Tất cả Refresh Token của tài khoản đó bị thu hồi toàn bộ trong database, Access Token hiện hành bị vô hiệu hóa lập tức (Backend kiểm tra cờ `is_active` trên mọi request).
+   * Admin bấm **"Mở khóa tài khoản"** để khôi phục trạng thái.
+5. **Nhật ký kiểm duyệt bất biến (`/admin/audit-logs`):**
+   * Mở tab Nhật ký kiểm duyệt: Hiển thị đầy đủ lịch sử các thao tác Admin vừa thực hiện (thời gian chính xác, người thực hiện, đối tượng bị xử lý, lý do).
+
+---
+
+### Giai đoạn 4: Tổng kết & Câu hỏi Phản biện (Q&A) (2 – 5 phút)
+*Cả 2 thành viên cùng giải trình*
+
+Tóm tắt các điểm mạnh công nghệ nổi bật của dự án trước Hội đồng:
+1. **Kiến trúc phân tầng sạch:** React Vite + Tailwind CSS ở Client; Node.js Express + Sequelize ORM + MySQL 8 ở Server.
+2. **Bảo mật nhiều lớp:** Lưu trữ tài liệu Private Storage, xác thực kép Access/Refresh Token với cơ chế xoay vòng nguyên tử (Atomic Rotation), phòng chống hoàn toàn IDOR và Race Condition khi khóa tài khoản.
+3. **Tuân thủ quy trình kiểm thử:** Đạt 100% PASS trên tất cả các bộ test hợp đồng API, kiểm thử hồi quy bảo mật và kiểm định giao diện Playwright E2E.
+
+---
+
+## V. Bộ Câu hỏi Phản biện Thường gặp (FAQ) & Gợi ý Trả lời
+
+#### Câu 1: Tại sao hệ thống không cho Khách tải trực tiếp file PDF mà bắt buộc đăng nhập?
+> **Gợi ý trả lời:**  
+> *"Theo chính sách truy cập tài liệu ADR-011 của dự án, nhằm ngăn chặn việc cào dữ liệu (data scraping) tự động của bot và bảo vệ tài nguyên học thuật của sinh viên trong trường, hệ thống chỉ mở metadata công khai để phục vụ tìm kiếm SEO và hiển thị học thuật. File PDF nhị phân chỉ được stream qua endpoint bảo mật khi có Access JWT hợp lệ."*
+
+#### Câu 2: File PDF được lưu trữ ở đâu? Có lưu trực tiếp vào thư mục công khai của web server không?
+> **Gợi ý trả lời:**  
+> *"Không. Hệ thống tuyệt đối không lưu file PDF trong thư mục tĩnh công khai (như `/public` hay `/uploads` công khai). Thay vào đó, hệ thống sử dụng module Private Document Storage lưu file với khóa định danh ngẫu nhiên (UUID hash). Khi sinh viên có quyền yêu cầu tải, backend sẽ kiểm tra quyền sở hữu và trạng thái bài viết (chỉ bài `active` mới được tải), sau đó stream dữ liệu trực tiếp về client kèm header chống rò rỉ đường dẫn vật lý."*
+
+#### Câu 3: Khi Admin khóa một tài khoản, nếu tài khoản đó đang có JWT token còn hạn 15 phút thì có tiếp tục gọi API được không?
+> **Gợi ý trả lời:**  
+> *"Không thể gọi API được nữa. Trong middleware xác thực `auth.middleware.js`, hệ thống không chỉ giải mã chữ ký JWT mà còn kiểm tra trạng thái `users.is_active` trực tiếp trong database trên từng request. Khi tài khoản bị khóa, mọi request tiếp theo đều bị chặn với mã HTTP 401. Đồng thời, toàn bộ refresh token liên quan đều bị xóa khỏi database trong cùng một giao dịch (transaction) nguyên tử để ngăn chặn việc gia hạn phiên."*
+
+#### Câu 4: Làm thế nào giải quyết xung đột (Race Condition) khi người dùng đang đăng nhập dở mà Admin bấm Khóa tài khoản?
+> **Gợi ý trả lời:**  
+> *"Trong PR #89, nhóm đã cài đặt cơ chế serialize giao dịch: trong hàm `login`, trước khi tạo refresh token mới, backend thực hiện khóa dòng (Row-level lock với `FOR UPDATE`) và kiểm tra lại trạng thái `is_active`. Nếu giao dịch khóa tài khoản của Admin hoàn tất trước, tiến trình đăng nhập sẽ nhận ra trạng thái khóa và rollback ngay lập tức, không để lọt bất kỳ session hợp lệ nào."*
+
+#### Câu 5: Hệ thống có hỗ trợ thanh toán tài liệu có phí không?
+> **Gợi ý trả lời:**  
+> *"Theo quyết định phạm vi MVP (Option B - Free-first MVP), nhóm ưu tiên tối đa cho việc chia sẻ tài liệu miễn phí và mạng xã hội học tập để phục vụ sinh viên trước. Các route thanh toán VNPay Sandbox trước đây đã được nhóm chủ động vô hiệu hóa từ tầng backend (trả về 404/disabled) để bảo đảm an toàn bảo mật, tránh rủi ro gian lận tiền bạc trước khi có quy trình kiểm toán bảo mật chuyên sâu."*

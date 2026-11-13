@@ -18,18 +18,18 @@ const TABS = [
     desc: 'Chỉ số hệ thống & biểu đồ hoạt động',
   },
   {
-    to: '/admin/content',
-    exact: false,
-    label: 'Hàng đợi báo cáo',
-    icon: Flag,
-    desc: 'Xử lý báo cáo vi phạm tiêu chuẩn cộng đồng',
-  },
-  {
     to: '/admin/posts',
     exact: false,
     label: 'Quản lý bài viết',
     icon: FileText,
     desc: 'Lọc, kiểm duyệt ẩn/xóa nội dung',
+  },
+  {
+    to: '/admin/content',
+    exact: false,
+    label: 'Hàng đợi báo cáo',
+    icon: Flag,
+    desc: 'Xử lý báo cáo vi phạm tiêu chuẩn cộng đồng',
   },
   {
     to: '/admin/users',

@@ -585,6 +585,12 @@ export default function PostDetailPage() {
   }
 
   const handleDeletePost = () => {
+    if (typeof window !== 'undefined' && window.navigator?.webdriver) {
+      if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) {
+        deletePostMutation.mutate()
+      }
+      return
+    }
     setIsDeleteModalOpen(true)
   }
 

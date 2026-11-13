@@ -200,6 +200,10 @@ test('FE66-P3 Chromium actual frontend interactions, DB/authorization and regres
       assert.equal((await Post.findByPk(question.id)).title,'P3 Edited '+seed);
       page.once('dialog',dialog=>dialog.accept());
       await page.getByRole('button',{name:'Xóa bài viết'}).click();
+      const modalBtn = page.getByRole('button', { name: 'Đồng ý xóa' });
+      if (await modalBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await modalBtn.click();
+      }
       await page.waitForURL(u=>u.pathname==='/');
       assert.equal((await Post.findByPk(question.id)).status,'deleted');
     });

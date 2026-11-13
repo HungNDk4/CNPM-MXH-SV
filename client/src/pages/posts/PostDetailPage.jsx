@@ -415,7 +415,7 @@ function Comments({ postId }) {
   const comments = Array.isArray(data) ? data : []
 
   return (
-    <section className="card p-5 sm:p-7 space-y-6" aria-label="Bình luận và thảo luận">
+    <section id="comments" className="card p-5 sm:p-7 space-y-6 scroll-mt-24" aria-label="Bình luận và thảo luận">
       <div className="flex items-center justify-between pb-3 border-b border-surface-border">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary-600 dark:text-primary-400" />
@@ -490,6 +490,20 @@ export default function PostDetailPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({ title: '', content: '', subject: '', tags: '' })
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+
+  // Scroll to comments section if URL contains #comments hash
+  useEffect(() => {
+    if (window.location.hash === '#comments') {
+      setTimeout(() => {
+        const el = document.getElementById('comments')
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          const input = document.getElementById('root-comment')
+          input?.focus()
+        }
+      }, 250)
+    }
+  }, [id])
 
   const isAdmin = user?.role === 'admin'
 

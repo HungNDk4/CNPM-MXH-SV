@@ -1,17 +1,17 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const path = require('path');
 const rateLimit = require('express-rate-limit');
 
 const authRoutes    = require('./routes/auth.routes');
 const userRoutes    = require('./routes/user.routes');
 const postRoutes    = require('./routes/post.routes');
+const documentRoutes = require('./routes/document.routes');
 const commentRoutes = require('./routes/comment.routes');
 const likeRoutes    = require('./routes/like.routes');
-const orderRoutes   = require('./routes/order.routes');
-const paymentRoutes = require('./routes/payment.routes');
+const adminRoutes   = require('./routes/admin.routes');
 
 const { errorHandler } = require('./middlewares/error.middleware');
 
@@ -25,9 +25,20 @@ app.use(cors({
 }));
 
 // ─── Rate Limiting ───────────────────────────────────────────────
+// Preserve production limit. More requests are allowed ONLY on the
+// explicitly disposable GitHub Actions Chromium harness (single localhost IP).
+const isolatedChromiumCI =
+  process.env.GITHUB_ACTIONS === 'true' &&
+  Boolean(process.env.RUNNER_TEMP) &&
+  process.env.NODE_ENV === 'test' &&
+  process.env.E2E_DISPOSABLE_DB === 'true' &&
+  process.env.DB_AUTO_SYNC === 'false' &&
+  process.env.DB_HOST === '127.0.0.1' &&
+  process.env.DB_NAME === 'mini_study_network' &&
+  process.env.FE74_CI_RATE_LIMIT === 'EXPLICIT_DISPOSABLE_E2E_ONLY';
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  max: 100,
+  max: isolatedChromiumCI ? 1000 : (process.env.NODE_ENV === 'development' ? 1000 : 100),
   message: { success: false, message: 'Quá nhiều request, vui lòng thử lại sau.' },
 });
 app.use('/api/', limiter);
@@ -42,7 +53,18 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // ─── Static Files (uploads) ──────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// No public static mount for protected PDFs (SEC-01).
+// Public post illustrations only (SEC-01 safe: images only, no PDFs).
+app.use('/uploads/post-images', express.static(path.join(__dirname, '../uploads/post-images'), {
+  dotfiles: 'ignore',
+  index: false,
+  maxAge: '1d',
+}));
+app.use('/uploads/avatars', express.static(path.join(__dirname, '../uploads/avatars'), {
+  dotfiles: 'ignore',
+  index: false,
+  maxAge: '7d',
+}));
 
 // ─── Health Check ────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -53,10 +75,10 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth',     authRoutes);
 app.use('/api/users',    userRoutes);
 app.use('/api/posts',    postRoutes);
+app.use('/api/documents', documentRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/likes',    likeRoutes);
-app.use('/api/orders',   orderRoutes);
-app.use('/api/payment',  paymentRoutes);
+app.use('/api/admin',    adminRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────
 app.use('*', (req, res) => {

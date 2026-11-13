@@ -1,5 +1,5 @@
 'use strict';
-/* Ubuntu MySQL 8 disposable CI integration; no cloud, PDF or payment tests. */
+/* Ubuntu MySQL 8 disposable CI integration; no cloud or payment tests. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
@@ -103,6 +103,31 @@ test('Ubuntu + MySQL 8: timestamps, register, login, refresh, create/list', { ti
     }
     if (started) await new Promise((resolve, reject) =>
       server.close(error => error ? reject(error) : resolve()));
-    await sequelize.close();
+    // Connection closes in final suite.
   }
+});
+
+
+// Load security tests in the same test runner.
+require('./pdf-security.test.cjs');
+
+// BE-06 runs in a separate Node process. SEC-01 closes this process's shared
+// Sequelize connection, so importing another top-level test here is unsafe.
+const { spawn } = require('node:child_process');
+const path = require('node:path');
+test('BE-06 independent MySQL8 feed/search regression process', { timeout: 120_000 }, async () => {
+  // A direct node entrypoint avoids node:test recursive-run skip in CI.
+  const exitCode = await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [path.join(__dirname, 'be06-feed-search-regression.cjs')], {
+      cwd: path.join(__dirname, '../../server'),
+      env: process.env,
+      stdio: 'inherit'
+    });
+    child.once('error', reject);
+    child.once('exit', (code, signal) => {
+      if (signal) reject(new Error('BE-06 test process terminated by ' + signal));
+      else resolve(code);
+    });
+  });
+  assert.equal(exitCode, 0, 'BE-06 disposable MySQL regression must pass');
 });

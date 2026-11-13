@@ -46,7 +46,7 @@ if (fs.existsSync(boardPath)) {
   for (const row of board.split(/\r?\n/)) {
     const cells = row.split('|').map((x) => x.trim())
     const id = cells[1]
-    if (!/^(?:OPS|AN|DS|SEC|BE|QA|FE|DOC|PAY|DOCS|DEMO)-\d{2}$/.test(id ?? '')) continue
+    if (!/^(?:OPS|AN|DS|SEC|BE|QA|FE|DOC|PAY|DOCS|DEMO|ADM)-\d{2}$/.test(id ?? '')) continue
     if (seen.has(id)) errors.push('Duplicate task ID: ' + id)
     seen.add(id)
     const status = cells[5]
@@ -64,6 +64,6 @@ if (errors.length) {
   process.exitCode = 1
 } else {
   console.log('PASS: project control docs, internal links, ' +
-    (fs.readFileSync(boardPath, 'utf8').match(/^\| (?:OPS|AN|DS|SEC|BE|QA|FE|DOC|PAY|DOCS|DEMO)-\d{2}/gm)?.length ?? 0) +
+    (fs.readFileSync(boardPath, 'utf8').match(/^\| (?:OPS|AN|DS|SEC|BE|QA|FE|DOC|PAY|DOCS|DEMO|ADM)-\d{2}/gm)?.length ?? 0) +
     ' unique task rows validated (static only).')
 }

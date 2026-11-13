@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { authAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
+import { Loader2, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
-  const [form, setForm]     = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { setAuth }         = useAuthStore()
-  const navigate            = useNavigate()
+  const { setAuth } = useAuthStore()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -18,60 +21,116 @@ export default function LoginPage() {
     try {
       const { data } = await authAPI.login(form)
       setAuth(data.data)
-      toast.success(`Chào mừng, ${data.data.user.full_name}!`)
-      navigate('/')
+      toast.success(`Chào mừng trở lại, ${data.data.user.full_name}! 👋`)
+      const from = location.state?.from?.pathname || '/'
+      navigate(from, { replace: true })
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Đăng nhập thất bại.')
+      toast.error(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-slate-100 mb-1">Đăng nhập</h2>
-      <p className="text-slate-500 text-sm mb-6">Chào mừng trở lại! 👋</p>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="space-y-1.5">
+        <h2 className="text-2xl sm:text-3xl font-black text-content tracking-tight">
+          Đăng nhập
+        </h2>
+        <p className="text-content-muted text-xs sm:text-sm leading-relaxed">
+          Đăng nhập vào OwlMate để tiếp tục thảo luận và khám phá tài liệu ôn thi.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="text-sm font-medium text-slate-300 mb-1.5 block">Email</label>
-          <input
-            id="email" name="email" type="email"
-            value={form.email} onChange={handleChange}
-            placeholder="student@university.edu.vn"
-            className="input" required
-          />
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+        {/* Email */}
+        <div className="space-y-1.5">
+          <label htmlFor="email" className="text-xs font-bold text-content block">
+            Email sinh viên / Cá nhân <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="ten@student.edu.vn hoặc email cá nhân"
+              className="input pl-10 pr-4 py-2.5 sm:py-3 text-sm rounded-2xl"
+              required
+              autoComplete="email"
+            />
+            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-slate-300 mb-1.5 block">Mật khẩu</label>
-          <input
-            id="password" name="password" type="password"
-            value={form.password} onChange={handleChange}
-            placeholder="••••••••"
-            className="input" required
-          />
+        {/* Password */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="text-xs font-bold text-content block">
+              Mật khẩu <span className="text-rose-500">*</span>
+            </label>
+          </div>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              value={form.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              className="input pl-10 pr-11 py-2.5 sm:py-3 text-sm rounded-2xl"
+              required
+              autoComplete="current-password"
+            />
+            <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-content transition-colors cursor-pointer p-1"
+              title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
-        <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary w-full mt-2 py-3 sm:py-3.5 inline-flex items-center justify-center gap-2 font-bold shadow-md shadow-primary/20 rounded-2xl transition-all cursor-pointer text-sm"
+        >
           {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-              </svg>
-              Đang đăng nhập...
-            </span>
-          ) : 'Đăng nhập'}
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Đang đăng nhập...</span>
+            </>
+          ) : (
+            <>
+              <span>Đăng nhập</span>
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
         </button>
       </form>
 
-      <p className="text-center text-slate-500 text-sm mt-5">
-        Chưa có tài khoản?{' '}
-        <Link to="/register" className="text-primary-400 hover:text-primary-300 font-medium transition-colors">
-          Đăng ký ngay
-        </Link>
-      </p>
+      {/* Switch to Register */}
+      <div className="pt-3.5 border-t border-surface-border text-center">
+        <p className="text-content-muted text-xs sm:text-sm">
+          Chưa có tài khoản?{' '}
+          <Link
+            to="/register"
+            state={location.state}
+            className="text-primary-600 dark:text-primary-400 hover:text-primary-700 font-bold hover:underline transition-colors ml-1"
+          >
+            Đăng ký ngay
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import AdminLayoutNav from '@/components/admin/AdminLayoutNav'
 import {
   ShieldCheck,
   Search,
@@ -146,23 +147,11 @@ export default function AdminContentPage() {
   const reportPages = Math.max(1, reportPagination?.totalPages || 1)
 
   return (
-    <div className="max-w-6xl mx-auto space-y-5 pb-12">
-      <header className="rounded-3xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 p-6 md:p-8">
-        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-          <ShieldCheck size={15} /> Quản trị viên
-        </span>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-extrabold text-content">Quản lý nội dung & Báo cáo</h1>
-            <p className="mt-2 text-sm text-content-secondary">
-              Tìm kiếm bài viết, xử lý hàng đợi báo cáo vi phạm và kiểm duyệt học tập an toàn.
-            </p>
-          </div>
-          <Link className="btn-secondary text-sm inline-flex items-center gap-2" to="/admin/audit-logs">
-            <ClipboardList size={16} /> Nhật ký kiểm duyệt
-          </Link>
-        </div>
-      </header>
+    <div className="max-w-6xl mx-auto space-y-6 pb-12">
+      <AdminLayoutNav
+        title="Quản lý nội dung & Báo cáo"
+        subtitle="Tìm kiếm bài viết, xử lý hàng đợi báo cáo vi phạm và kiểm duyệt học tập an toàn."
+      />
 
       {/* Tabs navigation */}
       <div className="flex items-center gap-2 border-b border-surface-border pb-1">

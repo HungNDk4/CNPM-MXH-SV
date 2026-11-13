@@ -99,8 +99,6 @@ export default function AdminAuditPage() {
         subtitle="Ghi nhận toàn bộ thao tác ẩn/xóa bài viết vi phạm, bảo toàn tính minh bạch và toàn vẹn của mạng xã hội sinh viên."
       />
 
-      <Link className="btn-secondary inline-flex items-center gap-2 text-sm" to="/admin/content">Quản lý danh sách bài viết</Link>
-
       {/* ── Control Grid: Quick Moderation & Filter ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Quick Action Bento Card */}

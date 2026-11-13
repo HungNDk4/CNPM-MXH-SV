@@ -256,12 +256,16 @@ export default function HomePage() {
   }
 
   const handleTrendingClick = (topicItem) => {
+    const query = topicItem.query || topicItem.topic || topicItem.name || '';
     const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('search', topicItem.query);
+    if (query) {
+      nextParams.set('search', query);
+    } else {
+      nextParams.delete('search');
+    }
     setSearchParams(nextParams);
-    setSearchKeyword(topicItem.query);
     setPage(1);
-    scrollToFeedTop()
+    scrollToFeedTop();
   };
 
   const handleSubjectChange = (subjectVal) => {

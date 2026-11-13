@@ -1,0 +1,53 @@
+================================================================================
+THÔNG TIN NỘP BÁO CÁO ĐỒ ÁN MÔN HỌC — CÔNG NGHỆ PHẦN MỀM
+================================================================================
+
+1. ĐỀ TÀI:
+   Owl Mate — Mạng xã hội học tập và chia sẻ tài liệu dành cho sinh viên
+   (Mini Study Network)
+
+2. THÔNG TIN THÀNH VIÊN NHÓM:
+   - Thành viên 1 (Trưởng nhóm / Frontend & UI-UX):
+     + Họ và tên: Nguyễn Đức Hùng
+     + MSSV: [Điền MSSV của bạn vào đây]
+     + Email: hungnd13112004@gmail.com
+     + GitHub: HungNDk4 (https://github.com/HungNDk4)
+
+   - Thành viên 2 (Thành viên / Core Backend & Database):
+     + Họ và tên: Trần Quốc Huy
+     + MSSV: 231A290026
+     + Email: HUY231A290026@st.vhu.edu.vn
+     + GitHub: Hunny-17 (https://github.com/Hunny-17)
+
+3. LIÊN KẾT MÃ NGUỒN GITHUB:
+   - Repository chính thức:
+     https://github.com/HungNDk4/CNPM-MXH-SV.git
+   - Nhánh tích hợp chính (Main Integration Branch):
+     https://github.com/HungNDk4/CNPM-MXH-SV/tree/integration/team-dev-20261020
+   - Nhánh tính năng hoàn thiện & dữ liệu mẫu (Feature Branch):
+     https://github.com/HungNDk4/CNPM-MXH-SV/tree/feat/ui-post-nav-and-academic-samples
+
+4. CÔNG NGHỆ SỬ DỤNG TRONG ĐỒ ÁN:
+   - Frontend: React 18, Vite, Tailwind CSS, TanStack Query v5, Zustand, Lucide Icons.
+   - Backend: Node.js, Express.js, Sequelize ORM, JWT Authentication (Access + Refresh Token), Multer.
+   - Cơ sở dữ liệu: MySQL 8.0 (hỗ trợ TiDB Cloud).
+   - Kiến trúc an toàn: Private PDF Storage & Stream Download (chặn truy cập tĩnh công khai), Kiểm soát truy cập RBAC (Admin/Student).
+
+================================================================================
+HƯỚNG DẪN ĐÓNG GÓI TỆP NGUỒN ZIP (ĐẢM BẢO NHẸ VÀ CHUẨN ĐỂ NỘP)
+================================================================================
+Khi nén ZIP mã nguồn nộp cho Giảng viên, TUYỆT ĐỐI KHÔNG NÉN thư mục "node_modules" 
+và ".git" (vì sẽ làm file nặng hàng trăm MB và dễ bị hệ thống nộp bài từ chối).
+
+Cách đóng gói nhanh trên Windows:
+1. Bạn có thể dùng WinRAR hoặc 7-Zip:
+   - Chọn toàn bộ thư mục dự án "CNPM-MXH-SV" (trừ node_modules của client và server).
+2. Hoặc chạy lệnh PowerShell tự động đóng gói sạch (khoảng 5-10 MB):
+   powershell -Command "Compress-Archive -Path client, server, database, docs, scripts, package.json, README.md, PROJECT_CONTROL.md -DestinationPath CNPM_Nhom_OwlMate_SourceCode.zip"
+
+Khi Thầy/Cô giải nén ra chấm bài, chỉ cần chạy:
+- cd server && npm install && npm start
+- cd client && npm install && npm run dev
+Dự án sẽ khởi chạy ngay lập tức!
+================================================================================
+

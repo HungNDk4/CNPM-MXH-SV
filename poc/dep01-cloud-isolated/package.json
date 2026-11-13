@@ -1,0 +1,12 @@
+{
+  "name": "mini-study-network-dep01-isolated",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Zero-dependency stage-A HTTPS+Function probe. No production app features.",
+  "scripts": {
+    "test": "node --test test/*.test.cjs"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

@@ -1,10 +1,1243 @@
-// Stub - sẽ được phát triển đầy đủ
-export default function ProfilePage() {
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import { userAPI, followAPI, postAPI } from '@/services/api'
+import { useAuthStore } from '@/stores/authStore'
+import PostCard from '@/components/PostCard'
+import { PostCardSkeleton } from '@/components/common/Skeleton'
+import EmptyState from '@/components/common/EmptyState'
+import {
+  Users,
+  User,
+  GraduationCap,
+  Calendar,
+  Edit3,
+  Lock,
+  FileText,
+  Check,
+  Plus,
+  AlertTriangle,
+  BookOpen,
+  Sparkles,
+  Share2,
+  Code2,
+  Flame,
+  MessageSquare,
+  HelpCircle,
+  FileUp,
+  MapPin,
+  ExternalLink,
+  Laptop,
+  Settings,
+  Camera,
+  UploadCloud,
+  Loader2,
+} from 'lucide-react'
+import Modal from '@/components/common/Modal'
+
+const formatDate = (isoString) => {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+  return Number.isNaN(date.getTime())
+    ? ''
+    : date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+}
+
+function FollowUsersModal({ type, userId, onClose }) {
+  const [page, setPage] = useState(1)
+  const isFollowers = type === 'followers'
+  const title = isFollowers ? 'Người theo dõi' : 'Đang theo dõi'
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['follow-list', type, userId, page],
+    queryFn: async () => {
+      const fn = isFollowers ? followAPI.getFollowers : followAPI.getFollowing
+      return (await fn(userId, { page, limit: 10 })).data
+    },
+    enabled: Boolean(userId),
+  })
+
+  const users = data?.data || []
+  const pagination = data?.pagination
+
   return (
-    <div className="card text-center py-20">
-      <p className="text-4xl mb-4">👤</p>
-      <h2 className="text-xl font-semibold text-slate-200 mb-2">Trang hồ sơ</h2>
-      <p className="text-slate-500 text-sm">Đang xây dựng...</p>
+    <Modal
+      isOpen={Boolean(type)}
+      onClose={onClose}
+      title={title}
+      icon={isFollowers ? Users : User}
+    >
+      <div className="space-y-4">
+        <div className="max-h-80 overflow-y-auto space-y-2.5 pr-1">
+          {isLoading ? (
+            <p className="text-center text-slate-500 py-6 text-sm">Đang tải danh sách...</p>
+          ) : isError ? (
+            <p className="text-center text-rose-500 py-6 text-sm">Không thể tải danh sách.</p>
+          ) : users.length === 0 ? (
+            <p className="text-center text-slate-500 py-6 text-sm">Chưa có ai trong danh sách.</p>
+          ) : (
+            users.map((u) => (
+              <Link
+                key={u.id}
+                to={`/profile/${u.id}`}
+                onClick={onClose}
+                className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-muted transition-colors group"
+              >
+                <div className="w-10 h-10 rounded-full avatar-gradient-ring p-[1.5px] shrink-0">
+                  <div className="relative w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-xs font-bold text-primary-600">
+                    <span>{u.full_name?.[0]?.toUpperCase() || 'U'}</span>
+                    {u.avatar_url && (
+                      <img
+                        src={u.avatar_url}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = 'none' }}
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-slate-900 dark:text-white group-hover:text-primary-600 text-sm truncate">
+                    {u.full_name}
+                  </p>
+                  {u.university && (
+                    <p className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
+                      <GraduationCap className="w-3.5 h-3.5 text-primary-500" />
+                      <span>{u.university}</span>
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between pt-3 border-t border-surface-border text-xs text-slate-500">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+            >
+              Trước
+            </button>
+            <span>
+              Trang {page} / {pagination.totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={page >= pagination.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+            >
+              Sau
+            </button>
+          </div>
+        )}
+      </div>
+    </Modal>
+  )
+}
+
+export default function ProfilePage() {
+  const { id } = useParams()
+  const queryClient = useQueryClient()
+  const currentUser = useAuthStore((state) => state.user)
+  const updateUser = useAuthStore((state) => state.updateUser)
+
+  const validId = /^[1-9]\d*$/.test(id || '')
+  const isOwner = Number(currentUser?.id) === Number(id)
+
+  const [activeTab, setActiveTab] = useState('posts') // 'posts' | 'documents' | 'about' | 'edit' | 'security'
+  const [followModalType, setFollowModalType] = useState(null) // 'followers' | 'following' | null
+
+  // Avatar upload state
+  const avatarFileInputRef = useRef(null)
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('')
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false)
+
+  const handleAvatarFileSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Ảnh đại diện không được vượt quá 2 MB.')
+      return
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Chỉ chấp nhận ảnh định dạng JPG, PNG hoặc WebP.')
+      return
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    setAvatarFile(file)
+    setAvatarPreviewUrl(previewUrl)
+    setIsAvatarModalOpen(true)
+  }
+
+  const closeAvatarModal = () => {
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl)
+    }
+    setAvatarFile(null)
+    setAvatarPreviewUrl('')
+    setIsAvatarModalOpen(false)
+  }
+
+  const avatarUploadMutation = useMutation({
+    mutationFn: async (file) => {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      return (await userAPI.uploadAvatar(formData)).data
+    },
+    onSuccess: (res) => {
+      const newAvatarUrl = res.data?.avatar_url || res.data?.user?.avatar_url
+      updateUser({ avatar_url: newAvatarUrl })
+      queryClient.invalidateQueries({ queryKey: ['profile', id] })
+      toast.success('Cập nhật ảnh đại diện thành công!')
+      closeAvatarModal()
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể tải lên ảnh đại diện.')
+    },
+  })
+
+  // Query profile
+  const { data: profile, isLoading, isError, error } = useQuery({
+    queryKey: ['profile', id],
+    queryFn: async () => (await userAPI.getProfile(id)).data.data,
+    enabled: validId,
+    retry: false,
+  })
+
+  // EXT-02: Query follow stats
+  const { data: followStats } = useQuery({
+    queryKey: ['follow-stats', id],
+    queryFn: async () => (await followAPI.getFollowStats(id)).data.data,
+    enabled: validId && Boolean(currentUser),
+  })
+
+  // Phase 5.4: Query authentic scoped post stats from GET /api/posts/my-stats
+  const { data: myStatsRes } = useQuery({
+    queryKey: ['my-post-stats'],
+    queryFn: async () => {
+      try {
+        const res = await postAPI.getMyStats()
+        return res.data?.data
+      } catch {
+        return null
+      }
+    },
+    enabled: Boolean(isOwner && currentUser),
+    staleTime: 30000,
+  })
+
+  // Query User's Posts from API (Optimized with server-side author_id filter)
+  const { data: userPostsData, isLoading: isLoadingPosts } = useQuery({
+    queryKey: ['profile-posts', id, Boolean(currentUser)],
+    queryFn: async () => {
+      const params = { limit: 50, author_id: id }
+      if (!currentUser) params.type = 'document'
+      const res = await postAPI.getAll(params)
+      const list = res?.data?.data || []
+      return { data: list }
+    },
+    enabled: validId,
+    retry: 1,
+  })
+
+  const userPosts = userPostsData?.data || []
+  const userDocuments = userPosts.filter((p) => p.post_type === 'document')
+
+  // Real API Statistics for Campus Member Card
+  const totalPostsCount = isOwner && myStatsRes?.totalPosts !== undefined ? myStatsRes.totalPosts : userPosts.length
+  const totalLikesCount = isOwner && myStatsRes?.total_likes !== undefined
+    ? myStatsRes.total_likes
+    : userPosts.reduce((acc, p) => acc + (Number(p.like_count) || 0), 0)
+  const totalCommentsCount = isOwner && myStatsRes?.total_comments !== undefined
+    ? myStatsRes.total_comments
+    : userPosts.reduce((acc, p) => acc + (Number(p.comment_count) || 0), 0)
+  const totalViewsCount = isOwner && myStatsRes?.total_views !== undefined
+    ? myStatsRes.total_views
+    : userPosts.reduce((acc, p) => acc + (Number(p.view_count) || 0), 0)
+
+  // ── Dynamic Logic Derived for Profile Widgets (Grovelyn & Kilogram style) ──
+  // 1. Công cụ & Kỹ năng: lấy từ tags của các bài viết thực tế của user
+  const derivedSkills = useMemo(() => {
+    const rawTags = userPosts.flatMap((p) => {
+      if (Array.isArray(p.tags)) return p.tags
+      if (typeof p.tags === 'string') {
+        try {
+          const parsed = JSON.parse(p.tags)
+          if (Array.isArray(parsed)) return parsed
+        } catch {
+          return p.tags.split(',').map((s) => s.trim())
+        }
+      }
+      return []
+    }).filter(Boolean)
+
+    const uniqueTags = Array.from(new Set(rawTags))
+    return uniqueTags.slice(0, 10)
+  }, [userPosts])
+
+  // 2. Mình có thể góp ý về: lấy từ các môn học (subject) mà user đã từng đăng bài
+  const derivedAdviceTopics = useMemo(() => {
+    const subjects = Array.from(new Set(userPosts.map((p) => p.subject).filter(Boolean)))
+    return subjects.map((sub) => ({
+      title: sub,
+      desc: `Kinh nghiệm làm bài tập và tài liệu học tập môn ${sub}.`,
+    }))
+  }, [userPosts])
+
+  // 3. Hoạt động học tập: Thống kê định lượng thực tế từ bài viết đã đăng
+  const learningStats = useMemo(() => {
+    return {
+      totalPosts: userPosts.length,
+      totalDocuments: userDocuments.length,
+    }
+  }, [userPosts, userDocuments])
+
+  // EXT-02: Mutation Follow / Unfollow
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      if (followStats?.is_following) {
+        return (await followAPI.unfollow(id)).data
+      } else {
+        return (await followAPI.follow(id)).data
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['follow-stats', id] })
+      toast.success(followStats?.is_following ? 'Đã bỏ theo dõi.' : 'Đã theo dõi người dùng!')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Thao tác không thành công.')
+    },
+  })
+
+  // State for Edit Profile form
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    avatar_url: '',
+    university: '',
+    major: '',
+    bio: '',
+  })
+
+  // Sync profile into editForm when loaded
+  useEffect(() => {
+    if (profile) {
+      setEditForm({
+        full_name: profile.full_name || '',
+        avatar_url: profile.avatar_url || '',
+        university: profile?.university || '',
+        major: profile?.major || '',
+        bio: profile?.bio || '',
+      })
+    }
+  }, [profile])
+
+  // Mutation: Update Profile
+  const updateProfileMutation = useMutation({
+    mutationFn: (data) => userAPI.updateProfile(data),
+    onSuccess: (response) => {
+      const updated = response.data.data
+      queryClient.setQueryData(['profile', id], updated)
+      if (isOwner) {
+        updateUser(updated)
+      }
+      toast.success('Cập nhật hồ sơ thành công!')
+      setActiveTab('about')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể cập nhật hồ sơ.')
+    },
+  })
+
+  // State for Change Password form
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: '',
+  })
+
+  // Mutation: Change Password
+  const changePasswordMutation = useMutation({
+    mutationFn: (data) => userAPI.changePassword(data),
+    onSuccess: () => {
+      toast.success('Đổi mật khẩu thành công!')
+      setPasswordForm({
+        current_password: '',
+        new_password: '',
+        confirm_password: '',
+      })
+      setActiveTab('about')
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Không thể đổi mật khẩu.')
+    },
+  })
+
+  // Handle Edit Submit
+  const handleEditSubmit = (e) => {
+    e.preventDefault()
+    const trimmedName = editForm.full_name.trim()
+    if (!trimmedName) {
+      toast.error('Họ tên không được để trống.')
+      return
+    }
+
+    const payload = {
+      full_name: trimmedName,
+      bio: editForm.bio.trim() || null,
+      university: editForm.university.trim() || null,
+      major: editForm.major.trim() || null,
+      avatar_url: editForm.avatar_url.trim() || null,
+    }
+
+    if (payload.avatar_url && !payload.avatar_url.startsWith('/uploads/avatars/')) {
+      try {
+        const parsed = new URL(payload.avatar_url)
+        if (parsed.protocol !== 'https:') {
+          toast.error('Ảnh đại diện phải là liên kết HTTPS hợp lệ (https://...) hoặc tải lên từ thiết bị.')
+          return
+        }
+      } catch {
+        toast.error('Đường dẫn ảnh đại diện không hợp lệ.')
+        return
+      }
+    }
+
+    updateProfileMutation.mutate(payload)
+  }
+
+  // Handle Password Submit
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault()
+    if (!passwordForm.current_password) {
+      toast.error('Vui lòng nhập mật khẩu hiện tại.')
+      return
+    }
+    if (passwordForm.new_password.length < 6) {
+      toast.error('Mật khẩu mới phải có ít nhất 6 ký tự.')
+      return
+    }
+    if (passwordForm.new_password === passwordForm.current_password) {
+      toast.error('Mật khẩu mới phải khác mật khẩu hiện tại.')
+      return
+    }
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      toast.error('Mật khẩu xác nhận không khớp.')
+      return
+    }
+
+    changePasswordMutation.mutate({
+      current_password: passwordForm.current_password,
+      new_password: passwordForm.new_password,
+    })
+  }
+
+  // Handle Share Profile Link
+  const handleShareProfile = async () => {
+    const url = window.location.href
+    if (navigator?.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(url)
+        toast.success('Đã sao chép liên kết hồ sơ vào clipboard!')
+        return
+      } catch { /* fallback */ }
+    }
+    toast.success('Liên kết hồ sơ: ' + url)
+  }
+
+  // Invalid ID check
+  if (!validId) {
+    return (
+      <section className="card text-center py-16 space-y-4 max-w-lg mx-auto" role="alert">
+        <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Đường dẫn hồ sơ không hợp lệ</h1>
+        <p className="text-slate-500 text-sm">ID người dùng phải là số nguyên dương.</p>
+        <Link to="/" className="btn-secondary inline-block">Về trang chủ</Link>
+      </section>
+    )
+  }
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-6 animate-pulse" role="status">
+        <div className="card p-6 space-y-4">
+          <div className="h-36 bg-surface-muted rounded-2xl w-full" />
+          <div className="flex items-center gap-4 px-4">
+            <div className="w-24 h-24 rounded-full bg-surface-muted border-4 border-surface-card -mt-12" />
+            <div className="space-y-2 flex-1">
+              <div className="h-6 bg-surface-muted rounded w-1/3" />
+              <div className="h-4 bg-surface-muted rounded w-1/4" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error 404 / 500
+  if (isError) {
+    return (
+      <section className="card text-center py-16 space-y-4 max-w-lg mx-auto" role="alert">
+        <User className="w-10 h-10 text-slate-400 mx-auto" />
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+          {error?.response?.status === 404
+            ? 'Người dùng không tồn tại hoặc đã bị khóa.'
+            : 'Không thể tải thông tin hồ sơ.'}
+        </h1>
+        <Link to="/" className="btn-secondary inline-block">Về trang chủ</Link>
+      </section>
+    )
+  }
+
+  if (!profile) return null
+
+  const initialLetter = profile?.full_name?.[0]?.toUpperCase() || 'U'
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* ── Profile Header Card (Inspired by Grovelyn Image 5 & X Image 3) ── */}
+      <section className="card overflow-hidden p-0 border border-surface-border shadow-bento bg-surface-card" aria-label="Thông tin tổng quan hồ sơ">
+        {/* Campus Grove Cover Banner — Pastel green with decorative leaves (like Grovelyn Image 5) */}
+        <div className="h-36 sm:h-48 relative overflow-hidden grove-banner bg-gradient-to-br from-green-200 via-emerald-100 to-lime-100 dark:from-green-900 dark:via-emerald-950 dark:to-green-950">
+          {/* Decorative leaf shapes */}
+          <svg className="absolute top-4 right-8 w-12 h-12 text-green-400/50 dark:text-green-500/30 animate-leaf-sway" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <ellipse cx="50" cy="50" rx="30" ry="48" transform="rotate(-30 50 50)" />
+          </svg>
+          <svg className="absolute top-8 right-24 w-8 h-8 text-emerald-500/40 dark:text-emerald-400/20" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <ellipse cx="50" cy="50" rx="28" ry="44" transform="rotate(20 50 50)" />
+          </svg>
+          <svg className="absolute bottom-4 right-16 w-10 h-10 text-lime-400/40 dark:text-lime-500/20 animate-leaf-sway" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <ellipse cx="50" cy="50" rx="25" ry="40" transform="rotate(45 50 50)" />
+          </svg>
+          <svg className="absolute top-6 right-40 w-6 h-6 text-teal-400/50 dark:text-teal-500/25" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <circle cx="50" cy="50" r="30" />
+          </svg>
+          <svg className="absolute bottom-6 right-48 w-8 h-8 text-green-300/60 dark:text-green-400/20" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <ellipse cx="50" cy="50" rx="22" ry="36" transform="rotate(-15 50 50)" />
+          </svg>
+          <div className="absolute top-4 right-4 bg-white/50 dark:bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-green-800 dark:text-green-200 text-xs font-semibold flex items-center gap-1.5 border border-green-200/60 dark:border-white/10">
+            <Sparkles className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+            <span>Thành viên từ {formatDate(profile?.created_at)}</span>
+          </div>
+        </div>
+
+        {/* Profile Info Row with Overlapping Avatar */}
+        <div className="px-6 sm:px-8 pb-6 pt-0 space-y-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 -mt-16 sm:-mt-20">
+            {/* Avatar with Status Ring */}
+            <div className="relative group">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full avatar-gradient-ring p-1 shrink-0 shadow-xl bg-surface-card">
+                <div
+                  className={`relative w-full h-full rounded-full bg-surface-card flex items-center justify-center overflow-hidden text-4xl font-black text-[#16a34a] dark:text-[#2ECC71] border-4 border-surface-card ${isOwner ? 'cursor-pointer' : ''}`}
+                  onClick={() => isOwner && avatarFileInputRef.current?.click()}
+                  title={isOwner ? 'Nhấn để đổi ảnh đại diện' : undefined}
+                >
+                  <span>{initialLetter}</span>
+                  {profile.avatar_url && (
+                    <img
+                      src={profile.avatar_url}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  )}
+                  {isOwner && (
+                    <div className="absolute inset-0 rounded-full bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold gap-1 z-10">
+                      <Camera className="w-5 h-5" />
+                      <span>Đổi ảnh</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Badge or Camera Button */}
+              {isOwner ? (
+                <>
+                  <input
+                    ref={avatarFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handleAvatarFileSelect}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => avatarFileInputRef.current?.click()}
+                    aria-label="Đổi ảnh đại diện"
+                    className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#16a34a] hover:bg-[#15803d] text-white shadow-md flex items-center justify-center border-2 border-surface-card transition-transform active:scale-95 cursor-pointer z-10"
+                    title="Tải ảnh đại diện mới"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <span className="absolute bottom-1 right-1 bg-[#16a34a] dark:bg-[#22c55e] text-white dark:text-[#06110a] text-[10px] font-black px-2.5 py-0.5 rounded-full border-2 border-surface-card flex items-center gap-1 shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-[#06110a] animate-pulse" />
+                  Đang học
+                </span>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2.5 self-center sm:self-end pt-2 flex-wrap">
+              {isOwner && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('edit')}
+                    className={`btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex items-center gap-2 ${
+                      activeTab === 'edit' ? 'bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] font-bold border-[#bbf7d0] dark:border-[#166534]' : ''
+                    }`}
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span>Chỉnh sửa hồ sơ</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleShareProfile}
+                    className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl flex items-center gap-2 cursor-pointer"
+                    title="Chia sẻ hồ sơ"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Chia sẻ hồ sơ</span>
+                  </button>
+                </>
+              )}
+
+              {!isOwner && (
+                <button
+                  type="button"
+                  onClick={handleShareProfile}
+                  className="btn-secondary text-xs sm:text-sm py-2 px-3.5 rounded-xl flex items-center gap-1.5 cursor-pointer"
+                  title="Chia sẻ hồ sơ"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Chia sẻ hồ sơ</span>
+                </button>
+              )}
+
+              {!isOwner && currentUser && (
+                <button
+                  type="button"
+                  onClick={() => followMutation.mutate()}
+                  disabled={followMutation.isPending}
+                  className={`text-xs sm:text-sm py-2.5 px-6 rounded-full font-bold transition-all shadow-sm flex items-center gap-2 ${
+                    followStats?.is_following
+                      ? 'btn-secondary text-slate-700 dark:text-slate-200'
+                      : 'btn-primary'
+                  }`}
+                >
+                  {followMutation.isPending ? (
+                    'Đang xử lý...'
+                  ) : followStats?.is_following ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Đang theo dõi</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>Theo dõi</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              {!isOwner && !currentUser && (
+                <Link to="/login" className="btn-secondary text-xs sm:text-sm py-2 px-4 rounded-xl">
+                  Đăng nhập để theo dõi
+                </Link>
+              )}
+            </div>
+          </div>
+
+                    {/* Campus Member Identity: Names, Badges, Academic Affiliation & Bio */}
+          <div className="space-y-2 text-center sm:text-left">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#06110a] dark:text-white break-words tracking-tight">
+                {profile.full_name}
+              </h1>
+              {profile.username && (
+                <span className="text-xs sm:text-sm font-semibold font-mono text-[#56614f] dark:text-[#B0B3B8]">
+                  @{profile.username}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#dcfce7] dark:bg-[#14532d]/40 text-[#15803d] dark:text-[#4ade80] border border-[#bbf7d0] dark:border-[#166534]">
+                {profile.role === 'admin' ? 'Quản trị viên' : 'Sinh viên'}
+              </span>
+            </div>
+
+            {(profile?.university || profile?.major) && (
+              <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] flex items-center justify-center sm:justify-start gap-1.5 font-medium">
+                <GraduationCap className="w-4 h-4 text-[#16a34a] dark:text-[#2ECC71] shrink-0" />
+                <span>{profile?.university ? `${profile?.university}` : ''} {profile?.major ? `· ${profile?.major}` : ''}</span>
+              </p>
+            )}
+
+            {profile?.bio && (
+              <p className="text-sm text-[#374151] dark:text-[#d1d5db] leading-relaxed whitespace-pre-wrap pt-1 max-w-2xl">
+                {profile?.bio}
+              </p>
+            )}
+          </div>
+
+          {/* Bento Academic Member Stats Bar (Verified Real API Data) */}
+          <div className="flex items-center justify-center sm:justify-start gap-3 sm:gap-5 pt-3 border-t border-[#E2E7DE] dark:border-[#3E4042] text-xs sm:text-sm flex-wrap text-[#56614f] dark:text-[#B0B3B8]">
+            <div className="flex items-center gap-1 font-medium">
+              <strong className="text-[#06110a] dark:text-white font-bold tabular-nums">
+                {totalPostsCount}
+              </strong>
+              <span>bài đăng</span>
+            </div>
+            <span className="text-[#dce2d9] dark:text-[#3e4042]">·</span>
+            <div className="flex items-center gap-1 font-medium">
+              <strong className="text-[#06110a] dark:text-white font-bold tabular-nums">
+                {userDocuments.length}
+              </strong>
+              <span>tài liệu</span>
+            </div>
+            <span className="text-[#dce2d9] dark:text-[#3e4042]">·</span>
+            <div className="flex items-center gap-1 font-medium">
+              <strong className="text-[#06110a] dark:text-white font-bold tabular-nums">
+                {totalLikesCount}
+              </strong>
+              <span>lượt thích</span>
+            </div>
+            <span className="text-[#dce2d9] dark:text-[#3e4042]">·</span>
+            <div className="flex items-center gap-1 font-medium">
+              <strong className="text-[#06110a] dark:text-white font-bold tabular-nums">
+                {totalCommentsCount}
+              </strong>
+              <span>bình luận</span>
+            </div>
+            <span className="text-[#dce2d9] dark:text-[#3e4042]">·</span>
+            <button
+              type="button"
+              onClick={() => currentUser && setFollowModalType('followers')}
+              disabled={!currentUser}
+              className="hover:text-[#16a34a] dark:hover:text-[#4ade80] transition-colors cursor-pointer disabled:cursor-default inline-flex items-center gap-1 font-medium"
+              title={currentUser ? 'Xem danh sách người theo dõi' : 'Đăng nhập để xem'}
+            >
+              <strong className="text-[#06110a] dark:text-white font-bold tabular-nums">
+                {followStats?.followers ?? 0}
+              </strong>
+              <span>Người theo dõi</span>
+            </button>
+            <span className="text-[#dce2d9] dark:text-[#3e4042]">·</span>
+            <button
+              type="button"
+              onClick={() => currentUser && setFollowModalType('following')}
+              disabled={!currentUser}
+              className="hover:text-[#16a34a] dark:hover:text-[#4ade80] transition-colors cursor-pointer disabled:cursor-default inline-flex items-center gap-1 font-medium"
+              title={currentUser ? 'Xem danh sách đang theo dõi' : 'Đăng nhập để xem'}
+            >
+              <strong className="text-[#06110a] dark:text-white font-bold tabular-nums">
+                {followStats?.following ?? 0}
+              </strong>
+              <span>Đang theo dõi</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Main Content Grid (8 Cols Left Feed/Tabs + 4 Cols Right Widgets) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Tabs & Dynamic Content */}
+        <div className="lg:col-span-8 space-y-5">
+          {/* Tabs Bar (Matching Grovelyn Image 5 & X Image 3) */}
+          <div className="flex gap-2 p-1.5 bg-surface-card rounded-2xl border border-surface-border shadow-2xs overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setActiveTab('posts')}
+              className={`py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'posts'
+                  ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] shadow-2xs'
+                  : 'text-content-muted hover:text-content hover:bg-surface-muted'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Bài đăng ({userPosts.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('documents')}
+              className={`py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'documents'
+                  ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] shadow-2xs'
+                  : 'text-content-muted hover:text-content hover:bg-surface-muted'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Tài liệu PDF ({userDocuments.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('about')}
+              className={`py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'about'
+                  ? 'bg-[#16a34a] text-white dark:bg-[#22c55e] dark:text-[#06110a] shadow-2xs'
+                  : 'text-content-muted hover:text-content hover:bg-surface-muted'
+              }`}
+            >
+              <User className="w-4 h-4" />
+              <span>Giới thiệu &amp; Học vấn</span>
+            </button>
+          </div>
+
+          {/* TAB 1: User Posts Feed */}
+          {activeTab === 'posts' && (
+            <div className="space-y-4">
+              {isLoadingPosts ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <PostCardSkeleton key={i} />
+                  ))}
+                </div>
+              ) : userPosts.length === 0 ? (
+                <EmptyState
+                  variant="feed"
+                  icon={BookOpen}
+                  title="Chưa có bài viết nào"
+                  description={
+                    isOwner
+                      ? 'Bạn chưa đăng bài viết nào. Hãy chia sẻ câu hỏi hoặc kiến thức bổ ích đầu tiên nhé!'
+                      : 'Thành viên này chưa đăng bài viết nào trên cộng đồng.'
+                  }
+                  actionText={isOwner ? 'Đăng bài viết mới' : 'Khám phá bảng tin'}
+                  actionHref={isOwner ? '/posts/create' : '/'}
+                />
+              ) : (
+                userPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: User Documents Feed */}
+          {activeTab === 'documents' && (
+            <div className="space-y-4">
+              {isLoadingPosts ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <PostCardSkeleton key={i} />
+                  ))}
+                </div>
+              ) : userDocuments.length === 0 ? (
+                <EmptyState
+                  variant="documents"
+                  icon={FileText}
+                  title="Chưa có tài liệu PDF nào"
+                  description={
+                    isOwner
+                      ? 'Bạn chưa chia sẻ tài liệu nào. Tải lên slide, đề cương hoặc giáo trình ôn thi ngay nào!'
+                      : 'Thành viên này chưa chia sẻ tài liệu PDF nào.'
+                  }
+                  actionText={isOwner ? 'Chia sẻ tài liệu PDF' : 'Khám phá bảng tin'}
+                  actionHref={isOwner ? '/posts/create?type=document' : '/'}
+                />
+              ) : (
+                userDocuments.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: About & Education */}
+          {activeTab === 'about' && (
+            <div className="space-y-5">
+              <div className="card p-6 space-y-4">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2 border-b border-surface-border pb-3">
+                  <GraduationCap className="w-5 h-5 text-primary-600" />
+                  <span>Thông tin Học vấn & Chuyên ngành</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+                  <div className="p-4 rounded-2xl bg-surface-muted/60 border border-surface-border space-y-1">
+                    <span className="text-slate-400 block text-xs">Trường Đại học / Cao đẳng</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block text-sm">
+                      {profile?.university || 'Chưa cập nhật'}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-surface-muted/60 border border-surface-border space-y-1">
+                    <span className="text-slate-400 block text-xs">Chuyên ngành học tập</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block text-sm">
+                      {profile?.major || 'Chưa cập nhật'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card p-6 space-y-3">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2 border-b border-surface-border pb-3">
+                  <BookOpen className="w-5 h-5 text-primary-600" />
+                  <span>Tiểu sử cá nhân</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                  {profile?.bio || 'Người dùng chưa viết phần giới thiệu bản thân.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: Edit Profile Form (Preserving Playwright selectors!) */}
+          {activeTab === 'edit' && isOwner && (
+            <div className="card p-6 space-y-5">
+              <div className="border-b border-surface-border pb-3">
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-primary-600" />
+                  <span>Chỉnh sửa thông tin cá nhân</span>
+                </h3>
+                <p className="text-xs text-slate-500">Cập nhật hồ sơ hiển thị công khai trên mạng xã hội</p>
+              </div>
+
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="full_name" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Họ và tên <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="full_name"
+                    type="text"
+                    required
+                    value={editForm.full_name}
+                    onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                    className="input text-sm py-2"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label htmlFor="university" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                      Trường Đại học
+                    </label>
+                    <input
+                      id="university"
+                      type="text"
+                      value={editForm.university}
+                      onChange={(e) => setEditForm({ ...editForm, university: e.target.value })}
+                      placeholder="ĐH Bách Khoa TP.HCM"
+                      className="input text-sm py-2"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="major" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                      Ngành học
+                    </label>
+                    <input
+                      id="major"
+                      type="text"
+                      value={editForm.major}
+                      onChange={(e) => setEditForm({ ...editForm, major: e.target.value })}
+                      placeholder="Khoa học Máy tính"
+                      className="input text-sm py-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="bio" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Tiểu sử
+                  </label>
+                  <textarea
+                    id="bio"
+                    rows={4}
+                    value={editForm.bio}
+                    onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                    placeholder="Giới thiệu về bản thân, sở thích nghiên cứu..."
+                    className="input text-sm py-2 resize-none"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="avatar_url" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Link ảnh đại diện (HTTPS)
+                  </label>
+                  <input
+                    id="avatar_url"
+                    type="url"
+                    value={editForm.avatar_url}
+                    onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
+                    className="input text-sm py-2"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2.5 pt-3 border-t border-surface-border">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('about')}
+                    className="btn-secondary text-xs py-2 px-4 rounded-xl"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updateProfileMutation.isPending}
+                    className="btn-primary text-xs py-2 px-6 rounded-xl font-bold shadow-md shadow-primary/25"
+                  >
+                    {updateProfileMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* TAB 5: Change Password Form (Preserving Playwright selectors!) */}
+          {activeTab === 'security' && isOwner && (
+            <div className="card p-6 space-y-5">
+              <div className="border-b border-surface-border pb-3">
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-primary-600" />
+                  <span>Đổi mật khẩu tài khoản</span>
+                </h3>
+                <p className="text-xs text-slate-500">Bảo vệ tài khoản với mật khẩu tối thiểu 6 ký tự</p>
+              </div>
+
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="current_password" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Mật khẩu hiện tại <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="current_password"
+                    type="password"
+                    required
+                    value={passwordForm.current_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                    placeholder="••••••••"
+                    className="input text-sm py-2"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="new_password" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Mật khẩu mới <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="new_password"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={passwordForm.new_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                    placeholder="••••••••"
+                    className="input text-sm py-2"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="confirm_password" className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Xác nhận mật khẩu mới <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="confirm_password"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={passwordForm.confirm_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                    placeholder="••••••••"
+                    className="input text-sm py-2"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2.5 pt-3 border-t border-surface-border">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('about')}
+                    className="btn-secondary text-xs py-2 px-4 rounded-xl"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={changePasswordMutation.isPending}
+                    className="btn-primary text-xs py-2 px-6 rounded-xl font-bold shadow-md shadow-primary/25"
+                  >
+                    {changePasswordMutation.isPending ? 'Đang đổi...' : 'Đổi mật khẩu'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Widgets (Derived from Real Backend Data) */}
+        <div className="lg:col-span-4 space-y-5">
+          {/* Widget 1: Đang làm gì */}
+          <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <span>Đang làm gì</span>
+            </h4>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+              {profile?.bio || `Sinh viên ${profile?.major || 'chuyên ngành'} tại ${profile?.university || 'trường đại học'}. Tích cực tham gia trao đổi bài học, tải lên tài liệu và chia sẻ kinh nghiệm học tập.`}
+            </p>
+          </div>
+
+          {/* Widget 2: Chủ đề môn học đã chia sẻ */}
+          <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
+              <span>Chủ đề trao đổi học tập</span>
+            </h4>
+            {derivedAdviceTopics.length === 0 ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Thành viên chưa chia sẻ tài liệu hoặc thảo luận gắn với môn học cụ thể.
+              </p>
+            ) : (
+              <div className="space-y-2 text-xs">
+                {derivedAdviceTopics.map((topic, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-3 rounded-xl border ${
+                      idx === 0
+                        ? 'bg-primary-50 dark:bg-primary-950/40 border-primary-200/60 dark:border-primary-800/60 text-primary-700 dark:text-primary-300'
+                        : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'
+                    }`}
+                  >
+                    <p className="font-bold">{topic.title}</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">{topic.desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Widget 3: Công cụ và kỹ năng */}
+          <div className="card p-5 space-y-3 bg-surface-card border border-surface-border shadow-2xs">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <span>Thẻ môn học & Kỹ năng</span>
+            </h4>
+            {derivedSkills.length === 0 ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Chưa có thẻ kỹ năng nào được gắn vào bài viết của tác giả.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {derivedSkills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-muted border border-surface-border text-slate-700 dark:text-slate-300 hover:border-primary-300 transition-colors"
+                  >
+                    #{skill}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Widget 4: Đóng góp học tập */}
+          <div className="card p-5 space-y-3 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-surface-card border border-primary-500/20">
+            <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-wider">
+              <Flame className="w-4 h-4" />
+              <span>Đóng góp học tập</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-1 text-center">
+              <div className="bg-surface-card/80 p-3 rounded-xl border border-surface-border">
+                <span className="block text-lg font-black text-slate-900 dark:text-white">{learningStats.totalPosts}</span>
+                <span className="text-xs text-slate-500 font-medium">Bài thảo luận</span>
+              </div>
+              <div className="bg-surface-card/80 p-3 rounded-xl border border-surface-border">
+                <span className="block text-lg font-black text-emerald-600 dark:text-emerald-400">{learningStats.totalDocuments}</span>
+                <span className="text-xs text-slate-500 font-medium">Tài liệu PDF</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">
+              Thống kê tổng hợp từ các bài viết và tài liệu công khai của thành viên.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Followers / Following Modal */}
+      {followModalType && (
+        <FollowUsersModal
+          type={followModalType}
+          userId={id}
+          onClose={() => setFollowModalType(null)}
+        />
+      )}
+
+      {/* Modal xem trước và lưu ảnh đại diện */}
+      <Modal
+        isOpen={isAvatarModalOpen}
+        onClose={closeAvatarModal}
+        title="Cập nhật ảnh đại diện"
+        icon={Camera}
+      >
+        <div className="flex flex-col items-center gap-5 py-2">
+          <div className="relative w-36 h-36 rounded-full overflow-hidden border-4 border-[#16a34a] shadow-lg bg-surface-muted">
+            {avatarPreviewUrl && (
+              <img
+                src={avatarPreviewUrl}
+                alt="Xem trước ảnh đại diện"
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-xs">
+              {avatarFile?.name}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Kích thước: {(avatarFile?.size ? (avatarFile.size / 1024).toFixed(1) : 0)} KB • Định dạng:{' '}
+              {avatarFile?.type?.split('/')[1]?.toUpperCase()}
+            </p>
+          </div>
+          <div className="flex items-center justify-end gap-3 w-full pt-3 border-t border-surface-border">
+            <button
+              type="button"
+              onClick={closeAvatarModal}
+              disabled={avatarUploadMutation.isPending}
+              className="btn-secondary px-4 py-2 text-xs rounded-xl cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={() => avatarFile && avatarUploadMutation.mutate(avatarFile)}
+              disabled={avatarUploadMutation.isPending}
+              className="btn-primary px-5 py-2 text-xs rounded-xl flex items-center gap-1.5 font-semibold cursor-pointer"
+            >
+              {avatarUploadMutation.isPending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Đang lưu...
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  Lưu ảnh đại diện
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

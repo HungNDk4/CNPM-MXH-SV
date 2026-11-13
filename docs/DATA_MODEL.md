@@ -1,0 +1,35 @@
+# Data Model — MySQL / Sequelize
+**DRAFT**, nguồn đối chiếu `database/schema.sql` và `server/src/models/index.js`.
+
+| Bảng | Khóa/quan hệ chính | Ghi chú |
+|---|---|---|
+| users | id; email UNIQUE | role student/admin; wallet_balance (decimal) |
+| posts | user_id → users | question/document/discussion; status active/hidden/deleted |
+| comments | post_id → posts; user_id → users; parent_id → comments | phản hồi một cấp hiển thị trong API hiện tại |
+| likes | user_id → users; (user_id,target_type,target_id) UNIQUE | polymorphic target, không có FK tới post/comment |
+| orders | buyer_id/seller_id → users; post_id → posts; vnp_txn_ref UNIQUE | trạng thái pending/paid/failed/refunded |
+| document_access | user_id → users; post_id → posts; order_id → orders | UNIQUE (user_id,post_id) |
+| refresh_tokens | user_id → users; token UNIQUE | revoked + expires_at |
+
+## Các điểm cần kiểm tra trước khi migration
+- Trong `schema.sql`, `refresh_tokens` không khai báo `updated_at`; Sequelize `RefreshToken` mặc định `timestamps:true` → có nguy cơ drift.
+- `likes.target_id` và `comments.parent_id` cần validation nghiệp vụ tồn tại/thuộc đúng bài.
+- `posts.file_url` là metadata nhạy cảm nếu tài liệu thu phí; phương án lưu private object path + secured download endpoint cần duyệt.
+- `orders.amount`, `users.wallet_balance` dùng DECIMAL; không dùng Number/float để làm sổ cái tiền thật.
+- `schema.sql` có hash admin placeholder (không dùng được để đăng nhập). Không phát hành mật khẩu admin thật trong repo.
+- `server/src/index.js` gọi `sequelize.sync({alter:true})` trong development: tránh dùng khi DB có dữ liệu cần bảo toàn.
+- `document_access` cho người mua chỉ cấp quyền sau xử lý thanh toán được chứng thực, không dựa trên query return client.
+
+## Quy tắc schema change
+Mỗi thay đổi schema phải ghi migration theo version, kế hoạch rollback, tương thích model, seed không chứa secret và test dữ liệu liên quan. Không trực tiếp drop/recreate DB có dữ liệu nhóm.
+
+## Proposed storage schema for PDF uploads (NOT IMPLEMENTED)
+- Product decision DOC-01: website-hosted **PDF upload** for FREE documents; current `posts.file_url` only holds URLs and is not a complete secure file storage design.
+- **Design option to review:** `document_files(id, post_id UNIQUE FK, uploader_id FK, storage_key UNIQUE, original_filename, mime_type, size_bytes, sha256, created_at)`, 1 PDF per post *proposed*, not approved.
+- Store PDF bytes outside a publicly served `/uploads` folder, generate server-side storage keys; DB stores metadata/identifier, not publicly exposed file URLs.
+- Define transaction/orphan cleanup, soft-deleted post access and data retention. Review current SQL + Sequelize drift and migration path before changing schema.
+- Size cap **10 MiB** is proposed only; actual max and guest download policy are awaiting user review. See [DOCUMENT_UPLOAD_SPEC.md](DOCUMENT_UPLOAD_SPEC.md).
+
+## ADR-012 approved document cardinality constraint — physical schema still PROPOSED
+Human A confirmed (2026-10-18): exactly one uploaded PDF per document post and maximum 10 MiB (10,485,760 bytes inclusive). A proposed `document_files.post_id UNIQUE NOT NULL FK` enforces **at most one** file row per post; application workflow must also require **at least one** successful file before a `document` post is active. Storage byte length must be `1..10,485,760`. DB CHECK may provide defense-in-depth subject to actual MySQL version/DDL review.
+This is a **business requirement**, not a migration approval. No DB schema/model was changed by this docs PR; any DDL/model must be reviewed and applied on a disposable DB with rollback plan first.

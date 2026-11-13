@@ -52,6 +52,23 @@ CREATE TABLE posts (
 ) ENGINE=InnoDB;
 
 -- ----------------------------------------------------------------
+-- 2b. POST_IMAGES (Hinh anh dinh kem bai viet - toi da 4 anh)
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS post_images (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  post_id       INT UNSIGNED NOT NULL,
+  image_url     VARCHAR(500) NOT NULL,
+  storage_key   VARCHAR(100) NOT NULL,
+  original_name VARCHAR(255) NOT NULL,
+  mime_type     VARCHAR(50)  NOT NULL DEFAULT 'image/jpeg',
+  size_bytes    INT UNSIGNED NOT NULL,
+  sort_order    TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_pi_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  INDEX idx_pi_post_order (post_id, sort_order)
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------------
 -- 3. COMMENTS
 -- ----------------------------------------------------------------
 CREATE TABLE comments (
@@ -80,6 +97,7 @@ CREATE TABLE likes (
   target_type ENUM('post','comment') NOT NULL,
   target_id   INT UNSIGNED NOT NULL,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_likes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   UNIQUE KEY uq_like (user_id, target_type, target_id),
   INDEX idx_likes_target (target_type, target_id)
@@ -136,9 +154,77 @@ CREATE TABLE refresh_tokens (
   expires_at DATETIME     NOT NULL,
   revoked    TINYINT(1)   NOT NULL DEFAULT 0,
   created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_rt_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_rt_user  (user_id),
   INDEX idx_rt_token (token(64))
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------------
+-- 8. EXT-01 BOOKMARKS (additive extension)
+-- ----------------------------------------------------------------
+-- EXT-01 Bookmarks: independent per-user saved-post collection.
+CREATE TABLE IF NOT EXISTS bookmarks (
+  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT UNSIGNED NOT NULL,
+  post_id    INT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_bookmarks_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_bookmarks_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_bookmarks_user_post (user_id, post_id),
+  INDEX idx_bookmarks_user_created (user_id, created_at, id)
+) ENGINE=InnoDB;
+
+-- EXT-02: Follow System
+CREATE TABLE IF NOT EXISTS user_follows (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  follower_id INT UNSIGNED NOT NULL,
+  following_id INT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_follows_follower FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_follows_following FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT chk_follows_no_self CHECK (follower_id <> following_id),
+  UNIQUE KEY uq_follows_pair (follower_id, following_id),
+  INDEX idx_follows_followers (following_id, created_at, id),
+  INDEX idx_follows_following (follower_id, created_at, id)
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------------
+-- 10. EXT-03 MODERATION AUDIT LOGS
+-- ----------------------------------------------------------------
+-- EXT-03: Append-only through the API. No actor/post FK cascade: retain event IDs.
+CREATE TABLE IF NOT EXISTS moderation_audit_logs (
+  id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  actor_admin_id    INT UNSIGNED NOT NULL,
+  post_id           INT UNSIGNED NOT NULL,
+  previous_status   ENUM('active','hidden','deleted') NOT NULL,
+  new_status        ENUM('hidden','deleted') NOT NULL,
+  reason            VARCHAR(500) NULL,
+  created_at        DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  INDEX idx_moderation_audit_recent (created_at, id),
+  INDEX idx_moderation_audit_post_recent (post_id, created_at, id)
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------------
+-- 11. EXT-04 IN-APP NOTIFICATIONS
+-- ----------------------------------------------------------------
+-- EXT-04: user-only in-app notifications (no payload/body/PDF paths).
+CREATE TABLE IF NOT EXISTS notifications (
+  id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  recipient_id INT UNSIGNED NOT NULL,
+  actor_id     INT UNSIGNED NOT NULL,
+  event_type   ENUM('follow','comment','reply','like_post','like_comment') NOT NULL,
+  post_id      INT UNSIGNED DEFAULT NULL,
+  comment_id   INT UNSIGNED DEFAULT NULL,
+  is_read      TINYINT(1) NOT NULL DEFAULT 0,
+  created_at   DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  CONSTRAINT fk_notifications_recipient FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_notifications_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_notifications_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  CONSTRAINT fk_notifications_comment FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+  CONSTRAINT chk_notifications_not_self CHECK (recipient_id <> actor_id),
+  INDEX idx_notifications_recipient_recent (recipient_id, created_at, id),
+  INDEX idx_notifications_recipient_read_recent (recipient_id, is_read, created_at, id)
 ) ENGINE=InnoDB;
 
 -- ----------------------------------------------------------------
@@ -147,3 +233,34 @@ CREATE TABLE refresh_tokens (
 INSERT INTO users (full_name, email, password_hash, role)
 VALUES ('Administrator', 'admin@studynet.vn',
         '$2b$12$examplehashplaceholder000000000000000000000', 'admin');
+
+-- ----------------------------------------------------------------
+-- 12. POST REPORTS & MODERATION QUEUE
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS post_reports (
+  id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  reporter_id  INT UNSIGNED NOT NULL,
+  post_id      INT UNSIGNED NOT NULL,
+  reason       ENUM('spam', 'inappropriate', 'copyright', 'harassment', 'other') NOT NULL,
+  details      VARCHAR(500) DEFAULT NULL,
+  status       ENUM('pending', 'reviewed', 'dismissed') NOT NULL DEFAULT 'pending',
+  created_at   DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at   DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  CONSTRAINT fk_post_reports_reporter FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_post_reports_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_post_reports_reporter_post (reporter_id, post_id),
+  INDEX idx_post_reports_status_created (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 13. ADM-02 account moderation audit (additive; no destructive FK)
+CREATE TABLE IF NOT EXISTS account_moderation_audit_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  actor_admin_id INT UNSIGNED NOT NULL,
+  target_user_id INT UNSIGNED NOT NULL,
+  previous_active TINYINT(1) NOT NULL,
+  new_active TINYINT(1) NOT NULL,
+  reason VARCHAR(500) NOT NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  INDEX idx_account_audit_recent (created_at, id),
+  INDEX idx_account_audit_target_recent (target_user_id, created_at, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,17 +1,19 @@
 require('dotenv').config();
 const app = require('./app');
 const { sequelize } = require('./config/database');
+const privateStorage = require('./services/private-document-storage');
 
 const PORT = process.env.PORT || 5000;
 
 async function bootstrap() {
   try {
+    privateStorage.validateConfig();
     // Kiểm tra kết nối database
     await sequelize.authenticate();
     console.log('✅ MySQL connected successfully.');
 
     // Sync models (chỉ dùng trong dev, production dùng migrations)
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' && process.env.DB_AUTO_SYNC !== 'false') {
       await sequelize.sync({ alter: true });
       console.log('✅ Database models synchronized.');
     }

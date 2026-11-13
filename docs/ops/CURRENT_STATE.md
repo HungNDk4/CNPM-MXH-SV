@@ -1,0 +1,95 @@
+# CURRENT STATE — Read this before taking action
+
+## 2026-11-11 Integration Baseline & PR #89, #90, #91 Verified (Current Reference)
+- Integration baseline `integration/team-dev-20261020` confirmed at `434cf8291e0461d5f029bb84956e033bae9c85fd`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. **Strict rule: no merge to `main` without explicit request.**
+- Merged feature PRs:
+  - **PR #89 (`feat/adm02-account-moderation-api-20261110`, commit `309e9a9`)**: Admin user moderation API (`GET /api/admin/users`, `PATCH /api/admin/users/:id/status`, `GET /api/admin/users/audit-logs`), atomic registration/login race condition locking, session revocation, and `account_moderation_audit_logs` table.
+  - **PR #90 (`feat/be11-my-posts-api-20261110`, commit `0f459d2`)**: Authenticated owner-only `GET /api/posts/my` with server-side pagination, global sorting, status/type filters, and strict suppression of client-supplied `author_id`.
+  - **PR #91 (`feat/fe-adm02-be11-integration-20261110`, commit `434cf82`)**: Frontend UI integration for Admin User Moderation (`AdminUsersPage.jsx`) and My Posts (`MyPostsPage.jsx`), connected to real reviewed APIs.
+- Database & Local Migration State:
+  - Additive migration `database/migrations/20261110_adm02_account_audit.sql` executed and verified on local MySQL 8 database `mini_study_network`. Table `account_moderation_audit_logs` is created with required indices.
+- Test Evidence (all PASS on local test environment):
+  - `fe-adm02-be11-contract.test.cjs`: **PASS** (1/1).
+  - `adm02-account-moderation.test.cjs`: **PASS** (1/1 suite, all 401/403/422/409, concurrency, atomic lock, rollback and session revocation verified).
+  - `be11-my-posts.test.cjs`: **PASS** (1/1 suite, 51+ pagination, A/B isolation, status filters, engagement sort verified).
+  - `be08-admin-moderation-regression.cjs`: **PASS** (7/7 groups).
+  - `ext03-admin-audit-regression.cjs`: **PASS** (9/9 groups).
+  - `auth-ownership.test.cjs` (QA-01, BE-05, BE-07): **PASS** (15/15 checks, 9/9 profile security, 7/7 refresh rotation).
+  - `pdf-security.test.cjs` (SEC-01): **PASS** (18/18 checks).
+  - Frontend production build (`vite build`): **PASS** (0 errors).
+  - Project control validation (`check-project-control.mjs`): **PASS** (54 task rows).
+
+## 2026-10-21 E2E-01 — historical GitHub verification
+
+- Integration baseline `integration/team-dev-20261020` confirmed at `7bbe302623191d5f28e967424ae529df307a13e7`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. On integration, PDF security/API/React PRs #20/#21/#23/#24/#25/#26/#27/#29 have been merged; historical older rows/paragraphs below are not current source assertions.
+- QA-03/E2E-01: remote-only branch `test/e2e01-fullstack-20261021`, Draft PR #30 targeting integration. Existing fullstack GitHub Actions `39592227079` at `31a5467`: **7/7 jobs SUCCESS**, including **real Chromium browser ↔ Vite proxy ↔ Express ↔ disposable MySQL 8 ↔ filesystem** with 12 logged browser/API checks, including expired Blob auto-refresh.
+- Disposable migration `20261021_document_files.sql` verified on MySQL 8. PDF upload/download, guest metadata, cross-user free download, 401/403/404 access checks, invalid/10MiB+1/inclusive 10MiB, hide/delete, register/login/refresh passed; browser download bytes equal source PDF. Full evidence: `docs/testing/E2E01_INTEGRATION_REPORT.md`.
+- **Not verified:** either student's local physical worktree/Windows setup, mobile/responsive browser, persistent cloud storage, public HTTPS app, redeploy durability. E2E automation uses a CI runner, NOT the user's PC. Do not merge to `main` without human reviews. New safety-only test guard/docs commit after `c117d6b7` requires fresh CI recheck.
+
+**As-of:** 2026-10-18 (snapshot from linked GitHub evidence at creation; verify real-time refs when starting). **Approval status:** DRAFT / awaiting two-member review.
+
+## Project and people
+- Repo: https://github.com/HungNDk4/CNPM-MXH-SV, default branch `main`.
+- Human team count: **2**. Human A is the user's analysis/design reviewer role; Human B is the second teammate; precise work assignments not confirmed.
+- AI may research, draft, code and create PRs, but cannot claim human approval.
+- Selected idea: Mini Study Network. **Human A confirmed Option B on 2026-10-17**: social learning + free documents are MVP; paid documents/VNPay Sandbox are DEFERRED. See docs/MVP_SCOPE.md. Details still DRAFT.
+
+## GitHub state recorded at bootstrap
+- `main` HEAD confirmed: `0993a42154feb37e8842ef8bb3ed4d0a03627889`.
+- Foundation branch: `chore/project-foundation-20261017`, head `87eb985e023f77935edd49916ca7655346ff83eb`; **Draft PR #1** → main; CI build/syntax PASS for that commit.
+- This control-system workstream: `docs/session-worktree-control-20261017`, **based on foundation branch**, **Draft PR #2** → `chore/project-foundation-20261017` (dependent/stacked). Initial commit `3f4a018c3c40f34d348276c41156f459df96dca8` has GitHub CI PASS (3 jobs); latest HEAD changes as follow-up log is committed. HEAD changes after commit; use GitHub not this dated snapshot.
+- Scope branch: `docs/mvp-scope-option-b-20261017`, based on control branch @ `8c0b28ec025516cb98fe240fb9497020ac9822f0`, **Draft PR #3** → `docs/session-worktree-control-20261017`, CI initial scope commit PASS. Check latest HEAD/CI online.
+- No local Git worktrees have been created/verified by this GitHub-only workflow.
+
+## Phase and gate snapshot
+- Active: P0 Foundation & control-system docs. AN-00 **DONE** (Human A's limited Option B scope decision), but G0/G1 not yet approved. OPS-02 in REVIEW; OPS-03 in REVIEW, both awaiting human approval.
+- G0 **NOT YET APPROVED**. Requirements/design documents are DRAFT. No verified business E2E MySQL/Sandbox tests.
+- Known P0: posts feed leaks paid file URL; payment return/IPN risk double credit; paid static file exposure. **These endpoints are NOT disabled by the scope decision:** SEC-03 must deny them before MVP demo.
+- Product decision DOC-01 confirmed by Human A 2026-10-17: **direct PDF upload**, size limit appropriate but not specified. Technical spec DRAFT, SEC-04 Multer review required. Scope branch: `docs/pdf-upload-scope-20261017` based on option-B branch, **Draft PR #4** → option-B branch; initial commit `4aafba2a` CI 3 jobs PASS (https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39051750751); verify latest HEAD.
+- ADR-011 CONFIRMED by Human A 2026-10-18: guest may list/search/view active free-PDF metadata; **login required to download file bytes**, enforced backend 401. Source not updated; policy in docs/DOCUMENT_ACCESS_POLICY.md; branch `docs/guest-metadata-auth-download-20261018` **Draft PR #5** → PDF docs branch. Initial docs commit `ab311190` CI all three jobs PASS (https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39052464467); verify final HEAD.
+- **ADR-012 CONFIRMED by Human A 2026-10-18:** 10 MiB (10,485,760 bytes) max **inclusive** and exactly 1 uploaded PDF per document post. Source still unmodified; new branch `docs/pdf-upload-limits-20261018` based on PR #5 docs branch, **Draft PR #6** → PR #5 branch. Initial commit `c15e59b1` CI PASS (https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39137384913); verify final HEAD separately. T-UP-LIM-01..06 NOT RUN.
+- **ADR-013 approved by Human A on 2026-10-18:** after successful PDF validation + protected storage + DB commit, publish as `active` immediately (no Admin preapproval). Admin can hide/delete later, and hidden/deleted file bytes must be unavailable via direct download. Same **Draft PR #6** contains this docs follow-up, commit `19cd787c` CI 3 jobs PASS (https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39138720270). Tests T-PUBLISH-01..06 **NOT RUN**; report/appeal flow OPEN.
+- **ADR-014 2026-10-18:** Human A wants infrastructure/service costs kept minimal for two-student project. **Zero recurring service fees for local development/classroom demo** is a PROPOSED target, not confirmed numeric budget or selected provider. Local protected disk + local MySQL is the recommended no-subscription path; cloud storage free tiers only if online access required; refer to docs/STORAGE_COST_REVIEW.md. Ask whether online always-available demo is mandatory.
+- **ADR-015 confirmed Human A (2026-10-18):** website MUST be online at a public HTTPS link whenever lecturer visits and independent of team's laptops. Local-only is insufficient. Provider choice NOT approved. **DEP-01 TODO** compare Vercel Hobby + Express Function + TiDB Starter MySQL-compatible + Vercel Blob Private against free VM. Function body 4.5 MB requires client-direct upload of 10 MiB PDF; see docs/ONLINE_DEPLOYMENT_OPTIONS.md. Free tiers have quotas/no 100% uptime guarantee; no deployment or money spent.
+- **DEP-01 started 2026-10-18 on GitHub-only branch `docs/dep01-online-feasibility-20261018` based on PR #6 HEAD `2f6b28052076232dc93e889325a14aac4266dfeb`. Offline source audit, Express local health/feed smoke and CI job prepared; live Vercel/TiDB/private Blob PoC DEP-A01..06 NOT RUN. See `docs/DEP01_FEASIBILITY_AUDIT.md` and scripts/dep01-*. Status IN_PROGRESS, not proof that hosted deployment works. **Draft PR #7** → PR #6 branch, source commit `4c75b208` with initial 4/4 CI jobs PASS: https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39141647075; latest HEAD CI must be separately checked.
+- **2026-10-18 DEP-01 cloud PoC request:** Human A authorized an **isolated** cloud feasibility PoC, not billing or exposing source app. Vercel connection lists five historical projects but no usable teams (`list_teams=[]`, `get_git_deployment_context teams=[]`); trying mapped team read returned 403 forbidden. **No team/project/deployment created**. Repo `poc/dep01-cloud-isolated` Stage A no-dependency static+Node Function scaffold, safe for eventual separate Hobby project; initial 5/5 CI PASS (https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39143252600) at commit `3ebee966`; DEP-01B in Human B REVIEW. DEP-A01 public HTTPS, DEP-A02 TiDB, DEP-A03 Blob all NOT RUN until authorized scope. Do not deploy the legacy backend. See PoC README.
+- **DEP-A01 current live evidence (2026-10-19):** Vercel authenticated account `hunny-17` has Hobby plan. Previous zero-team/403 interpretation was misleading; creating standalone project on authorized personal account succeeded. Project `mini-study-network-dep01`, deployment `dpl_Umv7RsTsnEycnxyKXzQsrbLRrwtq` is **READY**, alias https://mini-study-network-dep01.vercel.app/. User-supplied Chrome Incognito screenshot visibly shows webpage and `API thử nghiệm: phản hồi thành công`, without login. **DEP-A01 = REVIEW with browser-access evidence; not full external off-network/uptime PASS.** The Vercel deployment ended up targeted as `production` despite initial staging intent; project contains *isolated health-only* code, not CNPM backend. No TiDB or Blob tests run. See `docs/DEP01_LIVE_EVIDENCE.md`.
+- **OPS-07 Ubuntu local-dev support (2026-10-19):** isolated GitHub branch `chore/ubuntu-dev-setup-20261019` based on PR #7 head `10b92d3c`; adds Ubuntu 24.04 setup/doctor scripts, MySQL 8 ephemeral GitHub Actions integration, and fixes `likes/refresh_tokens.updated_at` in fresh SQL schema. No existing DB migrated, no local machine configured, no changes to hosted PoC. Await CI and human review. See `docs/UBUNTU_SETUP.md`.
+- **OPS-07 Ubuntu progress (2026-10-19):** Draft PR #8 `chore/ubuntu-dev-setup-20261019` stacked on PR #7, Node 24/Ubuntu 24.04/MySQL 8 developer setup + local scripts and GitHub Actions real MySQL integration. Source schema fixed `likes` + `refresh_tokens.updated_at` for fresh installs, dev opt-out DB_AUTO_SYNC=false. Initial CI **6/6 PASS** after fixing preexisting refresh JWT collisions with random `jti`, run https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39288366164 at `01077636`. **Local human Ubuntu machine NOT CONFIGURED or TESTED**; full security/functional E2E NOT RUN. Read docs/UBUNTU_SETUP.md.
+- Known P1: guest GET feed blocked; PostDetail/Profile pages stub; SQL/Sequelize drift, no integration tests.
+
+## NEXT_SESSION_ACTIONS — Follow this order
+1. Manual UI walkthrough on `/admin/users` (Admin account locking/unlocking with reason, audit log inspection) and `/my-posts` (owner post listing, status filters, engagement sorting, inactive post suppression).
+2. Phase P3 academic deliverables: update Use Case diagrams and specifications, generate ERD and Sequence diagrams matching source, prepare defense walkthrough script.
+3. Keep `main` untouched until two-human approval. No automatic merge or deployment to `main`.
+4. Update `TASK_BOARD.md`, `CURRENT_STATE.md`, and `SESSION_LOG.md` upon any milestone completion.
+
+## Last verified tests
+- Foundation PR commit `87eb985e`: GitHub Actions **Frontend production build PASS** and **Backend JavaScript syntax PASS** (Node 24).
+- Planning PR initial commit `3f4a018c` GitHub Actions run https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39049674352: **three jobs PASS** (frontend build, backend syntax, docs integrity). Check latest follow-up commit CI separately.
+- Scope PR #3 initial commit `07a72f9c`: GitHub Actions https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39051123916 **3 jobs PASS**; this is docs/build/syntax only. Re-check final HEAD after log update.
+- ADR-011 PR #5 initial commit `ab311190`: https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39052464467 **3 jobs PASS** (frontend build/backend syntax/docs checks). Follow-up handoff commit CI must be verified separately.
+- ADR-012 PR #6 initial commit `c15e59b1`: https://github.com/HungNDk4/CNPM-MXH-SV/actions/runs/39137384913 **3 jobs PASS** (frontend build, backend syntax, docs integrity); recheck CI if HEAD advances.
+- PDF upload boundary tests T-UP-LIM-01..06, PDF access tests T-DOCFREE-01..06, MySQL integration, E2E, sandbox, pen-test: **NOT RUN**.
+
+## Operational warning
+This is a snapshot, not the source of truth for task status or branch state. Do not create worktrees, claim local paths, update payments, or modify main without specific verified context.
+
+## 2026-10-20 LIVE CHECKPOINT — Overrides dated setup/role paragraphs above (DO NOT assume task done)
+- User confirmed **Human A Core Backend**; second teammate **proposed** Frontend + Analysis/Design; Human B acceptance of exact tasks still PENDING. WBS stream A/B labels are independent of Human A/B identities.
+- User Ubuntu WSL 26.04.1 / Node 24.22 / npm 11.19 / MySQL 8.4.11/7 imported tables: Express health HTTP 200, React/Vite UI loaded, **Auth/Post smoke test 7/7 PASS** (register, login, /me, create post, read post, feed, refresh, logout), MySQL SELECT confirms stored post ID 1 on 2026-10-20. Not equivalent to 2-user authorization/security/PDF E2E.
+- Remote main remains `0993a421...`, stacked Draft PR #1–#10 are NOT MERGED. User WSL working branch `chore/ubuntu-dev-setup-20261019` at `f4a4c86` clean, tracked remote; `server/.env` ignored by git. Do not reset or force move it.
+- Team preview integration branch `integration/team-dev-20261020` forked from PR #10 HEAD `b840f16...`, contains docs & setup to start two independent feature branches; preview is NOT main approval/merge. Initial base CI 6/6 PASS GitHub Actions run 39448540132; sprint docs HEAD CI needs recheck.
+- GitHub Issues for first iteration: TEAM contract [#11](https://github.com/HungNDk4/CNPM-MXH-SV/issues/11), CORE legacy paid shutdown [#12](https://github.com/HungNDk4/CNPM-MXH-SV/issues/12), CORE safe DTO [#13](https://github.com/HungNDk4/CNPM-MXH-SV/issues/13), CORE 2-account negative tests [#14](https://github.com/HungNDk4/CNPM-MXH-SV/issues/14), FE PostDetail [#15](https://github.com/HungNDk4/CNPM-MXH-SV/issues/15), FE Profile [#16](https://github.com/HungNDk4/CNPM-MXH-SV/issues/16), FE SRS/UC/Wireframe [#17](https://github.com/HungNDk4/CNPM-MXH-SV/issues/17), TEAM two-machine setup [#18](https://github.com/HungNDk4/CNPM-MXH-SV/issues/18). All issues created with GitHub assignees empty; accepting tasks happens later.
+- Source still contains payment/order endpoints, public `/uploads`, Multer 1.x; public full app deployment blocked by P0 security. Vercel live PoC = **health-only**, not the full app.
+- **New read-first for concurrent work:** [TEAM_SPRINT01_20261020.md](TEAM_SPRINT01_20261020.md). Canonical board task statuses remain unchanged; issue links added only.
+
+## 2026-10-21 G03 / Issue #11 — contract candidate, not approval
+- DS-03 is now REVIEW for [API Contract v1 candidate](../API_CONTRACT.md), DRAFT v0.1, plus [synthetic mocks](../fixtures/api-contract-v1.json). Source baseline: integration `dffe5ae41f14983a5cad2c77a0e465726a3cbbcc`; branch `docs/api-contract-v1-20261021`. Exact published head/PR is recorded in the Issue #11 handoff; do not infer a later head from this snapshot.
+- Both Human A and Human B must accept the same revision and R1..R5 review choices. Neither approval exists yet. No product/source/schema/env change; Issue #13 implementation NOT STARTED pending that gate. ADR-002 remains OPEN.
+- At inspection, #20 `8a4a3b6` and #21 `96d6efc` are still Draft/open/unmerged; integration still mounts legacy payments, whereas #20/#21 do not. #21 is based on #20. Their existing PASS evidence is preserved in the contract; it is not evidence for candidate safe DTOs/PDF access. Prefer #20's human-reviewed merge before #13 app.js work; otherwise select a dependency branch with one editor or wait.
+- Static project-control, 22 synthetic example/13-route fixture validation and diff whitespace checks PASS. No new API/MySQL/Frontend rebuild or manual WSL checkpoint. Next: both-human contract review, then recheck integration/PR dependencies before starting #13. Older source/setup/task-status notes above remain historical, not overrides of this scoped checkpoint.
+
+### E2E-01 additional local execution evidence
+- Native isolated MySQL 8.4.13 / Node 24.19: existing backend regression 5 runner tests PASS (QA-01 15/15, DOC-03 9/9); offline checks 9/9. Exact fixture cleanup verified; temporary DB process stopped. No production data or .env touched.
+- Local build/browser assertions remain BLOCKED before Vite loads by Windows profile ancestor ACL; source/test head 4dde753 has 7/7 CI SUCCESS in run 39593775029, including all 12 browser checkpoints. Full local acceptance PARTIAL; human PR review/merge pending. Canonical report section 6 carries environment and overlap details.

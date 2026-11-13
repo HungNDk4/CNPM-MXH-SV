@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/authStore'
 const api = axios.create({
   baseURL: '/api',
   timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
+  // Axios sets JSON for objects; browser sets multipart boundaries for FormData.
 })
 
 // ── Request Interceptor: đính kèm Access Token ───────────────────
@@ -36,6 +36,16 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
+
+    // Binary PDF requests also receive JSON 401 errors as Blob. Decode only
+    // JSON errors so TOKEN_EXPIRED can use the existing refresh/retry flow.
+    if (error.response?.status === 401 &&
+        error.response.data instanceof Blob &&
+        error.response.headers?.['content-type']?.includes('application/json')) {
+      try {
+        error.response.data = JSON.parse(await error.response.data.text())
+      } catch { /* fall through with original HTTP error */ }
+    }
 
     if (
       error.response?.status === 401 &&

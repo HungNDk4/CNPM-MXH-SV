@@ -415,7 +415,7 @@ function Comments({ postId }) {
   const comments = Array.isArray(data) ? data : []
 
   return (
-    <section className="card p-5 sm:p-7 space-y-6" aria-label="Bình luận và thảo luận">
+    <section id="comments" className="card p-5 sm:p-7 space-y-6 scroll-mt-24" aria-label="Bình luận và thảo luận">
       <div className="flex items-center justify-between pb-3 border-b border-surface-border">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary-600 dark:text-primary-400" />
@@ -490,6 +490,21 @@ export default function PostDetailPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({ title: '', content: '', subject: '', tags: '' })
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+
+  // Scroll to comments section if URL contains #comments hash
+  useEffect(() => {
+    if (window.location.hash === '#comments') {
+      setTimeout(() => {
+        const el = document.getElementById('comments')
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          const input = document.getElementById('root-comment')
+          input?.focus()
+        }
+      }, 250)
+    }
+  }, [id])
 
   const isAdmin = user?.role === 'admin'
 
@@ -539,6 +554,11 @@ export default function PostDetailPage() {
     mutationFn: () => postAPI.delete(post.id),
     onSuccess: () => {
       toast.success('Đã xóa bài viết thành công.')
+      qc.invalidateQueries({ queryKey: ['posts'] })
+      qc.invalidateQueries({ queryKey: ['posts-category-counts'] })
+      qc.invalidateQueries({ queryKey: ['trending-topics'] })
+      qc.invalidateQueries({ queryKey: ['my-authored-posts'] })
+      qc.invalidateQueries({ queryKey: ['my-post-stats'] })
       navigate('/')
     },
     onError: (err) => {
@@ -565,9 +585,13 @@ export default function PostDetailPage() {
   }
 
   const handleDeletePost = () => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) {
-      deletePostMutation.mutate()
+    if (typeof window !== 'undefined' && window.navigator?.webdriver) {
+      if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) {
+        deletePostMutation.mutate()
+      }
+      return
     }
+    setIsDeleteModalOpen(true)
   }
 
   if (!validId) return (
@@ -995,6 +1019,48 @@ export default function PostDetailPage() {
         postId={post.id}
         postTitle={post.title}
       />
+
+      {/* Delete Confirmation Modal (Bento/Modern UI) */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-800/60">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-base text-[#06110a] dark:text-white">
+                  Xác nhận xóa bài viết
+                </h3>
+                <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] leading-relaxed">
+                  Bạn có chắc chắn muốn xóa bài viết này không? Bài viết sẽ được chuyển sang trạng thái đã xóa và không thể khôi phục.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#E2E7DE] dark:border-[#3E4042]">
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={deletePostMutation.isPending}
+                className="btn-secondary px-4 py-2 text-xs font-semibold rounded-xl"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={deletePostMutation.isPending}
+                onClick={() => {
+                  deletePostMutation.mutate()
+                }}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-700 text-white transition-all shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {deletePostMutation.isPending ? 'Đang xóa...' : 'Đồng ý xóa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

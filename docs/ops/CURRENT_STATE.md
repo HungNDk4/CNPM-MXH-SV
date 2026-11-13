@@ -1,5 +1,25 @@
 # CURRENT STATE — Read this before taking action
-## 2026-10-21 E2E-01 — latest GitHub verification (read first)
+
+## 2026-11-11 Integration Baseline & PR #89, #90, #91 Verified (Current Reference)
+- Integration baseline `integration/team-dev-20261020` confirmed at `434cf8291e0461d5f029bb84956e033bae9c85fd`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. **Strict rule: no merge to `main` without explicit request.**
+- Merged feature PRs:
+  - **PR #89 (`feat/adm02-account-moderation-api-20261110`, commit `309e9a9`)**: Admin user moderation API (`GET /api/admin/users`, `PATCH /api/admin/users/:id/status`, `GET /api/admin/users/audit-logs`), atomic registration/login race condition locking, session revocation, and `account_moderation_audit_logs` table.
+  - **PR #90 (`feat/be11-my-posts-api-20261110`, commit `0f459d2`)**: Authenticated owner-only `GET /api/posts/my` with server-side pagination, global sorting, status/type filters, and strict suppression of client-supplied `author_id`.
+  - **PR #91 (`feat/fe-adm02-be11-integration-20261110`, commit `434cf82`)**: Frontend UI integration for Admin User Moderation (`AdminUsersPage.jsx`) and My Posts (`MyPostsPage.jsx`), connected to real reviewed APIs.
+- Database & Local Migration State:
+  - Additive migration `database/migrations/20261110_adm02_account_audit.sql` executed and verified on local MySQL 8 database `mini_study_network`. Table `account_moderation_audit_logs` is created with required indices.
+- Test Evidence (all PASS on local test environment):
+  - `fe-adm02-be11-contract.test.cjs`: **PASS** (1/1).
+  - `adm02-account-moderation.test.cjs`: **PASS** (1/1 suite, all 401/403/422/409, concurrency, atomic lock, rollback and session revocation verified).
+  - `be11-my-posts.test.cjs`: **PASS** (1/1 suite, 51+ pagination, A/B isolation, status filters, engagement sort verified).
+  - `be08-admin-moderation-regression.cjs`: **PASS** (7/7 groups).
+  - `ext03-admin-audit-regression.cjs`: **PASS** (9/9 groups).
+  - `auth-ownership.test.cjs` (QA-01, BE-05, BE-07): **PASS** (15/15 checks, 9/9 profile security, 7/7 refresh rotation).
+  - `pdf-security.test.cjs` (SEC-01): **PASS** (18/18 checks).
+  - Frontend production build (`vite build`): **PASS** (0 errors).
+  - Project control validation (`check-project-control.mjs`): **PASS** (54 task rows).
+
+## 2026-10-21 E2E-01 — historical GitHub verification
 
 - Integration baseline `integration/team-dev-20261020` confirmed at `7bbe302623191d5f28e967424ae529df307a13e7`. Default `main` remains `0993a42154feb37e8842ef8bb3ed4d0a03627889`, unchanged. On integration, PDF security/API/React PRs #20/#21/#23/#24/#25/#26/#27/#29 have been merged; historical older rows/paragraphs below are not current source assertions.
 - QA-03/E2E-01: remote-only branch `test/e2e01-fullstack-20261021`, Draft PR #30 targeting integration. Existing fullstack GitHub Actions `39592227079` at `31a5467`: **7/7 jobs SUCCESS**, including **real Chromium browser ↔ Vite proxy ↔ Express ↔ disposable MySQL 8 ↔ filesystem** with 12 logged browser/API checks, including expired Blob auto-refresh.
@@ -39,13 +59,10 @@
 - Known P1: guest GET feed blocked; PostDetail/Profile pages stub; SQL/Sequelize drift, no integration tests.
 
 ## NEXT_SESSION_ACTIONS — Follow this order
-1. Inspect GitHub `main` and stacked Draft PRs #1 through #5. Compare HEAD and CI; do not assume this snapshot remains current.
-2. Read `PROJECT_CONTROL.md`, `docs/ops/TASK_BOARD.md`, `docs/ops/SESSION_LOG.md`, `docs/ops/WORKTREE_REGISTRY.md`.
-3. Human A/Human B review stacked Draft PRs **#1 → #2 → #3 → #4 → #5 → #6**; payment scope Option B already chosen by Human A, remaining SRS and G0/G1 not approved. Do not merge without review.
-4. **DOC-01/ADR-011/ADR-012 CONFIRMED:** direct PDF upload; guest metadata public; login required for PDF download; **max 10 MiB (10,485,760 bytes inclusive), exactly 1 PDF per document post.** ADR-013 CONFIRMED by Human A: publish valid PDF immediately after successful checks, storage and DB commit; Admin may hide/delete afterward. ONLINE access requirement **CONFIRMED**. Next OPS-07: Human A runs documented commands on Ubuntu and reports terminal/health; human team reviews PR #8; continue DEP-01 cloud research separately. Vercel health-only HTTPS deployed READY and visited in User Chrome Incognito. No further Vercel reconnect required. DEP-A01 REVIEW (independent network/repeated availability not checked). Next DEP-A02 TiDB/Sequelize disposable proof only after service/account/cost scope review; DEP-A03 private Blob NOT RUN. Existing CNPM backend still must not be publicly deployed before SEC-01/03/04. Don't ask again if local-only demo is sufficient. Then select provider only after explicit team review. Do not re-ask approved rules.
-5. Once foundation merged and G0 accepted, start AN-01 (actors and SRS) and AN-02 on dedicated analysis branch.
-6. Before MVP demo, implement and negative-test **SEC-03 server-side paid-flow shutdown** and **SEC-01 paid URL protection**. SEC-02 full payment fix deferred.
-7. At end of each session update TASK_BOARD, CURRENT_STATE, SESSION_LOG and registry if branch/worktree changed. Use `SESSION_HANDOFF_TEMPLATE.md`.
+1. Manual UI walkthrough on `/admin/users` (Admin account locking/unlocking with reason, audit log inspection) and `/my-posts` (owner post listing, status filters, engagement sorting, inactive post suppression).
+2. Phase P3 academic deliverables: update Use Case diagrams and specifications, generate ERD and Sequence diagrams matching source, prepare defense walkthrough script.
+3. Keep `main` untouched until two-human approval. No automatic merge or deployment to `main`.
+4. Update `TASK_BOARD.md`, `CURRENT_STATE.md`, and `SESSION_LOG.md` upon any milestone completion.
 
 ## Last verified tests
 - Foundation PR commit `87eb985e`: GitHub Actions **Frontend production build PASS** and **Backend JavaScript syntax PASS** (Node 24).

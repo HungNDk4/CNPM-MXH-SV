@@ -1,5 +1,5 @@
-import { useState, useMemo, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { postAPI, followAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
@@ -25,6 +25,7 @@ import {
   TrendingUp,
   DownloadCloud,
   ArrowUpDown,
+  ArrowUp,
 } from 'lucide-react'
 import { PostCardSkeleton } from '@/components/common/Skeleton'
 
@@ -46,6 +47,7 @@ const FILTER_TABS = [
 ]
 
 export default function HomePage() {
+  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, isAuthenticated } = useAuthStore()
 
@@ -58,6 +60,24 @@ export default function HomePage() {
   const searchKeyword = searchParams.get('search') || ''
   const selectedSubject = searchParams.get('subject') || ''
   const [page, setPage] = useState(1)
+  const [showScrollTop, setShowScrollTop] = useState(false)
+
+  // Track window scroll position to toggle back-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowScrollTop(true)
+      } else {
+        setShowScrollTop(false)
+      }
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const scrollToFeedTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   // When not logged in, guests can only view free document posts (ADR-002 / ADR-011)
   const effectiveType = isAuthenticated ? activeType : 'document'
@@ -233,14 +253,20 @@ export default function HomePage() {
     }
     setSearchParams(nextParams)
     setPage(1)
+    scrollToFeedTop()
   }
 
   const handleTrendingClick = (topicItem) => {
+    const query = topicItem.query || topicItem.topic || topicItem.name || '';
     const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('search', topicItem.query);
+    if (query) {
+      nextParams.set('search', query);
+    } else {
+      nextParams.delete('search');
+    }
     setSearchParams(nextParams);
-    setSearchKeyword(topicItem.query);
     setPage(1);
+    scrollToFeedTop();
   };
 
   const handleSubjectChange = (subjectVal) => {
@@ -252,6 +278,7 @@ export default function HomePage() {
     }
     setSearchParams(nextParams)
     setPage(1)
+    scrollToFeedTop()
   }
 
   const removeSearchFilter = () => {
@@ -259,6 +286,7 @@ export default function HomePage() {
     nextParams.delete('search')
     setSearchParams(nextParams)
     setPage(1)
+    scrollToFeedTop()
   }
 
   const removeSubjectFilter = () => {
@@ -266,6 +294,7 @@ export default function HomePage() {
     nextParams.delete('subject')
     setSearchParams(nextParams)
     setPage(1)
+    scrollToFeedTop()
   }
 
   return (
@@ -276,7 +305,17 @@ export default function HomePage() {
       <div className="mx-auto flex w-full min-w-0 max-w-[700px] flex-col space-y-4">
         {/* Inline Post Composer (Grovelyn Image 4 Style - Part of Column 2) */}
         {isAuthenticated ? (
-          <InlineComposer user={user} onPostSuccess={() => refetch()} />
+          <InlineComposer
+            user={user}
+            onPostSuccess={() => {
+              setPage(1)
+              queryClient.invalidateQueries({ queryKey: ['posts'] })
+              queryClient.invalidateQueries({ queryKey: ['posts-category-counts'] })
+              queryClient.invalidateQueries({ queryKey: ['trending-topics'] })
+              refetch()
+              scrollToFeedTop()
+            }}
+          />
         ) : (
           <div className="relative overflow-hidden rounded-[22px] bg-[#06110a] dark:bg-[#242526] text-white p-6 sm:p-7 shadow-xs border border-[#213328] dark:border-[#3E4042] transition-colors">
             {/* Subtle decorative leaf SVG background */}
@@ -332,7 +371,10 @@ export default function HomePage() {
                 type="button"
                 role="tab"
                 aria-selected={streamTab === 'for-you'}
-                onClick={() => setStreamTab('for-you')}
+                onClick={() => {
+                  setStreamTab('for-you')
+                  scrollToFeedTop()
+                }}
                 className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                   streamTab === 'for-you'
                     ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
@@ -348,7 +390,10 @@ export default function HomePage() {
                     type="button"
                     role="tab"
                     aria-selected={streamTab === 'following'}
-                    onClick={() => setStreamTab('following')}
+                    onClick={() => {
+                      setStreamTab('following')
+                      scrollToFeedTop()
+                    }}
                     className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                       streamTab === 'following'
                         ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
@@ -362,7 +407,10 @@ export default function HomePage() {
                     type="button"
                     role="tab"
                     aria-selected={streamTab === 'groups'}
-                    onClick={() => setStreamTab('groups')}
+                    onClick={() => {
+                      setStreamTab('groups')
+                      scrollToFeedTop()
+                    }}
                     className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                       streamTab === 'groups'
                         ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
@@ -381,7 +429,10 @@ export default function HomePage() {
               <span className="sr-only sm:not-sr-only text-xs">Sắp xếp:</span>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => {
+                  setSortBy(e.target.value)
+                  scrollToFeedTop()
+                }}
                 className="cursor-pointer appearance-none bg-transparent pr-1 font-bold text-xs sm:text-sm text-[#06110a] dark:text-white outline-none"
               >
                 <option value="newest" className="bg-white dark:bg-[#303132] text-[#06110a] dark:text-white">Mới nhất</option>
@@ -530,7 +581,10 @@ export default function HomePage() {
             title="Chưa có bài viết từ người bạn theo dõi"
             description="Theo dõi các bạn học và tác giả tích cực chia sẻ tài liệu hữu ích để cập nhật bài viết mới nhất tại đây."
             actionLabel='Xem bảng tin "Dành cho bạn"'
-            onAction={() => setStreamTab('for-you')}
+            onAction={() => {
+              setStreamTab('for-you')
+              scrollToFeedTop()
+            }}
           />
         ) : displayPosts.length === 0 ? (
           <EmptyState
@@ -563,6 +617,7 @@ export default function HomePage() {
                     next.delete('subject')
                     setSearchParams(next)
                     setPage(1)
+                    scrollToFeedTop()
                   }
                 : undefined
             }
@@ -579,7 +634,10 @@ export default function HomePage() {
                 <button
                   type="button"
                   disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setPage((p) => Math.max(1, p - 1))
+                    scrollToFeedTop()
+                  }}
                   className="btn-secondary py-2 px-4 rounded-xl disabled:opacity-40 flex items-center gap-1 font-semibold"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -593,7 +651,10 @@ export default function HomePage() {
                 <button
                   type="button"
                   disabled={page >= pagination.totalPages}
-                  onClick={() => setPage((p) => p + 1)}
+                  onClick={() => {
+                    setPage((p) => p + 1)
+                    scrollToFeedTop()
+                  }}
                   className="btn-secondary py-2 px-4 rounded-xl disabled:opacity-40 flex items-center gap-1 font-semibold"
                 >
                   <span>Trang sau</span>
@@ -604,6 +665,19 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Floating Scroll to Top Button for improved UX */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToFeedTop}
+          className="fixed bottom-6 right-6 z-40 p-3 rounded-full bg-[#16a34a] hover:bg-[#15803d] text-white shadow-lg transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer border border-emerald-400/40"
+          title="Cuộn lên đầu trang"
+          aria-label="Cuộn lên đầu trang"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
 
       {/* ═══════════════════════════════════════════════
           CỘT PHẢI (SIDE WIDGETS): Môn học, Xu hướng, Bạn bè, Thống kê (Grovelyn Standard: 320px - 340px)

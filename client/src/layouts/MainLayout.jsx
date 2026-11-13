@@ -42,7 +42,12 @@ export default function MainLayout() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const searchContainerRef = useRef(null)
 
-  // Debounce search query (250ms)
+  // Auto scroll to top on any route / search query change (except specific hash anchor)
+  useEffect(() => {
+    if (!location.hash) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [location.pathname, location.search])
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchInput.trim())

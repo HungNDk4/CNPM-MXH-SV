@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('node:fs');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -79,6 +80,20 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/likes',    likeRoutes);
 app.use('/api/admin',    adminRoutes);
+
+// In the deployed release, Express serves the compiled React SPA on the same origin.
+if (process.env.NODE_ENV === 'production') {
+  const dist = path.resolve(__dirname, '../../client/dist');
+  const indexFile = path.join(dist, 'index.html');
+  if (!fs.existsSync(indexFile)) {
+    throw new Error('Production frontend missing: build client/dist before starting Express.');
+  }
+  app.use(express.static(dist, { index: false, maxAge: '1h' }));
+  app.get(/^\/(?!api(?:\/|$)|uploads(?:\/|$)).*/, (req, res, next) => {
+    if (path.extname(req.path)) return next();
+    res.sendFile(indexFile);
+  });
+}
 
 // ─── 404 Handler ─────────────────────────────────────────────────
 app.use('*', (req, res) => {

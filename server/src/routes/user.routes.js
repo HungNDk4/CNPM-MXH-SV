@@ -101,10 +101,10 @@ router.post('/me/avatar', authenticate, parseAvatarUpload, async (req, res, next
     return next(createError('Vui lòng chọn ảnh đại diện.', 422));
   }
 
-  let savedTarget = null;
+  let newAvatarUrl = null;
   try {
     const { avatarUrl, targetPath } = await saveAvatar(req.file);
-    savedTarget = targetPath;
+    newAvatarUrl = avatarUrl;
 
     const currentUser = await User.findByPk(req.user.id);
     if (!currentUser || !currentUser.is_active) {
@@ -117,7 +117,8 @@ router.post('/me/avatar', authenticate, parseAvatarUpload, async (req, res, next
 
     // Clean up previous uploaded avatar file if managed locally
     if (oldAvatarUrl && oldAvatarUrl !== avatarUrl) {
-      await deleteAvatarFile(oldAvatarUrl);
+      try { await deleteAvatarFile(oldAvatarUrl); }
+      catch (cleanupError) { console.warn('Old avatar cleanup failed:', cleanupError.message); }
     }
 
     const profile = await publicProfile(req.user.id);
@@ -131,9 +132,8 @@ router.post('/me/avatar', authenticate, parseAvatarUpload, async (req, res, next
       },
     });
   } catch (error) {
-    if (savedTarget) {
-      const fs = require('node:fs/promises');
-      try { await fs.unlink(savedTarget); } catch { /* ignore rollback error */ }
+    if (newAvatarUrl) {
+      try { await deleteAvatarFile(newAvatarUrl); } catch { /* best-effort cleanup */ }
     }
     return next(error);
   }

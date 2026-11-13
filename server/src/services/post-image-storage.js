@@ -4,6 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { createError } = require('../middlewares/error.middleware');
 const { PostImage } = require('../models');
+const publicImages = require('./public-image-storage');
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB per image
 const MAX_IMAGES_PER_POST = 4;
@@ -80,17 +81,23 @@ async function savePostImages(files, postId, transaction) {
       const file = files[i];
       const { ext, mimeType, originalName, sizeBytes } = validateImageBuffer(file);
       const storageKey = crypto.randomUUID() + ext;
-      const targetPath = path.join(uploadDir, storageKey);
-
-      await fs.writeFile(targetPath, file.buffer, { flag: 'wx' });
-      writtenFiles.push(targetPath);
-
-      const imageUrl = `/uploads/post-images/${storageKey}`;
+      let stored;
+      if (publicImages.isCloud()) {
+        stored = await publicImages.save({
+          category: 'post-images', buffer: file.buffer, ext, mimeType,
+        });
+      } else {
+        const targetPath = path.join(uploadDir, storageKey);
+        await fs.writeFile(targetPath, file.buffer, { flag: 'wx' });
+        stored = { url: `/uploads/post-images/${storageKey}`, storageKey, targetPath };
+      }
+      writtenFiles.push(stored);
+      const imageUrl = stored.url;
       const row = await PostImage.create(
         {
           post_id: postId,
           image_url: imageUrl,
-          storage_key: storageKey,
+          storage_key: stored.storageKey,
           original_name: originalName,
           mime_type: mimeType,
           size_bytes: sizeBytes,
@@ -104,8 +111,9 @@ async function savePostImages(files, postId, transaction) {
   } catch (error) {
     // Compensating rollback: remove any files written to disk
     await Promise.all(
-      writtenFiles.map(async (filePath) => {
-        try { await fs.unlink(filePath); } catch { /* ignore */ }
+      writtenFiles.map(async ({ targetPath, url }) => {
+        try { if (targetPath) await fs.unlink(targetPath); else await publicImages.remove(url); }
+        catch { /* best-effort cleanup */ }
       })
     );
     throw error;

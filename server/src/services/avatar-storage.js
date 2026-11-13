@@ -5,6 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const multer = require('multer');
 const { createError } = require('../middlewares/error.middleware');
+const publicImages = require('./public-image-storage');
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
 const uploadDir = path.resolve(__dirname, '../../uploads/avatars');
@@ -62,7 +63,13 @@ function validateAvatarBuffer(file) {
  * Save single avatar file to uploads/avatars directory.
  */
 async function saveAvatar(file) {
-  const { ext } = validateAvatarBuffer(file);
+  const { ext, mimeType } = validateAvatarBuffer(file);
+  if (publicImages.isCloud()) {
+    const saved = await publicImages.save({
+      category: 'avatars', buffer: file.buffer, ext, mimeType,
+    });
+    return { avatarUrl: saved.url, storageKey: saved.storageKey, targetPath: null };
+  }
   await fs.mkdir(uploadDir, { recursive: true });
 
   const storageKey = crypto.randomUUID() + ext;
@@ -83,6 +90,7 @@ async function saveAvatar(file) {
  */
 async function deleteAvatarFile(avatarUrl) {
   if (!avatarUrl || typeof avatarUrl !== 'string') return;
+  if (publicImages.validPublicUrl(avatarUrl)) return publicImages.remove(avatarUrl);
   if (!avatarUrl.startsWith('/uploads/avatars/')) return;
 
   const filename = path.basename(avatarUrl);

@@ -1,0 +1,98 @@
+name: QA Online Release — production React + Express + disposable MySQL8
+on:
+  push:
+    branches: [deploy/qa-render-online-20261113]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-and-browser:
+    name: Production bundle + Chromium + PDF and roles
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: qa_release_isolated_only
+          MYSQL_DATABASE: mini_study_network
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pqa_release_isolated_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      NODE_ENV: production
+      ONLINE_RELEASE_QA_DISPOSABLE: 'true'
+      DB_AUTO_SYNC: 'false'
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_NAME: mini_study_network
+      DB_USER: root
+      DB_PASSWORD: qa_release_isolated_only
+      JWT_ACCESS_SECRET: qa_release_only_secret_for_local_disposable_runner_2026
+      JWT_REFRESH_SECRET: qa_release_only_refresh_secret_for_local_disposable_runner_2026
+      CLIENT_URL: http://127.0.0.1:5000
+      PORT: '5000'
+      DOCUMENT_STORAGE_DRIVER: filesystem
+      DOCUMENT_STORAGE_PERSISTENT: 'true'
+      DOCUMENT_PRIVATE_DIR: /tmp/qa-release-disposable-documents
+      PUBLIC_IMAGE_STORAGE_DRIVER: filesystem
+      PUBLIC_IMAGES_PERSISTENT: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            client/package-lock.json
+            server/package-lock.json
+      - name: Create disposable schema and private directory
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
+          mysql --protocol=tcp -h127.0.0.1 -uroot -p"$DB_PASSWORD" < database/schema.sql
+          mysql --protocol=tcp -h127.0.0.1 -uroot -p"$DB_PASSWORD" < database/migrations/20261021_document_files.sql
+          mkdir -p "$DOCUMENT_PRIVATE_DIR"
+      - name: Install and build real production React bundle
+        run: |
+          npm --prefix server ci
+          npm --prefix client ci --include=dev
+          npm --prefix client run build
+          test -s client/dist/index.html
+          node --check server/src/app.js
+          node --check server/src/services/public-image-storage.js
+          node --check scripts/online/release-e2e.test.cjs
+      - name: Install Chromium runner for real UI interactions
+        run: |
+          npm --prefix client install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          cd client && npx playwright install --with-deps chromium
+      - name: Start production Express serving React on the same origin
+        run: |
+          node server/src/index.js > "$RUNNER_TEMP/online-release-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/online-release-server.pid"
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5000/api/health >/dev/null &&
+               curl -fsS http://127.0.0.1:5000/register >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          tail -n 100 "$RUNNER_TEMP/online-release-server.log"
+          exit 1
+      - name: Browser QA on production bundle + disposable data
+        run: node --test scripts/online/release-e2e.test.cjs
+      - name: Preserve actual browser screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qa-production-bundle-real-chromium
+          path: ${{ runner.temp }}/online-release-screenshots/*.png
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Show server logs if failed
+        if: failure()
+        run: tail -n 150 "$RUNNER_TEMP/online-release-server.log" || true
+      - name: Stop temporary processes
+        if: always()
+        run: |
+          test ! -f "$RUNNER_TEMP/online-release-server.pid" || kill "$(cat "$RUNNER_TEMP/online-release-server.pid")" 2>/dev/null || true

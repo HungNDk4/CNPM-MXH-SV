@@ -62,7 +62,7 @@ Owner clarification (2026-10-20): `Human A` = user, **now confirmed Core Backend
 | DOCS-01 | P1 | Final diagrams and traceability | Human A + AI | TODO | G6 | DRAFT diagrams |
 | DOCS-02 | P1 | Academic report matched to source/test | Human A + AI | TODO | G6 | Not started |
 | DOCS-03 | P1 | User/admin manuals | Human B + AI | TODO | G6 | Not started |
-| DEMO-01 | P1 | Demonstration and defense scenario | Two humans + AI | TODO | G6 | Not started |
+| DEMO-01 | P1 | Demonstration and defense scenario | Two humans + AI | DONE | G6 | docs/DEMO_SCENARIO.md created and verified |
 | OPS-06 | P1 | Final release archive and handoff | Two humans | TODO | G7 | Not started |
 
 ## Status transitions

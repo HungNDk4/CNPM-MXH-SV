@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { postAPI, followAPI } from '@/services/api'
@@ -25,6 +25,7 @@ import {
   TrendingUp,
   DownloadCloud,
   ArrowUpDown,
+  ArrowUp,
 } from 'lucide-react'
 import { PostCardSkeleton } from '@/components/common/Skeleton'
 
@@ -58,6 +59,24 @@ export default function HomePage() {
   const searchKeyword = searchParams.get('search') || ''
   const selectedSubject = searchParams.get('subject') || ''
   const [page, setPage] = useState(1)
+  const [showScrollTop, setShowScrollTop] = useState(false)
+
+  // Track window scroll position to toggle back-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowScrollTop(true)
+      } else {
+        setShowScrollTop(false)
+      }
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const scrollToFeedTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   // When not logged in, guests can only view free document posts (ADR-002 / ADR-011)
   const effectiveType = isAuthenticated ? activeType : 'document'
@@ -233,6 +252,7 @@ export default function HomePage() {
     }
     setSearchParams(nextParams)
     setPage(1)
+    scrollToFeedTop()
   }
 
   const handleTrendingClick = (topicItem) => {
@@ -241,6 +261,7 @@ export default function HomePage() {
     setSearchParams(nextParams);
     setSearchKeyword(topicItem.query);
     setPage(1);
+    scrollToFeedTop()
   };
 
   const handleSubjectChange = (subjectVal) => {
@@ -252,6 +273,7 @@ export default function HomePage() {
     }
     setSearchParams(nextParams)
     setPage(1)
+    scrollToFeedTop()
   }
 
   const removeSearchFilter = () => {
@@ -259,6 +281,7 @@ export default function HomePage() {
     nextParams.delete('search')
     setSearchParams(nextParams)
     setPage(1)
+    scrollToFeedTop()
   }
 
   const removeSubjectFilter = () => {
@@ -266,6 +289,7 @@ export default function HomePage() {
     nextParams.delete('subject')
     setSearchParams(nextParams)
     setPage(1)
+    scrollToFeedTop()
   }
 
   return (
@@ -332,7 +356,10 @@ export default function HomePage() {
                 type="button"
                 role="tab"
                 aria-selected={streamTab === 'for-you'}
-                onClick={() => setStreamTab('for-you')}
+                onClick={() => {
+                  setStreamTab('for-you')
+                  scrollToFeedTop()
+                }}
                 className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                   streamTab === 'for-you'
                     ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
@@ -348,7 +375,10 @@ export default function HomePage() {
                     type="button"
                     role="tab"
                     aria-selected={streamTab === 'following'}
-                    onClick={() => setStreamTab('following')}
+                    onClick={() => {
+                      setStreamTab('following')
+                      scrollToFeedTop()
+                    }}
                     className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                       streamTab === 'following'
                         ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
@@ -362,7 +392,10 @@ export default function HomePage() {
                     type="button"
                     role="tab"
                     aria-selected={streamTab === 'groups'}
-                    onClick={() => setStreamTab('groups')}
+                    onClick={() => {
+                      setStreamTab('groups')
+                      scrollToFeedTop()
+                    }}
                     className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                       streamTab === 'groups'
                         ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
@@ -579,7 +612,10 @@ export default function HomePage() {
                 <button
                   type="button"
                   disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setPage((p) => Math.max(1, p - 1))
+                    scrollToFeedTop()
+                  }}
                   className="btn-secondary py-2 px-4 rounded-xl disabled:opacity-40 flex items-center gap-1 font-semibold"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -593,7 +629,10 @@ export default function HomePage() {
                 <button
                   type="button"
                   disabled={page >= pagination.totalPages}
-                  onClick={() => setPage((p) => p + 1)}
+                  onClick={() => {
+                    setPage((p) => p + 1)
+                    scrollToFeedTop()
+                  }}
                   className="btn-secondary py-2 px-4 rounded-xl disabled:opacity-40 flex items-center gap-1 font-semibold"
                 >
                   <span>Trang sau</span>
@@ -604,6 +643,19 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Floating Scroll to Top Button for improved UX */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToFeedTop}
+          className="fixed bottom-6 right-6 z-40 p-3 rounded-full bg-[#16a34a] hover:bg-[#15803d] text-white shadow-lg transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer border border-emerald-400/40"
+          title="Cuộn lên đầu trang"
+          aria-label="Cuộn lên đầu trang"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
 
       {/* ═══════════════════════════════════════════════
           CỘT PHẢI (SIDE WIDGETS): Môn học, Xu hướng, Bạn bè, Thống kê (Grovelyn Standard: 320px - 340px)

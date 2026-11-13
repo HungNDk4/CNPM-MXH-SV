@@ -417,6 +417,9 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
           <Folder className="w-3.5 h-3.5 text-[#16a34a] dark:text-[#22c55e] shrink-0" />
           <Link
             to={`/?subject=${encodeURIComponent(post.subject)}`}
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
             className="font-bold text-[#06110a] dark:text-white hover:text-[#16a34a] dark:hover:text-[#22c55e] transition-colors hover:underline"
           >
             {post.subject}
@@ -455,12 +458,16 @@ export default function PostCard({ post, initialBookmarked = false, onDelete }) 
       {tagsList.length > 1 && (
         <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
           {tagsList.slice(0, 3).map((tag, idx) => (
-            <span
+            <Link
               key={idx}
-              className="inline-flex items-center text-[11px] text-[#56614f] dark:text-[#B0B3B8] bg-[#f2f4ef] dark:bg-[#303132] px-2.5 py-0.5 rounded-full font-mono border border-[#e2e7de] dark:border-[#3e4042]"
+              to={`/?search=${encodeURIComponent(tag)}`}
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+              className="inline-flex items-center text-[11px] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#16a34a] dark:hover:text-[#4ade80] bg-[#f2f4ef] dark:bg-[#303132] px-2.5 py-0.5 rounded-full font-mono border border-[#e2e7de] dark:border-[#3e4042] transition-colors cursor-pointer"
             >
               #{tag}
-            </span>
+            </Link>
           ))}
         </div>
       )}

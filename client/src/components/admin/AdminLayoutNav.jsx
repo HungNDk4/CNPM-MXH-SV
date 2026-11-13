@@ -20,9 +20,9 @@ const TABS = [
   {
     to: '/admin/content',
     exact: false,
-    label: 'Kiểm duyệt & Báo cáo',
+    label: 'Hàng đợi báo cáo',
     icon: Flag,
-    desc: 'Hàng đợi báo cáo vi phạm & duyệt bài',
+    desc: 'Xử lý báo cáo vi phạm tiêu chuẩn cộng đồng',
   },
   {
     to: '/admin/posts',

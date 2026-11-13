@@ -29,6 +29,7 @@ export default function MyPostsPage() {
   const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'active' | 'hidden' | 'deleted'
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
+  const [postToDelete, setPostToDelete] = useState(null) // { id, title }
   const [sortBy, setSortBy] = useState('newest') // 'newest' | 'engagement'
 
   // 1. Fetch Real Personal Statistics (A.1)
@@ -77,9 +78,11 @@ export default function MyPostsPage() {
     mutationFn: (id) => postAPI.delete(id),
     onSuccess: () => {
       toast.success('Đã xóa bài viết thành công!')
+      setPostToDelete(null)
       queryClient.invalidateQueries({ queryKey: ['my-authored-posts'] })
       queryClient.invalidateQueries({ queryKey: ['my-post-stats'] })
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['posts-category-counts'] })
       queryClient.invalidateQueries({ queryKey: ['trending-topics'] })
     },
     onError: (err) => {
@@ -88,9 +91,7 @@ export default function MyPostsPage() {
   })
 
   const handleDeletePost = (id, title) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa bài viết "${title}" không? Hành động này không thể hoàn tác.`)) {
-      deleteMutation.mutate(id)
-    }
+    setPostToDelete({ id, title })
   }
 
   const handleSearchSubmit = (e) => {
@@ -406,6 +407,48 @@ export default function MyPostsPage() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal (Bento/Modern UI) */}
+      {postToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-[#242526] border border-[#E2E7DE] dark:border-[#3E4042] rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-800/60">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-base text-[#06110a] dark:text-white">
+                  Xác nhận xóa bài viết
+                </h3>
+                <p className="text-xs sm:text-sm text-[#56614f] dark:text-[#B0B3B8] leading-relaxed">
+                  Bạn có chắc chắn muốn xóa bài viết <strong className="text-[#06110a] dark:text-white">"{postToDelete.title}"</strong> không? Hành động này sẽ chuyển trạng thái bài viết thành đã xóa.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#E2E7DE] dark:border-[#3E4042]">
+              <button
+                type="button"
+                onClick={() => setPostToDelete(null)}
+                disabled={deleteMutation.isPending}
+                className="btn-secondary px-4 py-2 text-xs font-semibold rounded-xl"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={deleteMutation.isPending}
+                onClick={() => {
+                  deleteMutation.mutate(postToDelete.id)
+                }}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-700 text-white transition-all shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {deleteMutation.isPending ? 'Đang xóa...' : 'Đồng ý xóa'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

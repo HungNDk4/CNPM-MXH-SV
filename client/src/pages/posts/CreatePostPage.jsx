@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { documentAPI, postAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import toast from 'react-hot-toast'
@@ -46,6 +47,7 @@ const POST_TYPES = [
 ]
 
 export default function CreatePostPage() {
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const [searchParams] = useSearchParams()
@@ -139,6 +141,14 @@ export default function CreatePostPage() {
       }
       const postId = response.data?.data?.id
       if (!postId) throw new Error('Thiếu ID bài viết trong phản hồi.')
+
+      // Invalidate posts query caches so Home Feed immediately shows the new post
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['posts-category-counts'] })
+      queryClient.invalidateQueries({ queryKey: ['trending-topics'] })
+      queryClient.invalidateQueries({ queryKey: ['my-authored-posts'] })
+      queryClient.invalidateQueries({ queryKey: ['my-post-stats'] })
+
       toast.success(form.post_type === 'document' ? 'Chia sẻ PDF thành công!' : 'Đăng bài thành công!')
       navigate(form.post_type === 'document' ? '/documents/' + postId : '/posts/' + postId)
     } catch (error) {

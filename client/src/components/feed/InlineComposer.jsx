@@ -133,6 +133,10 @@ export default function InlineComposer({ user, onPostSuccess }) {
       // Reset form
       handleCancel()
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['posts-category-counts'] })
+      queryClient.invalidateQueries({ queryKey: ['trending-topics'] })
+      queryClient.invalidateQueries({ queryKey: ['my-authored-posts'] })
+      queryClient.invalidateQueries({ queryKey: ['my-post-stats'] })
       if (onPostSuccess) onPostSuccess()
     } catch (err) {
       const msg = err.response?.data?.message || 'Không thể đăng bài viết lúc này.'

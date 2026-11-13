@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { postAPI, followAPI } from '@/services/api'
 import PostCard from '@/components/PostCard'
@@ -47,6 +47,7 @@ const FILTER_TABS = [
 ]
 
 export default function HomePage() {
+  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, isAuthenticated } = useAuthStore()
 
@@ -304,7 +305,17 @@ export default function HomePage() {
       <div className="mx-auto flex w-full min-w-0 max-w-[700px] flex-col space-y-4">
         {/* Inline Post Composer (Grovelyn Image 4 Style - Part of Column 2) */}
         {isAuthenticated ? (
-          <InlineComposer user={user} onPostSuccess={() => refetch()} />
+          <InlineComposer
+            user={user}
+            onPostSuccess={() => {
+              setPage(1)
+              queryClient.invalidateQueries({ queryKey: ['posts'] })
+              queryClient.invalidateQueries({ queryKey: ['posts-category-counts'] })
+              queryClient.invalidateQueries({ queryKey: ['trending-topics'] })
+              refetch()
+              scrollToFeedTop()
+            }}
+          />
         ) : (
           <div className="relative overflow-hidden rounded-[22px] bg-[#06110a] dark:bg-[#242526] text-white p-6 sm:p-7 shadow-xs border border-[#213328] dark:border-[#3E4042] transition-colors">
             {/* Subtle decorative leaf SVG background */}

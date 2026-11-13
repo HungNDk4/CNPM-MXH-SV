@@ -168,10 +168,15 @@ export default function HomePage() {
     if (streamTab === 'following') {
       const followedIds = new Set((followingData || []).map((f) => f.id || f.following_id))
       list = list.filter((p) => p.author?.id && (followedIds.has(p.author.id) || p.author.id === user?.id))
-    }
-
-    if (selectedSubject) {
-      list = list.filter((p) => (p.subject || '').toLowerCase() === selectedSubject.toLowerCase())
+    } else if (streamTab === 'groups') {
+      const projectKeywords = ['đồ án', 'dự án', 'project', 'srs', 'báo cáo', 'tiểu luận', 'bài tập', 'luận văn', 'nghiên cứu', 'tài liệu', 'công nghệ', 'giải thuật', 'hệ điều hành', 'mạng máy tính', 'cơ sở dữ liệu']
+      list = list.filter((p) => {
+        if (selectedSubject) {
+          return (p.subject || '').toLowerCase() === selectedSubject.toLowerCase()
+        }
+        const text = `${p.title || ''} ${p.content || ''} ${p.subject || ''} ${(p.tags || []).join(' ')}`.toLowerCase()
+        return p.post_type === 'document' || projectKeywords.some((kw) => text.includes(kw))
+      })
     }
 
     if (sortBy === 'popular') {
@@ -338,19 +343,35 @@ export default function HomePage() {
               </button>
 
               {isAuthenticated && (
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={streamTab === 'following'}
-                  onClick={() => setStreamTab('following')}
-                  className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
-                    streamTab === 'following'
-                      ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
-                      : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
-                  }`}
-                >
-                  Đang theo dõi
-                </button>
+                <>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={streamTab === 'following'}
+                    onClick={() => setStreamTab('following')}
+                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                      streamTab === 'following'
+                        ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
+                        : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
+                    }`}
+                  >
+                    Đang theo dõi
+                  </button>
+
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={streamTab === 'groups'}
+                    onClick={() => setStreamTab('groups')}
+                    className={`-mb-px shrink-0 border-b-[3px] pb-2 pt-0.5 text-xs sm:text-[16px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                      streamTab === 'groups'
+                        ? 'border-[#16a34a] dark:border-[#22c55e] text-[#06110a] dark:text-white'
+                        : 'border-transparent text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white'
+                    }`}
+                  >
+                    Môn học &amp; Đồ án
+                  </button>
+                </>
               )}
             </div>
 
@@ -369,29 +390,31 @@ export default function HomePage() {
             </label>
           </div>
 
-          {/* ── THANH CHỌN MÔN HỌC TRỰC TIẾP (POPULAR SUBJECTS CHIP BAR) ── */}
-          <div className="flex items-center gap-1.5 overflow-x-auto py-1.5 scrollbar-none -mx-1 px-1">
-            <span className="text-[11px] font-bold text-[#56614f] dark:text-[#B0B3B8] shrink-0 mr-1">
-              Lọc môn:
-            </span>
-            {POPULAR_SUBJECTS.map((sub) => {
-              const isSelected = selectedSubject === sub || (sub === 'Tất cả môn' && !selectedSubject)
-              return (
-                <button
-                  key={sub}
-                  type="button"
-                  onClick={() => handleSubjectChange(sub)}
-                  className={`text-xs px-3 py-1 rounded-xl transition-all cursor-pointer shrink-0 font-semibold ${
-                    isSelected
-                      ? 'bg-[#16a34a] text-white dark:bg-[#2ECC71] dark:text-[#18191A] shadow-2xs font-bold'
-                      : 'bg-white dark:bg-[#242526] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white border border-[#E2E7DE] dark:border-[#3E4042]'
-                  }`}
-                >
-                  {sub}
-                </button>
-              )
-            })}
-          </div>
+          {/* ── THANH CHỌN MÔN HỌC TRỰC TIẾP KHI Ở TAB MÔN HỌC & ĐỒ ÁN ── */}
+          {streamTab === 'groups' && (
+            <div className="flex items-center gap-1.5 overflow-x-auto py-1.5 scrollbar-none -mx-1 px-1">
+              <span className="text-[11px] font-bold text-[#56614f] dark:text-[#B0B3B8] shrink-0 mr-1">
+                Lọc môn:
+              </span>
+              {POPULAR_SUBJECTS.map((sub) => {
+                const isSelected = selectedSubject === sub || (sub === 'Tất cả môn' && !selectedSubject)
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => handleSubjectChange(sub)}
+                    className={`text-xs px-3 py-1 rounded-xl transition-all cursor-pointer shrink-0 font-semibold ${
+                      isSelected
+                        ? 'bg-[#16a34a] text-white dark:bg-[#2ECC71] dark:text-[#18191A] shadow-2xs font-bold'
+                        : 'bg-white dark:bg-[#242526] text-[#56614f] dark:text-[#B0B3B8] hover:text-[#06110a] dark:hover:text-white border border-[#E2E7DE] dark:border-[#3E4042]'
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {/* ── TẦNG 2: PHÂN LOẠI NỘI DUNG (FILTER PILLS WITH TABULAR COUNTS) ── */}
           <div className="-mx-1 flex max-w-full items-center gap-2 overflow-x-auto px-1 [scrollbar-width:none] py-0.5">

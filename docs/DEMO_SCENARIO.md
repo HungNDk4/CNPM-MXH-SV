@@ -165,3 +165,4 @@ Tóm tắt các điểm mạnh công nghệ nổi bật của dự án trước 
 #### Câu 5: Hệ thống có hỗ trợ thanh toán tài liệu có phí không?
 > **Gợi ý trả lời:**  
 > *"Theo quyết định phạm vi MVP (Option B - Free-first MVP), nhóm ưu tiên tối đa cho việc chia sẻ tài liệu miễn phí và mạng xã hội học tập để phục vụ sinh viên trước. Các route thanh toán VNPay Sandbox trước đây đã được nhóm chủ động vô hiệu hóa từ tầng backend (trả về 404/disabled) để bảo đảm an toàn bảo mật, tránh rủi ro gian lận tiền bạc trước khi có quy trình kiểm toán bảo mật chuyên sâu."*
+
